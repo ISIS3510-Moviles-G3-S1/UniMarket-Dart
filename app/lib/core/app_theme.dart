@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   // Base tokens from index.css (HSL converted to hex)
   static const Color black = Color(0xFF000000); // --primary
-  static const Color gray = Color(0xFFBFBFBF); // --gray
+  static const Color gray = Color(0xFFAFAFAF); // --gray (slightly darker)
   static const Color white = Color(0xFFFFFFFF); // --white / --card / --background
 
   // Brand / semantic colors

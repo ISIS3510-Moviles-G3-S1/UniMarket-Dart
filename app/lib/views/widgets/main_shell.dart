@@ -76,9 +76,9 @@ class MainShell extends StatelessWidget {
               ),
               _NavIcon(
                 icon: Icons.person_rounded,
-                index: 3,
+                index: 4,
                 currentIndex: navigationShell.currentIndex,
-                onTap: () => navigationShell.goBranch(3),
+                onTap: () => navigationShell.goBranch(4),
               ),
             ],
           ),
