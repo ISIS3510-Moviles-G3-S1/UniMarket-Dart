@@ -9,6 +9,9 @@ import '../../models/profile_models.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  static const String _selectedAvatarUrl =
+      'https://api.dicebear.com/7.x/adventurer/png?seed=Valentina&backgroundColor=f2f2f2';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,25 +45,39 @@ class ProfileScreen extends StatelessWidget {
                 builder:
                     (context, vm, _) => Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
                       decoration: BoxDecoration(
-                        color: AppTheme.deepGreen.withValues(alpha: 0.5),
+                        color: Colors.white,
                         border: Border(
-                          bottom: BorderSide(color: AppTheme.deepGreen),
+                          bottom: BorderSide(
+                            color: AppTheme.deepGreen.withValues(alpha: 0.8),
+                          ),
                         ),
                       ),
                       child: Row(
                         children: [
-                          CircleAvatar(
-                            radius: 32,
-                            backgroundColor: AppTheme.accent,
-                            backgroundImage: NetworkImage(vm.profileAvatar),
-                            onBackgroundImageError: (_, __) {},
-                            child: Text(
-                              vm.profileName.substring(0, 2).toUpperCase(),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.sageDark,
+                          Container(
+                            width: 72,
+                            height: 72,
+                            padding: const EdgeInsets.all(2.5),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppTheme.sage, width: 2),
+                            ),
+                            child: ClipOval(
+                              child: Image.network(
+                                _selectedAvatarUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (_, __, ___) => Container(
+                                      color: const Color(0xFFF2F2F2),
+                                      alignment: Alignment.center,
+                                      child: const Icon(
+                                        Icons.person_rounded,
+                                        size: 34,
+                                        color: AppTheme.deepGreen,
+                                      ),
+                                    ),
                               ),
                             ),
                           ),
@@ -71,40 +88,41 @@ class ProfileScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   vm.profileName,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.deepGreen,
                                   ),
                                 ),
                                 Text(
                                   '${vm.profileUniversity} · Member since ${vm.profileSince}',
                                   style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.white70,
+                                    fontSize: 14,
+                                    color: AppTheme.deepGreen.withValues(alpha: 0.85),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.star_rounded,
-                                      size: 16,
-                                      color: AppTheme.mustard,
+                                      size: 21,
+                                      color: Color(0xFF2F2F2F),
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: 8),
                                     Text(
                                       '${vm.profileRating}',
                                       style: TextStyle(
+                                        fontSize: 15,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.white,
+                                        color: AppTheme.deepGreen.withValues(alpha: 0.92),
                                       ),
                                     ),
                                     Text(
                                       ' · ${vm.profileTransactions} transactions',
                                       style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white70,
+                                        fontSize: 14,
+                                        color: AppTheme.deepGreen.withValues(alpha: 0.76),
                                       ),
                                     ),
                                   ],
@@ -112,10 +130,10 @@ class ProfileScreen extends StatelessWidget {
                                 const SizedBox(height: 8),
                                 Text(
                                   '${vm.xp} XP Points',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.accent,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.sage,
                                   ),
                                 ),
                               ],
@@ -144,21 +162,15 @@ class ProfileScreen extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      height: 64,
-                      width: 64,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.asset(
-                          'assets/images/eco_llama.jpeg',
-                          fit: BoxFit.cover,
-                        ),
+                    SizedBox(
+                      height: 108,
+                      width: 86,
+                      child: Image.asset(
+                        'assets/images/eco_llama.jpeg',
+                        fit: BoxFit.contain,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -608,59 +620,98 @@ class _BadgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLocked = !badge.earned;
+
     return Card(
+      elevation: 0,
+      color: isLocked
+          ? const Color.fromRGBO(214, 221, 219, 0.46)
+          : const Color.fromRGBO(214, 221, 219, 0.30),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: const Color(0xFFD6DDDB).withValues(alpha: 0.45),
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              badge.emoji,
-              style: TextStyle(
-                fontSize: 28,
-                color: badge.earned ? null : Colors.grey,
-              ),
+            Stack(
+              children: [
+                ColorFiltered(
+                  colorFilter: isLocked
+                      ? const ColorFilter.mode(
+                          Color(0xFFBDBDBD),
+                          BlendMode.modulate,
+                        )
+                      : const ColorFilter.mode(
+                          Colors.transparent,
+                          BlendMode.dst,
+                        ),
+                  child: Text(
+                    badge.emoji,
+                    style: const TextStyle(fontSize: 34),
+                  ),
+                ),
+                if (isLocked)
+                  const Positioned(
+                    right: -2,
+                    bottom: 0,
+                    child: Icon(
+                      Icons.lock_outline_rounded,
+                      size: 15,
+                      color: Color(0xFFB0B0B0),
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 10),
             Text(
               badge.name,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.foreground,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isLocked ? const Color(0xFF8E8E8E) : AppTheme.foreground,
               ),
             ),
+            const SizedBox(height: 2),
             Text(
               badge.desc,
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 10, color: AppTheme.mutedForeground),
+              style: TextStyle(
+                fontSize: 12,
+                color: isLocked
+                    ? const Color(0xFF9EB0B3)
+                    : AppTheme.mutedForeground,
+              ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 10),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color:
-                    badge.earned
-                        ? AppTheme.accent.withValues(alpha: 0.2)
-                        : AppTheme.muted,
-                borderRadius: BorderRadius.circular(8),
+                color: isLocked
+                    ? const Color(0xFFD6DDDB)
+                    : AppTheme.accent.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color:
-                      badge.earned
-                          ? AppTheme.accent.withValues(alpha: 0.3)
-                          : AppTheme.muted,
+                  color: isLocked
+                      ? const Color(0xFFD6DDDB)
+                      : AppTheme.accent.withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
                 '+${badge.xp} XP',
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color:
-                      badge.earned ? AppTheme.accent : AppTheme.mutedForeground,
+                  color: isLocked
+                      ? const Color(0xFF9CB1B5)
+                      : AppTheme.accent,
                 ),
               ),
             ),

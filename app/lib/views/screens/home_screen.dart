@@ -15,6 +15,7 @@ class HomeScreen extends StatelessWidget {
       body: Consumer<HomeViewModel>(
         builder: (context, vm, _) {
           final featured = vm.featured;
+          const buttonBorderColor = Color(0xFFD0D6D1);
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -57,18 +58,35 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        'Your Campus,\nYour Closet.',
-                        textAlign: TextAlign.center,
-                        style: (Theme.of(context).textTheme.headlineLarge ??
-                                const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w800,
-                                ))
-                            .copyWith(
-                          height: 1.2,
-                          color: AppTheme.foreground,
-                        ),
+                      Column(
+                        children: [
+                          Text(
+                            'Your Campus,',
+                            textAlign: TextAlign.center,
+                            style: (Theme.of(context).textTheme.headlineLarge ??
+                                    const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w800,
+                                    ))
+                                .copyWith(
+                              height: 1.2,
+                              color: AppTheme.deepGreen,
+                            ),
+                          ),
+                          Text(
+                            'Your Closet.',
+                            textAlign: TextAlign.center,
+                            style: (Theme.of(context).textTheme.headlineLarge ??
+                                    const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w800,
+                                    ))
+                                .copyWith(
+                              height: 1.2,
+                              color: AppTheme.sage,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -81,87 +99,117 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          onPressed: () => context.go('/browse'),
-                          icon: const Icon(
-                            Icons.arrow_back_rounded,
-                            size: 20,
-                            color: AppTheme.foreground,
-                          ),
-                          label: const Text('Browse Items'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppTheme.sage,
-                            foregroundColor: AppTheme.foreground,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(999),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: () => context.go('/browse'),
+                            icon: const Icon(
+                              Icons.arrow_back_rounded,
+                              size: 22,
+                              color: AppTheme.foreground,
                             ),
-                            elevation: 0,
+                            label: const Text('Browse Items'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.sage,
+                              foregroundColor: AppTheme.foreground,
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              elevation: 0,
+                              textStyle: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () => context.go('/sell'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.deepGreen,
-                            side: BorderSide(
-                              color: AppTheme.gray.withValues(alpha: 0.6),
-                              width: 1,
+                      const SizedBox(height: 14),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: () => context.go('/sell'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.deepGreen,
+                              side: const BorderSide(color: buttonBorderColor),
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(999),
-                            ),
+                            child: const Text('Start Selling'),
                           ),
-                          child: const Text('Start Selling'),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => context.go('/donate'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppTheme.deepGreen,
-                                side: BorderSide(
-                                  color: AppTheme.gray.withValues(alpha: 0.6),
-                                  width: 1,
+                      const SizedBox(height: 14),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => context.go('/donate'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppTheme.deepGreen,
+                                  side: const BorderSide(color: buttonBorderColor),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                              ),
-                              child: const Text('Donate'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => context.go('/swap'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppTheme.deepGreen,
-                                side: BorderSide(
-                                  color: AppTheme.gray.withValues(alpha: 0.6),
-                                  width: 1,
-                                ),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(999),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.card_giftcard_rounded, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Donate'),
+                                  ],
                                 ),
                               ),
-                              child: const Text('Swap'),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => context.go('/swap'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppTheme.deepGreen,
+                                  side: const BorderSide(color: buttonBorderColor),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.compare_arrows_rounded, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Swap'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 20),
                       _FeaturedCard(listings: featured, vm: vm),
@@ -171,56 +219,73 @@ class HomeScreen extends StatelessWidget {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        height: 56,
-                        width: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                  padding: const EdgeInsets.fromLTRB(26, 10, 26, 16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardBg,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: AppTheme.gray.withValues(alpha: 0.55),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.asset(
-                            'assets/images/eco_llama.jpeg',
-                            fit: BoxFit.cover,
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          'assets/images/eco_llama.jpeg',
+                          height: 58,
+                          width: 58,
+                          fit: BoxFit.cover,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    'Hi! My name is Eco',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppTheme.foreground,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Icon(
+                                    Icons.eco_rounded,
+                                    size: 16,
+                                    color: AppTheme.sage,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Welcome to your sustainable fashion journey!',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.gray.withValues(
+                                    alpha: 0.78,
+                                  ),
+                                  height: 1.2,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Hi! My name is Eco 🌿',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.foreground,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Welcome to your sustainable fashion journey!',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.mutedForeground,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
