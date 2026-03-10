@@ -19,7 +19,14 @@ class ReEngagementNotificationManager {
   /// Initialize notification settings
   Future<void> initialize() async {
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings();
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
+    );
     const initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
@@ -30,7 +37,7 @@ class ReEngagementNotificationManager {
 
   /// Check inactivity and send notification if needed
   /// This should be called when app starts or periodically
-  Future<void> checkAndNotifyInactivity() async {
+  Future<bool> checkAndNotifyInactivity() async {
     final days = await _activityService.getDaysSinceLastActivity();
     
     // Context-aware check: Is user inactive for 5+ days?
@@ -38,14 +45,20 @@ class ReEngagementNotificationManager {
       // Check if we already sent a notification recently (avoid spam)
       final shouldSend = await _shouldSendNotification();
       if (shouldSend) {
-        await _sendReEngagementNotification();
+        await _sendReEngagementNotification(notificationId: 0);
         await _recordNotificationSent();
+        return true;
       }
     }
+
+    return false;
   }
 
   /// Send the re-engagement notification
-  Future<void> _sendReEngagementNotification() async {
+  Future<void> _sendReEngagementNotification({
+    required int notificationId,
+    String body = 'New items are waiting for you!',
+  }) async {
     const androidDetails = AndroidNotificationDetails(
       'reengagement_channel',
       'Re-engagement Notifications',
@@ -67,10 +80,21 @@ class ReEngagementNotificationManager {
     );
 
     await _notificationsPlugin.show(
-      0, // Notification ID
+      notificationId,
       'UniMarket',
-      'New items are waiting for you!',
+      body,
       notificationDetails,
+    );
+  }
+
+  /// Force-send a local notification for manual testing.
+  /// This bypasses inactivity and cooldown checks.
+  Future<void> sendTestNotification() async {
+    final now = DateTime.now();
+    final testId = now.millisecondsSinceEpoch.remainder(1000000);
+    await _sendReEngagementNotification(
+      notificationId: testId,
+      body: 'Test notification at ${now.hour}:${now.minute.toString().padLeft(2, '0')}.',
     );
   }
 

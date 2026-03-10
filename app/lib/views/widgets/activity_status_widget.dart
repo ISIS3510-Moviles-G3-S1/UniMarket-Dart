@@ -32,10 +32,14 @@ class _ActivityStatusWidgetState extends State<ActivityStatusWidget> {
   }
 
   Future<void> _testNotification() async {
-    await _notificationManager.checkAndNotifyInactivity();
+    await _notificationManager.sendTestNotification();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notification check completed')),
+        const SnackBar(
+          content: Text(
+            'Test notification sent. Check iOS Notification Center (swipe down).',
+          ),
+        ),
       );
     }
   }
