@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Notification permission for Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Internet permission for network images and potential future features -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    
     <application
         android:label="uni_market"
         android:name="${applicationName}"

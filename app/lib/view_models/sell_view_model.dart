@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../data/mock_data.dart';
+import '../core/user_activity_service.dart';
 
 class SellViewModel extends ChangeNotifier {
   String? _photoPath;
@@ -8,6 +9,7 @@ class SellViewModel extends ChangeNotifier {
   bool _aiDone = false;
   double _aiProgress = 0;
   bool _published = false;
+  final UserActivityService _activityService = UserActivityService();
 
   String _title = '';
   String _description = '';
@@ -119,6 +121,8 @@ class SellViewModel extends ChangeNotifier {
 
   void publish() {
     _published = true;
+    // Record user activity when selling an item
+    _activityService.recordActivity('sell');
     notifyListeners();
   }
 

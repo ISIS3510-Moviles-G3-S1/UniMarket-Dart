@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import '../models/item_detail.dart';
 import '../data/mock_data.dart';
+import '../core/user_activity_service.dart';
 
 class ItemDetailViewModel extends ChangeNotifier {
   ItemDetail? _item;
   int _activeImageIndex = 0;
   bool _saved = false;
   bool _messageSent = false;
+  final UserActivityService _activityService = UserActivityService();
 
   ItemDetail? get item => _item;
   int get activeImageIndex => _activeImageIndex;
@@ -33,11 +35,17 @@ class ItemDetailViewModel extends ChangeNotifier {
 
   void toggleSaved() {
     _saved = !_saved;
+    // Record user activity when saving/liking an item
+    if (_saved) {
+      _activityService.recordActivity('like');
+    }
     notifyListeners();
   }
 
   void sendMessage() {
     _messageSent = true;
+    // Record user activity when sending a message (indicates buying intent)
+    _activityService.recordActivity('buy');
     notifyListeners();
   }
 

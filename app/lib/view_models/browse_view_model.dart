@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../models/listing.dart';
 import '../data/mock_data.dart';
+import '../core/user_activity_service.dart';
 
 class BrowseViewModel extends ChangeNotifier {
   List<Listing> _listings = List.from(MockData.browseListings);
   final Map<int, bool> _savedItems = {};
+  final UserActivityService _activityService = UserActivityService();
   String _search = '';
   String _category = 'All';
   String _size = 'All';
@@ -72,6 +74,10 @@ class BrowseViewModel extends ChangeNotifier {
 
   void toggleSave(int id) {
     _savedItems[id] = !(_savedItems[id] ?? false);
+    // Record user activity when liking an item
+    if (_savedItems[id] == true) {
+      _activityService.recordActivity('like');
+    }
     notifyListeners();
   }
 

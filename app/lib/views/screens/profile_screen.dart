@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_theme.dart';
 import '../../view_models/profile_view_model.dart';
 import '../../models/profile_models.dart';
+import '../widgets/activity_status_widget.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -301,6 +302,10 @@ class ProfileScreen extends StatelessWidget {
                       ),
                 ),
               ),
+            ),
+            // Activity Status Testing Widget
+            const SliverToBoxAdapter(
+              child: ActivityStatusWidget(),
             ),
             SliverToBoxAdapter(
               child: Padding(
