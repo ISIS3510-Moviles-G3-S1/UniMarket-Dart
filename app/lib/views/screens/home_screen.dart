@@ -11,18 +11,20 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
+    final pillBorder = colorScheme.outline.withValues(alpha: 0.55);
     return Scaffold(
       body: Consumer<HomeViewModel>(
         builder: (context, vm, _) {
           final featured = vm.featured;
-          const buttonBorderColor = Color(0xFFD0D6D1);
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(16, 48, 16, 24),
-                  color: AppTheme.background,
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   child: Column(
                     children: [
                       Container(
@@ -76,7 +78,7 @@ class HomeScreen extends StatelessWidget {
                                     ))
                                 .copyWith(
                               height: 1.2,
-                              color: AppTheme.deepGreen,
+                              color: colorScheme.primary,
                             ),
                           ),
                           Text(
@@ -89,7 +91,7 @@ class HomeScreen extends StatelessWidget {
                                     ))
                                 .copyWith(
                               height: 1.2,
-                              color: AppTheme.sage,
+                              color: colorScheme.secondary,
                             ),
                           ),
                         ],
@@ -100,7 +102,7 @@ class HomeScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppTheme.foreground,
+                          color: colorScheme.onSurface,
                           height: 1.4,
                         ),
                       ),
@@ -111,15 +113,11 @@ class HomeScreen extends StatelessWidget {
                           width: double.infinity,
                           child: FilledButton.icon(
                             onPressed: () => context.go('/browse'),
-                            icon: const Icon(
-                              Icons.arrow_back_rounded,
-                              size: 22,
-                              color: AppTheme.foreground,
-                            ),
+                            icon: const Icon(Icons.arrow_back_rounded, size: 22),
                             label: const Text('Browse Items'),
                             style: FilledButton.styleFrom(
-                              backgroundColor: AppTheme.sage,
-                              foregroundColor: AppTheme.foreground,
+                              backgroundColor: colorScheme.primary,
+                              foregroundColor: colorScheme.onPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(999),
@@ -141,8 +139,8 @@ class HomeScreen extends StatelessWidget {
                           child: OutlinedButton(
                             onPressed: () => context.go('/sell'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.deepGreen,
-                              side: const BorderSide(color: buttonBorderColor),
+                              foregroundColor: colorScheme.primary,
+                              side: BorderSide(color: pillBorder),
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(999),
@@ -165,8 +163,8 @@ class HomeScreen extends StatelessWidget {
                               child: OutlinedButton(
                                 onPressed: () => context.go('/donate'),
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppTheme.deepGreen,
-                                  side: const BorderSide(color: buttonBorderColor),
+                                  foregroundColor: colorScheme.primary,
+                                  side: BorderSide(color: pillBorder),
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(
@@ -192,8 +190,8 @@ class HomeScreen extends StatelessWidget {
                               child: OutlinedButton(
                                 onPressed: () => context.go('/swap'),
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppTheme.deepGreen,
-                                  side: const BorderSide(color: buttonBorderColor),
+                                  foregroundColor: colorScheme.primary,
+                                  side: BorderSide(color: pillBorder),
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(
@@ -232,14 +230,14 @@ class HomeScreen extends StatelessWidget {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.cardBg,
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: AppTheme.gray.withValues(alpha: 0.55),
+                        color: colorScheme.outline.withValues(alpha: 0.45),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
+                          color: Colors.black.withValues(alpha: 0.12),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
@@ -265,7 +263,7 @@ class HomeScreen extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
-                                      color: AppTheme.foreground,
+                                      color: colorScheme.onSurface,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
@@ -281,9 +279,7 @@ class HomeScreen extends StatelessWidget {
                                 'Welcome to your sustainable fashion journey!',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.gray.withValues(
-                                    alpha: 0.78,
-                                  ),
+                                  color: mutedText,
                                   height: 1.2,
                                 ),
                               ),
@@ -311,6 +307,8 @@ class _FeaturedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final mutedText = colorScheme.onSurface.withValues(alpha: 0.70);
     if (listings.isEmpty) return const SizedBox.shrink();
     final item = listings.first;
     return Stack(
@@ -325,7 +323,7 @@ class _FeaturedCard extends StatelessWidget {
             fit: BoxFit.cover,
             placeholder:
                 (_, __) => Container(
-                  color: AppTheme.muted,
+                  color: colorScheme.surfaceContainerHighest,
                   child: const Center(child: CircularProgressIndicator()),
                 ),
             errorWidget:
@@ -338,11 +336,11 @@ class _FeaturedCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.cardBg,
+              color: colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black26,
+                  color: Colors.black.withValues(alpha: 0.16),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -362,14 +360,14 @@ class _FeaturedCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.foreground,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       'Size ${item.size} · ${item.style} · ${item.condition}',
                       style: TextStyle(
                         fontSize: 10,
-                        color: AppTheme.mutedForeground,
+                        color: mutedText,
                       ),
                     ),
                   ],
@@ -384,11 +382,11 @@ class _FeaturedCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppTheme.sage,
+              color: colorScheme.primary,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black26,
+                  color: Colors.black.withValues(alpha: 0.16),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -403,12 +401,12 @@ class _FeaturedCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.sageDark,
+                    color: colorScheme.onPrimary,
                   ),
                 ),
                 Text(
                   '${item.condition} ✓',
-                  style: TextStyle(fontSize: 10, color: AppTheme.sageDark),
+                  style: TextStyle(fontSize: 10, color: colorScheme.onPrimary),
                 ),
               ],
             ),

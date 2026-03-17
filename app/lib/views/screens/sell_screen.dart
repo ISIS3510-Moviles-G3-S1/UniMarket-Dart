@@ -31,6 +31,8 @@ class _PublishSuccess extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
     final tip = SellViewModel.randomSustainabilityTip;
     return Center(
       child: Padding(
@@ -54,7 +56,7 @@ class _PublishSuccess extends StatelessWidget {
             Text(
               tip,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.mutedForeground),
+              style: TextStyle(color: mutedText),
             ),
             const SizedBox(height: 16),
             Container(
@@ -74,7 +76,7 @@ class _PublishSuccess extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.foreground,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -84,8 +86,8 @@ class _PublishSuccess extends StatelessWidget {
             FilledButton(
               onPressed: () => vm.resetAfterPublish(),
               style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.deepGreen,
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
               ),
               child: const Text('List Another Item'),
             ),
@@ -103,6 +105,8 @@ class _SellForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -124,18 +128,21 @@ class _SellForm extends StatelessWidget {
                   'List an Item',
                   style:
                       Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                       ) ??
-                      const TextStyle(
+                      TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                       ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Upload a photo - our AI will tag it for you automatically',
-                  style: TextStyle(fontSize: 13, color: Colors.white70),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colorScheme.onPrimary.withValues(alpha: 0.80),
+                  ),
                 ),
               ],
             ),
@@ -150,7 +157,7 @@ class _SellForm extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.foreground,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -222,7 +229,7 @@ class _SellForm extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.foreground,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -236,10 +243,12 @@ class _SellForm extends StatelessWidget {
                           label: Text(c),
                           selected: selected,
                           onSelected: (_) => vm.condition = c,
-                          selectedColor: AppTheme.deepGreen,
+                          selectedColor: colorScheme.primary,
                           labelStyle: TextStyle(
                             color:
-                                selected ? Colors.white : AppTheme.foreground,
+                                selected
+                                    ? colorScheme.onPrimary
+                                    : colorScheme.onSurface,
                           ),
                         );
                       }).toList(),
@@ -250,7 +259,7 @@ class _SellForm extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.foreground,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -271,8 +280,8 @@ class _SellForm extends StatelessWidget {
                                   border: Border.all(
                                     color:
                                         selected
-                                            ? AppTheme.deepGreen
-                                            : AppTheme.muted,
+                                            ? colorScheme.primary
+                                            : colorScheme.outline,
                                   ),
                                 ),
                                 child: Column(
@@ -285,8 +294,8 @@ class _SellForm extends StatelessWidget {
                                         fontWeight: FontWeight.w600,
                                         color:
                                             selected
-                                                ? AppTheme.deepGreen
-                                                : AppTheme.foreground,
+                                                ? colorScheme.primary
+                                                : colorScheme.onSurface,
                                       ),
                                     ),
                                     Text(
@@ -295,8 +304,8 @@ class _SellForm extends StatelessWidget {
                                         fontSize: 11,
                                         color:
                                             selected
-                                                ? AppTheme.deepGreen
-                                                : AppTheme.mutedForeground,
+                                                ? colorScheme.primary
+                                                : mutedText,
                                       ),
                                     ),
                                   ],
@@ -313,8 +322,8 @@ class _SellForm extends StatelessWidget {
                   icon: const Icon(Icons.upload_rounded, size: 20),
                   label: const Text('Publish Listing'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.sage,
-                    foregroundColor: AppTheme.sageDark,
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     minimumSize: const Size(double.infinity, 48),
                   ),
@@ -335,6 +344,8 @@ class _PhotoUpload extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
     final hasPhoto = vm.photoPath != null && vm.photoPath!.isNotEmpty;
     return GestureDetector(
       onTap: () async {
@@ -348,10 +359,10 @@ class _PhotoUpload extends StatelessWidget {
         width: double.infinity,
         constraints: const BoxConstraints(minWidth: 320, maxWidth: 420),
         decoration: BoxDecoration(
-          color: AppTheme.deepGreen.withOpacity(0.08), // verde opaco
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppTheme.deepGreen, // borde verde oscuro
+            color: colorScheme.primary,
             width: 2,
           ),
         ),
@@ -373,21 +384,21 @@ class _PhotoUpload extends StatelessWidget {
                     Icon(
                       Icons.camera_alt_rounded,
                       size: 48,
-                      color: AppTheme.foreground, 
+                      color: colorScheme.onSurface,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Tap to upload photo',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.foreground,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       'JPG, PNG, WEBP up to 10MB',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.mutedForeground,
+                        color: mutedText,
                       ),
                     ),
                   ],
@@ -404,11 +415,12 @@ class _AiTaggingBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: AppTheme.muted),
+        border: Border.all(color: colorScheme.outline),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -434,8 +446,8 @@ class _AiTaggingBlock extends StatelessWidget {
             const SizedBox(height: 8),
             LinearProgressIndicator(
               value: vm.aiProgress / 100,
-              backgroundColor: AppTheme.muted,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accent),
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
           ],
           if (vm.aiDone) ...[
@@ -447,26 +459,26 @@ class _AiTaggingBlock extends StatelessWidget {
                 if (vm.size.isNotEmpty)
                   Chip(
                     label: Text('Size: ${vm.size}'),
-                    backgroundColor: AppTheme.cardBg,
+                    backgroundColor: colorScheme.surface,
                   ),
                 if (vm.color.isNotEmpty)
                   Chip(
                     label: Text('Color: ${vm.color}'),
-                    backgroundColor: AppTheme.cardBg,
+                    backgroundColor: colorScheme.surface,
                   ),
                 if (vm.category.isNotEmpty)
                   Chip(
                     label: Text('Category: ${vm.category}'),
-                    backgroundColor: AppTheme.cardBg,
+                    backgroundColor: colorScheme.surface,
                   ),
                 if (vm.style.isNotEmpty)
                   Chip(
                     label: Text('Style: ${vm.style}'),
-                    backgroundColor: AppTheme.cardBg,
+                    backgroundColor: colorScheme.surface,
                   ),
                 Chip(
                   label: Text('Condition: ${vm.condition}'),
-                  backgroundColor: AppTheme.cardBg,
+                  backgroundColor: colorScheme.surface,
                 ),
               ],
             ),
@@ -521,6 +533,7 @@ class _TextFieldState extends State<_TextField> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -529,7 +542,7 @@ class _TextFieldState extends State<_TextField> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppTheme.foreground,
+            color: colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 6),
@@ -539,7 +552,7 @@ class _TextFieldState extends State<_TextField> {
           decoration: InputDecoration(
             hintText: widget.hint,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: colorScheme.surface,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,

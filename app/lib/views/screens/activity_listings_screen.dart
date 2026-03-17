@@ -10,8 +10,10 @@ class ActivityListingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: DefaultTabController(
           length: 2,
@@ -27,20 +29,20 @@ class ActivityListingsScreen extends StatelessWidget {
                 child: Text(
                   'Activity & Listings',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: Colors.white,
+                            color: colorScheme.onPrimary,
                           ) ??
-                      const TextStyle(
+                      TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                       ),
                 ),
               ),
               const SizedBox(height: 8),
               TabBar(
-                labelColor: AppTheme.deepGreen,
-                unselectedLabelColor: AppTheme.mutedForeground,
-                indicatorColor: AppTheme.deepGreen,
+                labelColor: colorScheme.primary,
+                unselectedLabelColor: mutedText,
+                indicatorColor: colorScheme.primary,
                 tabs: const [
                   Tab(text: 'Activity Feed'),
                   Tab(text: 'My Listings'),
@@ -73,7 +75,7 @@ class ActivityListingsScreen extends StatelessWidget {
                                 a.time,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.mutedForeground,
+                                  color: mutedText,
                                 ),
                               ),
                               trailing: Container(
@@ -118,7 +120,6 @@ class ActivityListingsScreen extends StatelessWidget {
                                       const Icon(
                                         Icons.add_rounded,
                                         size: 40,
-                                        color: AppTheme.mutedForeground,
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
@@ -126,7 +127,7 @@ class ActivityListingsScreen extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
-                                          color: AppTheme.mutedForeground,
+                                          color: mutedText,
                                         ),
                                       ),
                                     ],
