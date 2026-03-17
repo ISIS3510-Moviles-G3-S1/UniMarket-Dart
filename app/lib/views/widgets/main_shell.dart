@@ -9,11 +9,14 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final navUnselected = colorScheme.onSurface.withValues(alpha: 0.70);
+    final navUnselected =
+        isDark ? colorScheme.onSurface.withValues(alpha: 0.70) : AppTheme.deepGreen;
     return Scaffold(
       body: navigationShell,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor:
+          isDark ? Theme.of(context).scaffoldBackgroundColor : AppTheme.background,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Transform.translate(
         offset: const Offset(0, 20),
@@ -23,7 +26,10 @@ class MainShell extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: colorScheme.primary.withValues(alpha: 0.30),
+              color:
+                  isDark
+                      ? colorScheme.primary.withValues(alpha: 0.30)
+                      : AppTheme.deepGreen.withOpacity(0.25),
               width: 4,
             ),
             boxShadow: [
@@ -35,8 +41,8 @@ class MainShell extends StatelessWidget {
             ],
           ),
           child: FloatingActionButton(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
+            backgroundColor: AppTheme.sage,
+            foregroundColor: AppTheme.sageDark,
             elevation: 0,
             shape: const CircleBorder(),
             onPressed: () => context.go('/sell'),
@@ -45,7 +51,7 @@ class MainShell extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomAppBar(
-        color: colorScheme.surface,
+        color: isDark ? colorScheme.surface : Colors.white,
         elevation: 4,
         shape: const CircularNotchedRectangle(),
         notchMargin: 4,
@@ -58,7 +64,7 @@ class MainShell extends StatelessWidget {
                 icon: Icons.home_rounded,
                 index: 0,
                 currentIndex: navigationShell.currentIndex,
-                selectedColor: colorScheme.primary,
+                selectedColor: AppTheme.sage,
                 unselectedColor: navUnselected,
                 onTap: () => navigationShell.goBranch(0),
               ),
@@ -66,7 +72,7 @@ class MainShell extends StatelessWidget {
                 icon: Icons.search_rounded,
                 index: 1,
                 currentIndex: navigationShell.currentIndex,
-                selectedColor: colorScheme.primary,
+                selectedColor: AppTheme.sage,
                 unselectedColor: navUnselected,
                 onTap: () => navigationShell.goBranch(1),
               ),
@@ -77,7 +83,7 @@ class MainShell extends StatelessWidget {
                   icon: Icons.list_rounded,
                   index: 3,
                   currentIndex: navigationShell.currentIndex,
-                  selectedColor: colorScheme.primary,
+                  selectedColor: AppTheme.sage,
                   unselectedColor: navUnselected,
                   onTap: () => navigationShell.goBranch(3),
                 ),
@@ -86,7 +92,7 @@ class MainShell extends StatelessWidget {
                 icon: Icons.person_rounded,
                 index: 4,
                 currentIndex: navigationShell.currentIndex,
-                selectedColor: colorScheme.primary,
+                selectedColor: AppTheme.sage,
                 unselectedColor: navUnselected,
                 onTap: () => navigationShell.goBranch(4),
               ),

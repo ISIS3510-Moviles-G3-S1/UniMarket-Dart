@@ -31,8 +31,10 @@ class _PublishSuccess extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
+    final mutedText =
+        isDark ? colorScheme.onSurface.withValues(alpha: 0.72) : AppTheme.mutedForeground;
     final tip = SellViewModel.randomSustainabilityTip;
     return Center(
       child: Padding(
@@ -86,8 +88,8 @@ class _PublishSuccess extends StatelessWidget {
             FilledButton(
               onPressed: () => vm.resetAfterPublish(),
               style: FilledButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
+                backgroundColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
+                foregroundColor: isDark ? colorScheme.onPrimary : Colors.white,
               ),
               child: const Text('List Another Item'),
             ),
@@ -105,8 +107,10 @@ class _SellForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
+    final mutedText =
+        isDark ? colorScheme.onSurface.withValues(alpha: 0.72) : AppTheme.mutedForeground;
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -128,21 +132,18 @@ class _SellForm extends StatelessWidget {
                   'List an Item',
                   style:
                       Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: colorScheme.onPrimary,
+                        color: Colors.white,
                       ) ??
-                      TextStyle(
+                      const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: colorScheme.onPrimary,
+                        color: Colors.white,
                       ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Upload a photo - our AI will tag it for you automatically',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: colorScheme.onPrimary.withValues(alpha: 0.80),
-                  ),
+                  style: const TextStyle(fontSize: 13, color: Colors.white70),
                 ),
               ],
             ),
@@ -243,12 +244,12 @@ class _SellForm extends StatelessWidget {
                           label: Text(c),
                           selected: selected,
                           onSelected: (_) => vm.condition = c,
-                          selectedColor: colorScheme.primary,
+                          selectedColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
                           labelStyle: TextStyle(
                             color:
                                 selected
-                                    ? colorScheme.onPrimary
-                                    : colorScheme.onSurface,
+                                    ? (isDark ? colorScheme.onPrimary : Colors.white)
+                                    : (isDark ? colorScheme.onSurface : AppTheme.foreground),
                           ),
                         );
                       }).toList(),
@@ -280,8 +281,8 @@ class _SellForm extends StatelessWidget {
                                   border: Border.all(
                                     color:
                                         selected
-                                            ? colorScheme.primary
-                                            : colorScheme.outline,
+                                            ? (isDark ? colorScheme.primary : AppTheme.deepGreen)
+                                            : (isDark ? colorScheme.outline : AppTheme.muted),
                                   ),
                                 ),
                                 child: Column(
@@ -294,8 +295,8 @@ class _SellForm extends StatelessWidget {
                                         fontWeight: FontWeight.w600,
                                         color:
                                             selected
-                                                ? colorScheme.primary
-                                                : colorScheme.onSurface,
+                                                ? (isDark ? colorScheme.primary : AppTheme.deepGreen)
+                                                : (isDark ? colorScheme.onSurface : AppTheme.foreground),
                                       ),
                                     ),
                                     Text(
@@ -304,7 +305,7 @@ class _SellForm extends StatelessWidget {
                                         fontSize: 11,
                                         color:
                                             selected
-                                                ? colorScheme.primary
+                                                ? (isDark ? colorScheme.primary : AppTheme.deepGreen)
                                                 : mutedText,
                                       ),
                                     ),
@@ -322,8 +323,8 @@ class _SellForm extends StatelessWidget {
                   icon: const Icon(Icons.upload_rounded, size: 20),
                   label: const Text('Publish Listing'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
+                    backgroundColor: isDark ? colorScheme.primary : AppTheme.sage,
+                    foregroundColor: isDark ? colorScheme.onPrimary : AppTheme.sageDark,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     minimumSize: const Size(double.infinity, 48),
                   ),

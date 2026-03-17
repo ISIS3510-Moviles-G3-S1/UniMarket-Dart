@@ -14,8 +14,10 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
+    final mutedText =
+        isDark ? colorScheme.onSurface.withValues(alpha: 0.72) : AppTheme.mutedForeground;
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
@@ -93,7 +95,7 @@ class ProfileScreen extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w800,
-                                    color: colorScheme.primary,
+                                    color: isDark ? colorScheme.onSurface : AppTheme.deepGreen,
                                   ),
                                 ),
                                 Text(
@@ -266,7 +268,7 @@ class ProfileScreen extends StatelessWidget {
                                 minHeight: 10,
                                 backgroundColor: colorScheme.surfaceContainerHighest,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  colorScheme.primary,
+                                  isDark ? colorScheme.primary : AppTheme.deepGreen,
                                 ),
                               ),
                               const SizedBox(height: 6),
@@ -345,9 +347,9 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       TabBar(
-                        labelColor: colorScheme.primary,
+                        labelColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
                         unselectedLabelColor: mutedText,
-                        indicatorColor: colorScheme.primary,
+                        indicatorColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
                         tabs: const [
                           Tab(text: 'Activity Feed'),
                           Tab(text: 'My Listings'),
@@ -622,6 +624,8 @@ class _BadgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final isLocked = !badge.earned;
 
     return Card(
@@ -688,8 +692,12 @@ class _BadgeCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 color: isLocked
-                    ? const Color(0xFF9EB0B3)
-                    : AppTheme.mutedForeground,
+                    ? (isDark
+                        ? colorScheme.onSurface.withValues(alpha: 0.46)
+                        : const Color(0xFF9EB0B3))
+                    : (isDark
+                        ? colorScheme.onSurface.withValues(alpha: 0.72)
+                        : AppTheme.mutedForeground),
               ),
             ),
             const SizedBox(height: 10),
@@ -712,8 +720,12 @@ class _BadgeCard extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: isLocked
-                      ? const Color(0xFF9CB1B5)
-                      : AppTheme.accent,
+                      ? (isDark
+                          ? colorScheme.onSurface.withValues(alpha: 0.52)
+                          : const Color(0xFF9CB1B5))
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.90)
+                          : AppTheme.accent),
                 ),
               ),
             ),

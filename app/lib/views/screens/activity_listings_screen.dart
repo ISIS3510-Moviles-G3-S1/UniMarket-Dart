@@ -10,10 +10,13 @@ class ActivityListingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
+    final mutedText =
+        isDark ? colorScheme.onSurface.withValues(alpha: 0.72) : AppTheme.mutedForeground;
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor:
+          isDark ? Theme.of(context).scaffoldBackgroundColor : AppTheme.background,
       body: SafeArea(
         child: DefaultTabController(
           length: 2,
@@ -40,9 +43,9 @@ class ActivityListingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               TabBar(
-                labelColor: colorScheme.primary,
+                labelColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
                 unselectedLabelColor: mutedText,
-                indicatorColor: colorScheme.primary,
+                indicatorColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
                 tabs: const [
                   Tab(text: 'Activity Feed'),
                   Tab(text: 'My Listings'),
@@ -84,10 +87,16 @@ class ActivityListingsScreen extends StatelessWidget {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.sage.withValues(alpha: 0.2),
+                                  color:
+                                      isDark
+                                          ? AppTheme.sage.withValues(alpha: 0.28)
+                                          : AppTheme.sage.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: AppTheme.sage.withValues(alpha: 0.3),
+                                    color:
+                                        isDark
+                                            ? AppTheme.sage.withValues(alpha: 0.48)
+                                            : AppTheme.sage.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: Text(
@@ -95,7 +104,10 @@ class ActivityListingsScreen extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.sageDark,
+                                    color:
+                                        isDark
+                                            ? Colors.white.withValues(alpha: 0.92)
+                                            : AppTheme.sageDark,
                                   ),
                                 ),
                               ),

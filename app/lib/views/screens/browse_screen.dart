@@ -12,8 +12,10 @@ class BrowseScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
+    final mutedText =
+        isDark ? colorScheme.onSurface.withValues(alpha: 0.72) : AppTheme.mutedForeground;
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -25,12 +27,12 @@ class BrowseScreen extends StatelessWidget {
             child: Text(
               'Browse',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: colorScheme.onPrimary,
+                    color: Colors.white,
                   ) ??
-                  TextStyle(
+                  const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: colorScheme.onPrimary,
+                    color: Colors.white,
                   ),
             ),
           ),
@@ -59,11 +61,14 @@ class BrowseScreen extends StatelessWidget {
                                 decoration: InputDecoration(
                                   hintText: 'Search items...',
                                   filled: true,
-                                  fillColor: colorScheme.surface,
+                                  fillColor: isDark ? colorScheme.surface : Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(999),
                                     borderSide: BorderSide(
-                                      color: colorScheme.outline.withValues(alpha: 0.65),
+                                      color:
+                                          isDark
+                                              ? colorScheme.outline.withValues(alpha: 0.65)
+                                              : AppTheme.gray.withValues(alpha: 0.8),
                                     ),
                                   ),
                                   contentPadding: const EdgeInsets.symmetric(
@@ -77,10 +82,14 @@ class BrowseScreen extends StatelessWidget {
                             IconButton(
                               onPressed: () => vm.aiSearch = !vm.aiSearch,
                               style: IconButton.styleFrom(
-                                backgroundColor: colorScheme.surface,
-                                foregroundColor: colorScheme.primary,
+                                backgroundColor:
+                                    isDark ? colorScheme.surface : Colors.white,
+                                foregroundColor: AppTheme.deepGreen,
                                 side: BorderSide(
-                                  color: colorScheme.outline.withValues(alpha: 0.65),
+                                  color:
+                                      isDark
+                                          ? colorScheme.outline.withValues(alpha: 0.65)
+                                          : AppTheme.gray.withValues(alpha: 0.8),
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(999),
@@ -91,10 +100,14 @@ class BrowseScreen extends StatelessWidget {
                             IconButton(
                               onPressed: () => vm.showFilters = true,
                               style: IconButton.styleFrom(
-                                backgroundColor: colorScheme.surface,
-                                foregroundColor: colorScheme.primary,
+                                backgroundColor:
+                                    isDark ? colorScheme.surface : Colors.white,
+                                foregroundColor: AppTheme.deepGreen,
                                 side: BorderSide(
-                                  color: colorScheme.outline.withValues(alpha: 0.65),
+                                  color:
+                                      isDark
+                                          ? colorScheme.outline.withValues(alpha: 0.65)
+                                          : AppTheme.gray.withValues(alpha: 0.8),
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(999),
@@ -110,22 +123,35 @@ class BrowseScreen extends StatelessWidget {
                           margin: const EdgeInsets.only(left: 12, right: 12, top: 8),
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppTheme.accent.withValues(alpha: 0.2),
+                            color:
+                                isDark
+                                    ? colorScheme.surfaceContainerHigh
+                                    : AppTheme.accent.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: AppTheme.accent.withValues(alpha: 0.4),
+                              color:
+                                  isDark
+                                      ? colorScheme.outline.withValues(alpha: 0.7)
+                                      : AppTheme.accent.withValues(alpha: 0.4),
                             ),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.auto_awesome, size: 16, color: colorScheme.onPrimary),
+                              Icon(
+                                Icons.auto_awesome,
+                                size: 16,
+                                color: isDark ? colorScheme.primary : Colors.white,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'Upload a photo to find similar items',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: colorScheme.onPrimary,
+                                    color:
+                                        isDark
+                                            ? colorScheme.onSurface
+                                            : Colors.white,
                                   ),
                                 ),
                               ),
@@ -136,7 +162,10 @@ class BrowseScreen extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.accent,
+                                    color:
+                                        isDark
+                                            ? colorScheme.primary
+                                            : AppTheme.accent,
                                   ),
                                 ),
                               ),
@@ -232,8 +261,10 @@ class _ListingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final mutedText = colorScheme.onSurface.withValues(alpha: 0.70);
+    final mutedText =
+        isDark ? colorScheme.onSurface.withValues(alpha: 0.70) : AppTheme.mutedForeground;
     return GestureDetector(
       onTap: () => context.push('/item/${listing.id}'),
       child: Card(
@@ -251,7 +282,7 @@ class _ListingCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     placeholder:
                         (_, __) => Container(
-                          color: colorScheme.surfaceContainerHighest,
+                          color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.muted,
                           child: const Center(
                             child: CircularProgressIndicator(),
                           ),
@@ -267,7 +298,10 @@ class _ListingCard extends StatelessWidget {
                       onTap: () => vm.toggleSave(listing.id),
                       child: CircleAvatar(
                         radius: 16,
-                        backgroundColor: colorScheme.surface.withValues(alpha: 0.92),
+                        backgroundColor:
+                            isDark
+                                ? colorScheme.surface.withValues(alpha: 0.92)
+                                : Colors.white.withValues(alpha: 0.9),
                         child: Icon(
                           vm.isSaved(listing.id)
                               ? Icons.favorite_rounded
@@ -290,9 +324,11 @@ class _ListingCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.surface,
+                        color: isDark ? colorScheme.surface : Colors.white,
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: colorScheme.outline),
+                        border: Border.all(
+                          color: isDark ? colorScheme.outline : AppTheme.foreground,
+                        ),
                       ),
                       child: Text(
                         listing.condition,

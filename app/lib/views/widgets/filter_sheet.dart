@@ -10,14 +10,21 @@ class FilterSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final sectionText =
+        isDark ? colorScheme.onSurface.withValues(alpha: 0.78) : AppTheme.mutedForeground;
+    final chipBg = isDark ? colorScheme.surfaceContainerHigh : null;
+    final chipBorderColor =
+        isDark ? colorScheme.outline.withValues(alpha: 0.60) : null;
     return GestureDetector(
       onTap: () => vm.showFilters = false,
       child: Container(
-        color: Colors.black54,
+        color: Colors.black.withValues(alpha: isDark ? 0.68 : 0.54),
         child: Align(
           alignment: Alignment.centerRight,
           child: Material(
-            color: AppTheme.background,
+            color: isDark ? colorScheme.surface : AppTheme.background,
             child: SizedBox(
               width: 280,
               child: ListView(
@@ -31,7 +38,7 @@ class FilterSheet extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.foreground,
+                          color: isDark ? colorScheme.onSurface : AppTheme.foreground,
                         ),
                       ),
                       IconButton(
@@ -55,11 +62,18 @@ class FilterSheet extends StatelessWidget {
                                 selected: selected,
                                 onSelected: (_) => vm.category = c,
                                 selectedColor: AppTheme.sage,
+                                backgroundColor: chipBg,
+                                side:
+                                    chipBorderColor == null
+                                        ? null
+                                        : BorderSide(color: chipBorderColor),
                                 labelStyle: TextStyle(
                                   color:
                                       selected
                                           ? AppTheme.sageDark
-                                          : AppTheme.foreground,
+                                          : (isDark
+                                              ? colorScheme.onSurface
+                                              : AppTheme.foreground),
                                   fontSize: 12,
                                 ),
                               );
@@ -81,11 +95,18 @@ class FilterSheet extends StatelessWidget {
                                 selected: selected,
                                 onSelected: (_) => vm.size = s,
                                 selectedColor: AppTheme.sage,
+                                backgroundColor: chipBg,
+                                side:
+                                    chipBorderColor == null
+                                        ? null
+                                        : BorderSide(color: chipBorderColor),
                                 labelStyle: TextStyle(
                                   color:
                                       selected
                                           ? AppTheme.sageDark
-                                          : AppTheme.foreground,
+                                          : (isDark
+                                              ? colorScheme.onSurface
+                                              : AppTheme.foreground),
                                   fontSize: 12,
                                 ),
                               );
@@ -107,11 +128,18 @@ class FilterSheet extends StatelessWidget {
                                 selected: selected,
                                 onSelected: (_) => vm.condition = c,
                                 selectedColor: AppTheme.sage,
+                                backgroundColor: chipBg,
+                                side:
+                                    chipBorderColor == null
+                                        ? null
+                                        : BorderSide(color: chipBorderColor),
                                 labelStyle: TextStyle(
                                   color:
                                       selected
                                           ? AppTheme.sageDark
-                                          : AppTheme.foreground,
+                                          : (isDark
+                                              ? colorScheme.onSurface
+                                              : AppTheme.foreground),
                                   fontSize: 12,
                                 ),
                               );
@@ -163,7 +191,8 @@ class FilterSheet extends StatelessWidget {
                       onPressed: () => vm.showFilters = false,
                       style: FilledButton.styleFrom(
                         backgroundColor: AppTheme.accent,
-                        foregroundColor: AppTheme.foreground,
+                        foregroundColor:
+                            isDark ? colorScheme.onSurface : AppTheme.foreground,
                       ),
                       child: const Text('Apply Filters'),
                     ),
@@ -186,6 +215,8 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -196,7 +227,10 @@ class _Section extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppTheme.mutedForeground,
+              color:
+                  isDark
+                      ? colorScheme.onSurface.withValues(alpha: 0.78)
+                      : AppTheme.mutedForeground,
             ),
           ),
           const SizedBox(height: 8),
