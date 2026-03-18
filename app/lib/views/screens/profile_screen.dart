@@ -705,12 +705,16 @@ class _BadgeCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: isLocked
-                    ? const Color(0xFFD6DDDB)
+                    ? (isDark
+                        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.9)
+                        : const Color(0xFFD6DDDB))
                     : AppTheme.accent.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
                   color: isLocked
-                      ? const Color(0xFFD6DDDB)
+                      ? (isDark
+                          ? colorScheme.outline.withValues(alpha: 0.7)
+                          : const Color(0xFFD6DDDB))
                       : AppTheme.accent.withValues(alpha: 0.3),
                 ),
               ),
@@ -721,7 +725,7 @@ class _BadgeCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   color: isLocked
                       ? (isDark
-                          ? colorScheme.onSurface.withValues(alpha: 0.52)
+                          ? colorScheme.onSurface.withValues(alpha: 0.92)
                           : const Color(0xFF9CB1B5))
                       : (isDark
                           ? Colors.white.withValues(alpha: 0.90)
