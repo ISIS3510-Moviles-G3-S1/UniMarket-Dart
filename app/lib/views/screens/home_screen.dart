@@ -11,18 +11,26 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final mutedText =
+      isDark ? colorScheme.onSurface.withValues(alpha: 0.72) : AppTheme.mutedForeground;
+    final pillBorder =
+      isDark ? colorScheme.outline.withValues(alpha: 0.55) : const Color(0xFFD0D6D1);
     return Scaffold(
       body: Consumer<HomeViewModel>(
         builder: (context, vm, _) {
           final featured = vm.featured;
-          const buttonBorderColor = Color(0xFFD0D6D1);
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(16, 48, 16, 24),
-                  color: AppTheme.background,
+                  color:
+                      isDark
+                          ? Theme.of(context).scaffoldBackgroundColor
+                          : AppTheme.background,
                   child: Column(
                     children: [
                       Container(
@@ -89,7 +97,7 @@ class HomeScreen extends StatelessWidget {
                                     ))
                                 .copyWith(
                               height: 1.2,
-                              color: AppTheme.sage,
+                              color: colorScheme.secondary,
                             ),
                           ),
                         ],
@@ -100,7 +108,7 @@ class HomeScreen extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppTheme.foreground,
+                          color: isDark ? colorScheme.onSurface : AppTheme.foreground,
                           height: 1.4,
                         ),
                       ),
@@ -111,11 +119,7 @@ class HomeScreen extends StatelessWidget {
                           width: double.infinity,
                           child: FilledButton.icon(
                             onPressed: () => context.go('/browse'),
-                            icon: const Icon(
-                              Icons.arrow_back_rounded,
-                              size: 22,
-                              color: AppTheme.foreground,
-                            ),
+                            icon: const Icon(Icons.arrow_back_rounded, size: 22),
                             label: const Text('Browse Items'),
                             style: FilledButton.styleFrom(
                               backgroundColor: AppTheme.sage,
@@ -142,7 +146,7 @@ class HomeScreen extends StatelessWidget {
                             onPressed: () => context.go('/sell'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppTheme.deepGreen,
-                              side: const BorderSide(color: buttonBorderColor),
+                              side: BorderSide(color: pillBorder),
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(999),
@@ -166,7 +170,7 @@ class HomeScreen extends StatelessWidget {
                                 onPressed: () => context.go('/donate'),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppTheme.deepGreen,
-                                  side: const BorderSide(color: buttonBorderColor),
+                                  side: BorderSide(color: pillBorder),
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(
@@ -193,7 +197,7 @@ class HomeScreen extends StatelessWidget {
                                 onPressed: () => context.go('/swap'),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppTheme.deepGreen,
-                                  side: const BorderSide(color: buttonBorderColor),
+                                  side: BorderSide(color: pillBorder),
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(
@@ -232,14 +236,20 @@ class HomeScreen extends StatelessWidget {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.cardBg,
+                      color: isDark ? colorScheme.surface : AppTheme.cardBg,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: AppTheme.gray.withValues(alpha: 0.55),
+                        color:
+                            isDark
+                                ? colorScheme.outline.withValues(alpha: 0.45)
+                                : AppTheme.gray.withValues(alpha: 0.55),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
+                          color:
+                              isDark
+                                  ? Colors.black.withValues(alpha: 0.12)
+                                  : Colors.black.withValues(alpha: 0.03),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
@@ -265,7 +275,7 @@ class HomeScreen extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
-                                      color: AppTheme.foreground,
+                                      color: isDark ? colorScheme.onSurface : AppTheme.foreground,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
@@ -281,9 +291,7 @@ class HomeScreen extends StatelessWidget {
                                 'Welcome to your sustainable fashion journey!',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.gray.withValues(
-                                    alpha: 0.78,
-                                  ),
+                                  color: mutedText,
                                   height: 1.2,
                                 ),
                               ),
@@ -311,6 +319,10 @@ class _FeaturedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final mutedText =
+        isDark ? colorScheme.onSurface.withValues(alpha: 0.70) : AppTheme.mutedForeground;
     if (listings.isEmpty) return const SizedBox.shrink();
     final item = listings.first;
     return Stack(
@@ -325,7 +337,7 @@ class _FeaturedCard extends StatelessWidget {
             fit: BoxFit.cover,
             placeholder:
                 (_, __) => Container(
-                  color: AppTheme.muted,
+                  color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.muted,
                   child: const Center(child: CircularProgressIndicator()),
                 ),
             errorWidget:
@@ -338,11 +350,14 @@ class _FeaturedCard extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.cardBg,
+              color: isDark ? colorScheme.surface : AppTheme.cardBg,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black26,
+                  color:
+                      isDark
+                          ? Colors.black.withValues(alpha: 0.16)
+                          : Colors.black26,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -362,14 +377,14 @@ class _FeaturedCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.foreground,
+                        color: isDark ? colorScheme.onSurface : AppTheme.foreground,
                       ),
                     ),
                     Text(
                       'Size ${item.size} · ${item.style} · ${item.condition}',
                       style: TextStyle(
                         fontSize: 10,
-                        color: AppTheme.mutedForeground,
+                        color: mutedText,
                       ),
                     ),
                   ],
@@ -388,7 +403,10 @@ class _FeaturedCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black26,
+                  color:
+                      isDark
+                          ? Colors.black.withValues(alpha: 0.16)
+                          : Colors.black26,
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),

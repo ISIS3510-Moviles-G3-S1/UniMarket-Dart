@@ -14,6 +14,10 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final mutedText =
+        isDark ? colorScheme.onSurface.withValues(alpha: 0.72) : AppTheme.mutedForeground;
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
@@ -30,12 +34,12 @@ class ProfileScreen extends StatelessWidget {
                   'Profile',
                   style:
                       Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                       ) ??
-                      const TextStyle(
+                      TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                       ),
                 ),
               ),
@@ -47,10 +51,10 @@ class ProfileScreen extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: colorScheme.surface,
                         border: Border(
                           bottom: BorderSide(
-                            color: AppTheme.deepGreen.withValues(alpha: 0.8),
+                            color: colorScheme.outline.withValues(alpha: 0.60),
                           ),
                         ),
                       ),
@@ -88,17 +92,17 @@ class ProfileScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   vm.profileName,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w800,
-                                    color: AppTheme.deepGreen,
+                                    color: isDark ? colorScheme.onSurface : AppTheme.deepGreen,
                                   ),
                                 ),
                                 Text(
                                   '${vm.profileUniversity} · Member since ${vm.profileSince}',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: AppTheme.deepGreen.withValues(alpha: 0.85),
+                                    color: mutedText,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -115,14 +119,14 @@ class ProfileScreen extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
-                                        color: AppTheme.deepGreen.withValues(alpha: 0.92),
+                                        color: colorScheme.onSurface,
                                       ),
                                     ),
                                     Text(
                                       ' · ${vm.profileTransactions} transactions',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: AppTheme.deepGreen.withValues(alpha: 0.76),
+                                        color: mutedText,
                                       ),
                                     ),
                                   ],
@@ -149,11 +153,11 @@ class ProfileScreen extends StatelessWidget {
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -180,7 +184,7 @@ class ProfileScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.foreground,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -188,7 +192,7 @@ class ProfileScreen extends StatelessWidget {
                             "You've sold 3 items this month. You're just 220 XP away from Level 5 - Sustainability Star. Keep it up to unlock new badges and rewards!",
                             style: TextStyle(
                               fontSize: 13,
-                              color: AppTheme.mutedForeground,
+                              color: mutedText,
                               height: 1.4,
                             ),
                           ),
@@ -215,7 +219,7 @@ class ProfileScreen extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: AppTheme.mutedForeground,
+                                  color: mutedText,
                                 ),
                               ),
                               Text(
@@ -223,7 +227,7 @@ class ProfileScreen extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: AppTheme.foreground,
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                               if (vm.nextLevel != null) ...[
@@ -237,7 +241,7 @@ class ProfileScreen extends StatelessWidget {
                                         'Next up',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: AppTheme.mutedForeground,
+                                          color: mutedText,
                                         ),
                                       ),
                                       Text(
@@ -251,7 +255,7 @@ class ProfileScreen extends StatelessWidget {
                                         '${vm.nextLevel!.minXp - vm.xp} XP to go',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: AppTheme.mutedForeground,
+                                          color: mutedText,
                                         ),
                                       ),
                                     ],
@@ -262,9 +266,9 @@ class ProfileScreen extends StatelessWidget {
                               LinearProgressIndicator(
                                 value: vm.levelProgress / 100,
                                 minHeight: 10,
-                                backgroundColor: AppTheme.muted,
+                                backgroundColor: colorScheme.surfaceContainerHighest,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppTheme.deepGreen,
+                                  isDark ? colorScheme.primary : AppTheme.deepGreen,
                                 ),
                               ),
                               const SizedBox(height: 6),
@@ -276,7 +280,7 @@ class ProfileScreen extends StatelessWidget {
                                     '${vm.currentLevel.minXp} XP',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: AppTheme.mutedForeground,
+                                      color: mutedText,
                                     ),
                                   ),
                                   Text(
@@ -290,7 +294,7 @@ class ProfileScreen extends StatelessWidget {
                                     vm.nextLevel?.minXp.toString() ?? 'MAX',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: AppTheme.mutedForeground,
+                                      color: mutedText,
                                     ),
                                   ),
                                 ],
@@ -343,9 +347,9 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       TabBar(
-                        labelColor: AppTheme.deepGreen,
-                        unselectedLabelColor: AppTheme.mutedForeground,
-                        indicatorColor: AppTheme.deepGreen,
+                        labelColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
+                        unselectedLabelColor: mutedText,
+                        indicatorColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
                         tabs: const [
                           Tab(text: 'Activity Feed'),
                           Tab(text: 'My Listings'),
@@ -384,7 +388,7 @@ class ProfileScreen extends StatelessWidget {
                                             a.time,
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: AppTheme.mutedForeground,
+                                              color: mutedText,
                                             ),
                                           ),
                                           trailing: Container(
@@ -620,6 +624,8 @@ class _BadgeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     final isLocked = !badge.earned;
 
     return Card(
@@ -686,8 +692,12 @@ class _BadgeCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 color: isLocked
-                    ? const Color(0xFF9EB0B3)
-                    : AppTheme.mutedForeground,
+                    ? (isDark
+                        ? colorScheme.onSurface.withValues(alpha: 0.46)
+                        : const Color(0xFF9EB0B3))
+                    : (isDark
+                        ? colorScheme.onSurface.withValues(alpha: 0.72)
+                        : AppTheme.mutedForeground),
               ),
             ),
             const SizedBox(height: 10),
@@ -695,12 +705,16 @@ class _BadgeCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: isLocked
-                    ? const Color(0xFFD6DDDB)
+                    ? (isDark
+                        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.9)
+                        : const Color(0xFFD6DDDB))
                     : AppTheme.accent.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
                   color: isLocked
-                      ? const Color(0xFFD6DDDB)
+                      ? (isDark
+                          ? colorScheme.outline.withValues(alpha: 0.7)
+                          : const Color(0xFFD6DDDB))
                       : AppTheme.accent.withValues(alpha: 0.3),
                 ),
               ),
@@ -710,8 +724,12 @@ class _BadgeCard extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: isLocked
-                      ? const Color(0xFF9CB1B5)
-                      : AppTheme.accent,
+                      ? (isDark
+                          ? colorScheme.onSurface.withValues(alpha: 0.92)
+                          : const Color(0xFF9CB1B5))
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.90)
+                          : AppTheme.accent),
                 ),
               ),
             ),
