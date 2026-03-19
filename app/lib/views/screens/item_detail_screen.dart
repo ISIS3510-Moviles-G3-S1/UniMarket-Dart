@@ -180,6 +180,8 @@ class _InfoSection extends StatelessWidget {
     final bodyTextColor = isDark ? colorScheme.onSurface : AppTheme.foreground;
     final secondaryTextColor =
       isDark ? colorScheme.onSurface.withValues(alpha: 0.76) : AppTheme.mutedForeground;
+    // Chips in this section use a white background, so force dark text for readability.
+    final chipTextColor = isDark ? AppTheme.black : AppTheme.foreground;
     final borderColor = isDark ? colorScheme.outline : AppTheme.foreground;
     final cardColor = isDark ? colorScheme.surface : AppTheme.cardBg;
     final scoreLabel =
@@ -254,7 +256,7 @@ class _InfoSection extends StatelessWidget {
             Chip(
               label: Text(
                 item.condition,
-                style: TextStyle(fontWeight: FontWeight.w600, color: bodyTextColor),
+                style: TextStyle(fontWeight: FontWeight.w600, color: chipTextColor),
               ),
               backgroundColor: AppTheme.cardBg,
               side: BorderSide(color: borderColor),
@@ -296,7 +298,7 @@ class _InfoSection extends StatelessWidget {
             Chip(
               label: Text(
                 'Size ${item.size}',
-                style: TextStyle(fontWeight: FontWeight.w600, color: bodyTextColor),
+                style: TextStyle(fontWeight: FontWeight.w600, color: chipTextColor),
               ),
               backgroundColor: AppTheme.cardBg,
               side: BorderSide(color: borderColor),
@@ -305,7 +307,7 @@ class _InfoSection extends StatelessWidget {
             Chip(
               label: Text(
                 item.color,
-                style: TextStyle(fontWeight: FontWeight.w600, color: bodyTextColor),
+                style: TextStyle(fontWeight: FontWeight.w600, color: chipTextColor),
               ),
               backgroundColor: AppTheme.cardBg,
               side: BorderSide(color: borderColor),
@@ -314,7 +316,7 @@ class _InfoSection extends StatelessWidget {
             Chip(
               label: Text(
                 item.category,
-                style: TextStyle(fontWeight: FontWeight.w600, color: bodyTextColor),
+                style: TextStyle(fontWeight: FontWeight.w600, color: chipTextColor),
               ),
               backgroundColor: AppTheme.cardBg,
               side: BorderSide(color: borderColor),
@@ -323,7 +325,7 @@ class _InfoSection extends StatelessWidget {
             Chip(
               label: Text(
                 item.style,
-                style: TextStyle(fontWeight: FontWeight.w600, color: bodyTextColor),
+                style: TextStyle(fontWeight: FontWeight.w600, color: chipTextColor),
               ),
               backgroundColor: AppTheme.cardBg,
               side: BorderSide(color: borderColor),
@@ -335,7 +337,7 @@ class _InfoSection extends StatelessWidget {
                   (t) => Chip(
                     label: Text(
                       t,
-                      style: TextStyle(fontWeight: FontWeight.w600, color: bodyTextColor),
+                      style: TextStyle(fontWeight: FontWeight.w600, color: chipTextColor),
                     ),
                     backgroundColor: AppTheme.cardBg,
                     side: BorderSide(color: borderColor),
@@ -478,9 +480,10 @@ class _SellerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final bodyTextColor = isDark ? colorScheme.onSurface : AppTheme.foreground;
+    // Seller card is white in both themes, so keep text dark for contrast.
+    final bodyTextColor = AppTheme.foreground;
     final secondaryTextColor =
-        isDark ? colorScheme.onSurface.withValues(alpha: 0.76) : AppTheme.mutedForeground;
+        isDark ? AppTheme.black.withValues(alpha: 0.62) : AppTheme.mutedForeground;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
