@@ -178,6 +178,43 @@ class BrowseScreen extends StatelessWidget {
                             ListView(
                               padding: const EdgeInsets.all(12),
                               children: [
+                                // For You Section
+                                if (vm.forYouRecommendations.isNotEmpty)
+                                  ...[
+                                    const SizedBox(height: 8),
+                                    Text('For You', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                                    SizedBox(
+                                      height: 180,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: vm.forYouRecommendations.length,
+                                        itemBuilder: (context, index) {
+                                          final item = vm.forYouRecommendations[index];
+                                          return Card(
+                                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            child: SizedBox(
+                                              width: 120,
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  CachedNetworkImage(imageUrl: item.image, height: 80, width: 80),
+                                                  const SizedBox(height: 8),
+                                                  Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                                  Text(item.category, style: TextStyle(fontSize: 12, color: Colors.grey)),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                if (vm.forYouNewItemCounts.isNotEmpty)
+                                  ...[
+                                    const SizedBox(height: 12),
+                                    Text('New items in your favorite categories:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    ...vm.forYouNewItemCounts.entries.map((entry) => Text('${entry.key}: ${entry.value} new', style: TextStyle(fontSize: 13))),
+                                  ],
                                 Text(
                                   '${items.length} items',
                                   style: TextStyle(

@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import '../models/listing.dart';
 import '../data/mock_data.dart';
 
+import '../core/recommendation_service.dart';
+import '../core/recommendation_system.dart';
+
 class BrowseViewModel extends ChangeNotifier {
   List<Listing> _listings = List.from(MockData.browseListings);
   final Map<int, bool> _savedItems = {};
@@ -14,11 +17,41 @@ class BrowseViewModel extends ChangeNotifier {
   bool _aiSearch = false;
   bool _showFilters = false;
 
+  // Sample upload dates for demonstration
+  final Map<int, DateTime> _itemUploadDates = {
+    1: DateTime.now().subtract(Duration(days: 2)),
+    2: DateTime.now().subtract(Duration(days: 10)),
+    3: DateTime.now().subtract(Duration(days: 1)),
+    4: DateTime.now().subtract(Duration(days: 5)),
+    5: DateTime.now().subtract(Duration(days: 3)),
+    6: DateTime.now().subtract(Duration(days: 7)),
+    7: DateTime.now().subtract(Duration(days: 4)),
+    8: DateTime.now().subtract(Duration(days: 2)),
+    9: DateTime.now().subtract(Duration(days: 8)),
+  };
+
+  // Example: User's most frequent categories
+  final List<String> _userFrequentCategories = ["Jackets", "Tops", "Bottoms"];
+
+  late RecommendationService _recommendationService;
+
   BrowseViewModel() {
     for (final l in _listings) {
       _savedItems[l.id] = l.saved;
     }
+    _recommendationService = RecommendationService(
+      allItems: List.from(MockData.browseListings),
+      userFrequentCategories: _userFrequentCategories,
+      itemUploadDates: _itemUploadDates,
+      newThreshold: DateTime.now().subtract(Duration(days: 5)), // Items uploaded in last 5 days
+    );
   }
+
+  // 'For You' recommendations
+  List<Listing> get forYouRecommendations => _recommendationService.getRecommendations();
+
+  // New item counts per frequent category
+  Map<String, int> get forYouNewItemCounts => _recommendationService.getNewItemCounts();
 
   String get search => _search;
   set search(String v) {
