@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/listing.dart';
 import '../data/mock_data.dart';
+import 'dart:collection';
 
 import '../core/recommendation_service.dart';
 import '../core/recommendation_system.dart';
@@ -30,8 +31,8 @@ class BrowseViewModel extends ChangeNotifier {
     9: DateTime.now().subtract(Duration(days: 8)),
   };
 
-  // Example: User's most frequent categories
-  final List<String> _userFrequentCategories = ["Jackets", "Tops", "Bottoms"];
+  // Track category interaction counts
+  final Map<String, int> _categoryInteractionCounts = {};
 
   late RecommendationService _recommendationService;
 
@@ -39,12 +40,42 @@ class BrowseViewModel extends ChangeNotifier {
     for (final l in _listings) {
       _savedItems[l.id] = l.saved;
     }
+    // Initialize interaction counts
+    for (final l in _listings) {
+      _categoryInteractionCounts[l.category] = 0;
+    }
+    _updateRecommendationService();
+  }
+
+  void _updateRecommendationService() {
+    // Sort categories by interaction count
+    final sortedCategories = _categoryInteractionCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final frequentCategories = sortedCategories.take(3).map((e) => e.key).toList();
     _recommendationService = RecommendationService(
       allItems: List.from(MockData.browseListings),
-      userFrequentCategories: _userFrequentCategories,
+      userFrequentCategories: frequentCategories.isEmpty ? _categoryInteractionCounts.keys.toList() : frequentCategories,
       itemUploadDates: _itemUploadDates,
       newThreshold: DateTime.now().subtract(Duration(days: 5)), // Items uploaded in last 5 days
     );
+    notifyListeners();
+  }
+
+  // User favorites an item
+  void toggleSave(int itemId) {
+    _savedItems[itemId] = !_savedItems[itemId]!;
+    final item = _listings.firstWhere((l) => l.id == itemId);
+    // Increment category interaction
+    _categoryInteractionCounts[item.category] = (_categoryInteractionCounts[item.category] ?? 0) + 1;
+    _updateRecommendationService();
+    notifyListeners();
+  }
+
+  // User views an item
+  void viewItem(int itemId) {
+    final item = _listings.firstWhere((l) => l.id == itemId);
+    _categoryInteractionCounts[item.category] = (_categoryInteractionCounts[item.category] ?? 0) + 1;
+    _updateRecommendationService();
   }
 
   // 'For You' recommendations
@@ -102,11 +133,6 @@ class BrowseViewModel extends ChangeNotifier {
   }
 
   bool isSaved(int id) => _savedItems[id] ?? false;
-
-  void toggleSave(int id) {
-    _savedItems[id] = !(_savedItems[id] ?? false);
-    notifyListeners();
-  }
 
   void clearFilters() {
     _category = 'All';

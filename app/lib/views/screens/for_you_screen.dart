@@ -297,14 +297,6 @@ class ForYouScreen extends StatelessWidget {
                                         ),
                                   ),
                                 const SizedBox(height: 12),
-                                if (vm.forYouNewItemCounts.isNotEmpty)
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('New items in your favorite categories:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                      ...vm.forYouNewItemCounts.entries.map((entry) => Text('${entry.key}: ${entry.value} new', style: TextStyle(fontSize: 13))),
-                                    ],
-                                  ),
                               ],
                             ),
                             if (vm.showFilters) FilterSheet(vm: vm),
