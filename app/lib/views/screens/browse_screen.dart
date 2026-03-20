@@ -185,20 +185,22 @@ class _ListingCard extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: listing.image,
-                    fit: BoxFit.cover,
-                    placeholder:
-                        (_, __) => Container(
-                          color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.muted,
-                          child: const Center(
-                            child: CircularProgressIndicator(),
+                  if (listing.hasPrimaryImage)
+                    CachedNetworkImage(
+                      imageUrl: listing.primaryImageUrl,
+                      fit: BoxFit.cover,
+                      placeholder:
+                          (_, __) => Container(
+                            color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.muted,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
                           ),
-                        ),
-                    errorWidget:
-                        (_, __, ___) =>
-                            const Icon(Icons.image_not_supported, size: 40),
-                  ),
+                      errorWidget:
+                          (_, __, ___) => const Icon(Icons.image_not_supported, size: 40),
+                    )
+                  else
+                    const Center(child: Icon(Icons.image_not_supported, size: 40)),
                   Positioned(
                     top: 8,
                     right: 8,
@@ -239,7 +241,7 @@ class _ListingCard extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        listing.condition,
+                        listing.conditionTag,
                         style: const TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w500,
@@ -256,7 +258,7 @@ class _ListingCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    listing.name,
+                    listing.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -269,7 +271,7 @@ class _ListingCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '\$${listing.price.toStringAsFixed(0)}',
+                        '\$${listing.price}',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
@@ -277,7 +279,7 @@ class _ListingCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        listing.seller,
+                        listing.sellerName,
                         style: TextStyle(
                           fontSize: 10,
                           color: mutedText,

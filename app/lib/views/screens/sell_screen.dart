@@ -1,10 +1,14 @@
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../../core/app_theme.dart';
 import '../../view_models/sell_view_model.dart';
-import '../../data/mock_data.dart';
 
 class SellScreen extends StatelessWidget {
   const SellScreen({super.key});
@@ -14,14 +18,30 @@ class SellScreen extends StatelessWidget {
     return Scaffold(
       body: Consumer<SellViewModel>(
         builder: (context, vm, _) {
-          if (vm.published) {
-            return _PublishSuccess(vm: vm);
-          }
+          if (vm.published) return _PublishSuccess(vm: vm);
           return _SellForm(vm: vm);
         },
       ),
     );
   }
+}
+
+Widget _buildImagePreview(dynamic image, {double width = 140, double height = 160}) {
+  if (image is Uint8List) {
+    return Image.memory(image, width: width, height: height, fit: BoxFit.cover);
+  }
+  if (image is File) {
+    return Image.file(image, width: width, height: height, fit: BoxFit.cover);
+  }
+  if (image is String) {
+    return CachedNetworkImage(imageUrl: image, width: width, height: height, fit: BoxFit.cover);
+  }
+  return Container(
+    width: width,
+    height: height,
+    color: Colors.grey.shade300,
+    child: const Icon(Icons.image, size: 40),
+  );
 }
 
 class _PublishSuccess extends StatelessWidget {
@@ -31,67 +51,31 @@ class _PublishSuccess extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final mutedText =
-        isDark ? colorScheme.onSurface.withValues(alpha: 0.72) : AppTheme.mutedForeground;
-    final tip = SellViewModel.randomSustainabilityTip;
+    final mutedText = colorScheme.onSurface.withOpacity(0.72);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.check_circle_rounded,
-              size: 64,
-              color: AppTheme.sage,
-            ),
+            const Icon(Icons.check_circle_rounded, size: 72, color: AppTheme.sage),
             const SizedBox(height: 16),
             Text(
-              'Listing Published!',
-              style:
-                  Theme.of(context).textTheme.headlineSmall ??
-                  const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              'Your listing is live!',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              tip,
-              textAlign: TextAlign.center,
+              'Remember to reuse and recycle.',
               style: TextStyle(color: mutedText),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.sage.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.sage.withValues(alpha: 0.4)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.auto_awesome, color: AppTheme.sage),
-                  const SizedBox(width: 8),
-                  Text(
-                    '+50 XP earned with Eco!',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: () => vm.resetAfterPublish(),
-              style: FilledButton.styleFrom(
-                backgroundColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
-                foregroundColor: isDark ? colorScheme.onPrimary : Colors.white,
-              ),
-              child: const Text('List Another Item'),
+              child: const Text('List another item'),
             ),
           ],
         ),
@@ -109,8 +93,7 @@ class _SellForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final mutedText =
-        isDark ? colorScheme.onSurface.withValues(alpha: 0.72) : AppTheme.mutedForeground;
+    final mutedText = isDark ? colorScheme.onSurface.withOpacity(0.72) : AppTheme.mutedForeground;
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -130,20 +113,13 @@ class _SellForm extends StatelessWidget {
               children: [
                 Text(
                   'List an Item',
-                  style:
-                      Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                      ) ??
-                      const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white) ??
+                      const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                const Text(
                   'Upload a photo - our AI will tag it for you automatically',
-                  style: const TextStyle(fontSize: 13, color: Colors.white70),
+                  style: TextStyle(fontSize: 13, color: Colors.white70),
                 ),
               ],
             ),
@@ -155,11 +131,7 @@ class _SellForm extends StatelessWidget {
               children: [
                 Text(
                   'Photo',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                 ),
                 const SizedBox(height: 8),
                 _PhotoUpload(vm: vm),
@@ -172,49 +144,19 @@ class _SellForm extends StatelessWidget {
                   hint: 'e.g. Vintage Denim Jacket',
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _TextField(
-                        label: 'Price (\$)',
-                        value: vm.price,
-                        onChanged: (v) => vm.price = v,
-                        hint: '0.00',
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _TextField(
-                        label: 'Size',
-                        value: vm.size,
-                        onChanged: (v) => vm.size = v,
-                        hint: 'XS / S / M / L / XL',
-                      ),
-                    ),
-                  ],
+                _TextField(
+                  label: 'Price (COP)',
+                  value: vm.price,
+                  onChanged: (v) => vm.price = v,
+                  hint: '0.00',
+                  keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _TextField(
-                        label: 'Color',
-                        value: vm.color,
-                        onChanged: (v) => vm.color = v,
-                        hint: 'e.g. Blue',
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _TextField(
-                        label: 'Category',
-                        value: vm.category,
-                        onChanged: (v) => vm.category = v,
-                        hint: 'e.g. Jackets',
-                      ),
-                    ),
-                  ],
+                _TextField(
+                  label: 'Tags (comma separated)',
+                  value: vm.tagsInput,
+                  onChanged: (v) => vm.tagsInput = v,
+                  hint: 'e.g. jackets, denim, blue',
                 ),
                 const SizedBox(height: 12),
                 _TextField(
@@ -227,95 +169,85 @@ class _SellForm extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'Condition',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children:
-                      MockData.conditionsSell.map((c) {
-                        final selected = vm.condition == c;
-                        return ChoiceChip(
-                          label: Text(c),
-                          selected: selected,
-                          onSelected: (_) => vm.condition = c,
-                          selectedColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
-                          labelStyle: TextStyle(
-                            color:
-                                selected
-                                    ? (isDark ? colorScheme.onPrimary : Colors.white)
-                                    : (isDark ? colorScheme.onSurface : AppTheme.foreground),
-                          ),
-                        );
-                      }).toList(),
+                  children: const ['New', 'Like New', 'Good', 'Fair', 'Poor'].map((c) {
+                    final selected = vm.condition == c;
+                    return ChoiceChip(
+                      label: Text(c),
+                      selected: selected,
+                      onSelected: (_) => vm.condition = c,
+                      selectedColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
+                      labelStyle: TextStyle(
+                        color: selected
+                            ? (isDark ? colorScheme.onPrimary : Colors.white)
+                            : (isDark ? colorScheme.onSurface : AppTheme.foreground),
+                      ),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Exchange Type',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                 ),
                 const SizedBox(height: 8),
                 Row(
-                  children:
-                      MockData.exchangeTypes.map((e) {
-                        final value = e.$1, label = e.$2, desc = e.$3;
-                        final selected = vm.exchangeType == value;
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: GestureDetector(
-                              onTap: () => vm.exchangeType = value,
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color:
-                                        selected
-                                            ? (isDark ? colorScheme.primary : AppTheme.deepGreen)
-                                            : (isDark ? colorScheme.outline : AppTheme.muted),
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      label,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color:
-                                            selected
-                                                ? (isDark ? colorScheme.primary : AppTheme.deepGreen)
-                                                : (isDark ? colorScheme.onSurface : AppTheme.foreground),
-                                      ),
-                                    ),
-                                    Text(
-                                      desc,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color:
-                                            selected
-                                                ? (isDark ? colorScheme.primary : AppTheme.deepGreen)
-                                                : mutedText,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                  children: const [
+                    ('sell', 'Sell', 'Direct sale'),
+                    ('swap', 'Swap', 'Exchange with another item'),
+                    ('donate', 'Donate', 'Give away for free')
+                  ].map((e) {
+                    final value = e.$1, label = e.$2, desc = e.$3;
+                    final selected = vm.exchangeType == value;
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: GestureDetector(
+                          onTap: () => vm.exchangeType = value,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: selected
+                                    ? (isDark ? colorScheme.primary : AppTheme.deepGreen)
+                                    : (isDark ? colorScheme.outline : AppTheme.muted),
                               ),
                             ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  label,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: selected
+                                        ? (isDark ? colorScheme.primary : AppTheme.deepGreen)
+                                        : (isDark ? colorScheme.onSurface : AppTheme.foreground),
+                                  ),
+                                ),
+                                Text(
+                                  desc,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: selected
+                                        ? (isDark ? colorScheme.primary : AppTheme.deepGreen)
+                                        : mutedText,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      }).toList(),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
@@ -343,68 +275,113 @@ class _PhotoUpload extends StatelessWidget {
 
   const _PhotoUpload({required this.vm});
 
+  Future<void> _pickImages(BuildContext context) async {
+    final picker = ImagePicker();
+    final pickedFiles = await picker.pickMultiImage(imageQuality: 85);
+    if (pickedFiles == null || pickedFiles.isEmpty) return;
+    if (kIsWeb) {
+      final bytes = await Future.wait(pickedFiles.map((x) => x.readAsBytes()));
+      vm.setImages(bytes);
+    } else {
+      final files = pickedFiles.map((x) => File(x.path)).toList();
+      vm.setImages(files);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final mutedText = colorScheme.onSurface.withValues(alpha: 0.72);
-    final hasPhoto = vm.photoPath != null && vm.photoPath!.isNotEmpty;
-    return GestureDetector(
-      onTap: () async {
-        // Simulate pick: use demo URL for now (no file picker dependency)
-        vm.setPhotoFromUrl(
-          'https://images.unsplash.com/photo-1601333144130-8cbb312386b6?w=400&h=400&fit=crop',
-        );
-      },
-      child: Container(
-        height: 200,
-        width: double.infinity,
-        constraints: const BoxConstraints(minWidth: 320, maxWidth: 420),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: colorScheme.primary,
-            width: 2,
-          ),
-        ),
-        child:
-            hasPhoto
-                ? ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child:
-                      vm.photoPath!.startsWith('http')
-                          ? CachedNetworkImage(
-                            imageUrl: vm.photoPath!,
-                            fit: BoxFit.cover,
-                          )
-                          : Image.file(File(vm.photoPath!), fit: BoxFit.cover),
-                )
-                : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+    final mutedText = colorScheme.onSurface.withOpacity(0.72);
+    final images = vm.images;
+    final tileCount = images.length < 5 ? images.length + 1 : 5;
+    const imageSize = 110.0;
+    const addTileWidth = 180.0;
+    const tileHeight = 120.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: List.generate(tileCount, (idx) {
+            if (idx < images.length) {
+              return SizedBox(
+                width: imageSize,
+                height: tileHeight,
+                child: Stack(
                   children: [
-                    Icon(
-                      Icons.camera_alt_rounded,
-                      size: 48,
-                      color: colorScheme.onSurface,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Tap to upload photo',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: _buildImagePreview(
+                        images[idx],
+                        width: imageSize,
+                        height: tileHeight,
                       ),
                     ),
-                    Text(
-                      'JPG, PNG, WEBP up to 10MB',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: mutedText,
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: GestureDetector(
+                        onTap: () => vm.removeImageAt(idx),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(Icons.close, color: Colors.white, size: 22),
+                        ),
                       ),
                     ),
                   ],
                 ),
-      ),
+              );
+            }
+            return GestureDetector(
+              onTap: () => _pickImages(context),
+              child: Container(
+                width: addTileWidth,
+                height: tileHeight,
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: colorScheme.primary, width: 2.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.primary.withOpacity(0.08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_a_photo_rounded, size: 36, color: colorScheme.primary),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Add Photo',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: colorScheme.primary),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Row(
+            children: [
+              Icon(Icons.camera_alt_rounded, size: 24, color: colorScheme.onSurface),
+              const SizedBox(width: 8),
+              Text(
+                'JPG, PNG, WEBP up to 10MB. Max 5 photos.',
+                style: TextStyle(fontSize: 12, color: mutedText),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -436,10 +413,8 @@ class _AiTaggingBlock extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                vm.aiLoading
-                    ? 'AI is analyzing your photo...'
-                    : 'AI tagging complete!',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                vm.aiLoading ? 'AI is analyzing your photo...' : 'AI tagging complete!',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -457,30 +432,13 @@ class _AiTaggingBlock extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                if (vm.size.isNotEmpty)
+                if (vm.aiTags.isNotEmpty)
+                  ...vm.aiTags.map((t) => Chip(label: Text(t))),
+                if (vm.condition.isNotEmpty)
                   Chip(
-                    label: Text('Size: ${vm.size}'),
+                    label: Text('Condition: ${vm.condition}'),
                     backgroundColor: colorScheme.surface,
                   ),
-                if (vm.color.isNotEmpty)
-                  Chip(
-                    label: Text('Color: ${vm.color}'),
-                    backgroundColor: colorScheme.surface,
-                  ),
-                if (vm.category.isNotEmpty)
-                  Chip(
-                    label: Text('Category: ${vm.category}'),
-                    backgroundColor: colorScheme.surface,
-                  ),
-                if (vm.style.isNotEmpty)
-                  Chip(
-                    label: Text('Style: ${vm.style}'),
-                    backgroundColor: colorScheme.surface,
-                  ),
-                Chip(
-                  label: Text('Condition: ${vm.condition}'),
-                  backgroundColor: colorScheme.surface,
-                ),
               ],
             ),
           ],
@@ -540,11 +498,7 @@ class _TextFieldState extends State<_TextField> {
       children: [
         Text(
           widget.label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
         ),
         const SizedBox(height: 6),
         TextField(
@@ -555,10 +509,7 @@ class _TextFieldState extends State<_TextField> {
             filled: true,
             fillColor: colorScheme.surface,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 12,
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           ),
           keyboardType: widget.keyboardType,
           maxLines: widget.maxLines,

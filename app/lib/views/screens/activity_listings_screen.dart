@@ -161,12 +161,14 @@ class ActivityListingsScreen extends StatelessWidget {
                                   child: Stack(
                                     fit: StackFit.expand,
                                     children: [
-                                      CachedNetworkImage(
-                                        imageUrl: listing.image,
-                                        fit: BoxFit.cover,
-                                        errorWidget: (_, __, ___) =>
-                                            const Icon(Icons.image_rounded),
-                                      ),
+                                      if (listing.hasPrimaryImage)
+                                        CachedNetworkImage(
+                                          imageUrl: listing.primaryImageUrl,
+                                          fit: BoxFit.cover,
+                                          errorWidget: (_, __, ___) => const Icon(Icons.image_rounded),
+                                        )
+                                      else
+                                        const Center(child: Icon(Icons.image_rounded)),
                                       Positioned(
                                         top: 8,
                                         left: 8,
@@ -204,7 +206,7 @@ class ActivityListingsScreen extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        listing.name,
+                                        listing.title,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
@@ -212,7 +214,7 @@ class ActivityListingsScreen extends StatelessWidget {
                                         ),
                                       ),
                                       Text(
-                                        '\$${listing.price.toStringAsFixed(0)}',
+                                        '\$${listing.price}',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: AppTheme.accent,

@@ -366,19 +366,21 @@ class _FeaturedCard extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(16),
-          child: CachedNetworkImage(
-            imageUrl: item.image,
-            height: 280,
-            width: 260,
-            fit: BoxFit.cover,
-            placeholder:
-                (_, __) => Container(
-                  color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.muted,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-            errorWidget:
-                (_, __, ___) => const Icon(Icons.image_not_supported, size: 48),
-          ),
+          child: item.hasPrimaryImage
+              ? CachedNetworkImage(
+                  imageUrl: item.primaryImageUrl,
+                  height: 280,
+                  width: 260,
+                  fit: BoxFit.cover,
+                  placeholder:
+                      (_, __) => Container(
+                        color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.muted,
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                  errorWidget:
+                      (_, __, ___) => const Icon(Icons.image_not_supported, size: 48),
+                )
+              : const Center(child: Icon(Icons.image_not_supported, size: 48)),
         ),
         Positioned(
           bottom: -12,
@@ -416,8 +418,8 @@ class _FeaturedCard extends StatelessWidget {
                         color: isDark ? colorScheme.onSurface : AppTheme.foreground,
                       ),
                     ),
-                    Text(
-                      'Size ${item.size} · ${item.style} · ${item.condition}',
+                        Text(
+                          item.conditionTag,
                       style: TextStyle(
                         fontSize: 10,
                         color: mutedText,
@@ -460,8 +462,8 @@ class _FeaturedCard extends StatelessWidget {
                     color: AppTheme.sageDark,
                   ),
                 ),
-                Text(
-                  '${item.condition} ✓',
+                    Text(
+                      '${item.conditionTag} ✓',
                   style: TextStyle(fontSize: 10, color: AppTheme.sageDark),
                 ),
               ],
