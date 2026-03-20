@@ -9,11 +9,7 @@ class MockData {
       id: 1,
       name: "Vintage Levi's Denim Jacket",
       price: 25,
-      size: "M",
       condition: "Good",
-      category: "Jackets",
-      color: "Blue",
-      style: "Casual",
       seller: "Sofia R.",
       rating: 4.8,
       image:
@@ -24,11 +20,7 @@ class MockData {
       id: 2,
       name: "Floral Summer Dress",
       price: 18,
-      size: "S",
       condition: "Like New",
-      category: "Dresses",
-      color: "Multicolor",
-      style: "Boho",
       seller: "Maria G.",
       rating: 5.0,
       image:
@@ -39,11 +31,7 @@ class MockData {
       id: 3,
       name: "Cream Knit Sweater",
       price: 20,
-      size: "L",
       condition: "Good",
-      category: "Tops",
-      color: "Cream",
-      style: "Cozy",
       seller: "Emma T.",
       rating: 4.6,
       image:
@@ -54,11 +42,7 @@ class MockData {
       id: 4,
       name: "Black Slim Trousers",
       price: 15,
-      size: "M",
       condition: "Fair",
-      category: "Bottoms",
-      color: "Black",
-      style: "Smart Casual",
       seller: "Ana L.",
       rating: 4.3,
       image:
@@ -69,11 +53,7 @@ class MockData {
       id: 5,
       name: "Puffer Winter Jacket",
       price: 40,
-      size: "XL",
       condition: "Like New",
-      category: "Jackets",
-      color: "Green",
-      style: "Sporty",
       seller: "Laura P.",
       rating: 4.9,
       image:
@@ -88,219 +68,13 @@ class MockData {
       id: 6,
       name: "Silk Blouse Ivory",
       price: 22,
-      size: "S",
       condition: "Good",
-      category: "Tops",
-      color: "Ivory",
-      style: "Elegant",
       seller: "Chloe M.",
       rating: 4.7,
       image:
           "https://images.unsplash.com/photo-1485518882345-15568b007407?w=400&h=500&fit=crop",
-      tags: ["Elegant", "Silk", "Evening"],
-      saved: false,
-    ),
-    Listing(
-      id: 7,
-      name: "Canvas Tote Bag",
-      price: 10,
-      size: "One Size",
-      condition: "Like New",
-      category: "Accessories",
-      color: "Natural",
-      style: "Casual",
-      seller: "Ines R.",
-      rating: 4.5,
-      image:
-          "https://images.unsplash.com/photo-1544816155-12df9643f363?w=400&h=500&fit=crop",
-      tags: ["Eco", "Casual", "Bag"],
-      saved: true,
-    ),
-    Listing(
-      id: 8,
-      name: "High-Waist Jeans",
-      price: 28,
-      size: "M",
-      condition: "Good",
-      category: "Bottoms",
-      color: "Blue",
-      style: "Casual",
-      seller: "Nora B.",
-      rating: 4.4,
-      image:
-          "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=500&fit=crop",
-      tags: ["Denim", "Casual", "Classic"],
-      saved: false,
-    ),
-    Listing(
-      id: 9,
-      name: "Striped Linen Shirt",
-      price: 16,
-      size: "L",
-      condition: "Good",
-      category: "Tops",
-      color: "White",
-      style: "Casual",
-      seller: "Kai O.",
-      rating: 4.6,
-      image:
-          "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&h=500&fit=crop",
-      tags: ["Linen", "Summer", "Stripe"],
-      saved: false,
-    ),
-  ];
-
-  static final itemDetails = [
-    // 1. Vintage Levi's Denim Jacket
-    ItemDetail(
-      id: 1,
-      name: "Vintage Levi's Denim Jacket",
-      price: 25,
-      size: "M",
-      condition: "Good",
-      category: "Jackets",
-      color: "Blue",
-      style: "Casual",
-      seller: Seller(
-        name: "Sofia R.",
-        university: "UCM Madrid",
-        rating: 4.8,
-        sales: 12,
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sofia",
-        verified: true,
-      ),
-      aiScore: 87,
-      description: "Classic vintage Levi's denim jacket in good condition. Minor wear on the cuffs adds to its character. Perfect for layering in autumn and spring.",
-      images: [
-        "https://images.unsplash.com/photo-1601333144130-8cbb312386b6?w=600&h=700&fit=crop",
-        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=300&h=300&fit=crop",
-      ],
-      tags: ["Casual", "Vintage", "Denim", "Layering", "Autumn"],
-      exchangeType: "sell",
-    ),
-    // 2. Floral Summer Dress
-    ItemDetail(
-      id: 2,
-      name: "Floral Summer Dress",
-      price: 18,
-      size: "S",
-      condition: "Like New",
-      category: "Dresses",
-      color: "Multicolor",
-      style: "Boho",
-      seller: Seller(
-        name: "Maria G.",
-        university: "UPM Madrid",
-        rating: 5.0,
-        sales: 7,
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Maria",
-        verified: true,
-      ),
-      aiScore: 95,
-      description: "Beautiful floral summer dress worn only twice. Lightweight fabric, perfect for festivals or campus events. No stains or damage.",
-      images: [
-        "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&h=700&fit=crop",
-        "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=300&h=300&fit=crop",
-      ],
-      tags: ["Boho", "Summer", "Floral", "Festival", "Light"],
-      exchangeType: "swap",
-    ),
-    // 3. Cream Knit Sweater
-    ItemDetail(
-      id: 3,
-      name: "Cream Knit Sweater",
-      price: 20,
-      size: "L",
-      condition: "Good",
-      category: "Tops",
-      color: "Cream",
-      style: "Cozy",
-      seller: Seller(
-        name: "Emma T.",
-        university: "Complutense",
-        rating: 4.6,
-        sales: 5,
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
-        verified: false,
-      ),
-      aiScore: 82,
-      description: "Soft cream knit sweater from Zara. Gently used, no pilling. Great for cold evenings or cozy study sessions.",
-      images: [
-        "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&h=700&fit=crop",
-        "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=300&h=300&fit=crop",
-      ],
-      tags: ["Knitwear", "Cozy", "Autumn", "Zara", "Soft"],
-      exchangeType: "sell",
-    ),
-    // 4. Black Slim Trousers
-    ItemDetail(
-      id: 4,
-      name: "Black Slim Trousers",
-      price: 15,
-      size: "M",
-      condition: "Fair",
-      category: "Bottoms",
-      color: "Black",
-      style: "Smart Casual",
-      seller: Seller(
-        name: "Ana L.",
-        university: "UAM",
-        rating: 4.3,
-        sales: 3,
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana",
-        verified: false,
-      ),
-      aiScore: 72,
-      description: "Slim-fit black trousers, slightly faded from washing but still presentable. Perfect for office or smart casual looks.",
-      images: [
-        "https://images.unsplash.com/photo-1594938298603-c8148c4b4086?w=600&h=700&fit=crop",
-        "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=300&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1584370848010-d7fe6bc767ec?w=300&h=300&fit=crop",
-      ],
-      tags: ["Smart", "Office", "Classic", "Black", "Slim"],
-      exchangeType: "donate",
-    ),
-    // 5. Puffer Winter Jacket
-    ItemDetail(
-      id: 5,
-      name: "Puffer Winter Jacket",
-      price: 40,
-      size: "XL",
-      condition: "Like New",
-      category: "Jackets",
-      color: "Green",
-      style: "Sporty",
-      seller: Seller(
-        name: "Laura P.",
-        university: "UC3M",
-        rating: 4.9,
-        sales: 20,
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Laura",
-        verified: true,
-      ),
-      aiScore: 93,
-      description: "Warm army-green puffer jacket. Worn only once last winter. Excellent insulation, water-resistant outer shell.",
-      images: [
-        "https://images.unsplash.com/photo-1548126032-079a0fb0099d?w=600&h=700&fit=crop",
-        "https://images.unsplash.com/photo-1507680434567-5739c80be1ac?w=300&h=300&fit=crop",
-        "https://images.unsplash.com/photo-1544441893-675973e31985?w=300&h=300&fit=crop",
-      ],
-      tags: ["Winter", "Sporty", "Warm", "Puffer", "Green"],
-      exchangeType: "sell",
-    ),
-    // 6. Silk Blouse Ivory
-    ItemDetail(
-      id: 6,
-      name: "Silk Blouse Ivory",
-      price: 22,
-      size: "S",
-      condition: "Good",
-      category: "Tops",
-      color: "Ivory",
-      style: "Elegant",
+      // MockData eliminado. Usar ListingService para manejar los listings en Firebase.
+      // Removed deprecated fields
       seller: Seller(
         name: "Chloe M.",
         university: "UPM Madrid",
@@ -324,11 +98,7 @@ class MockData {
       id: 7,
       name: "Canvas Tote Bag",
       price: 10,
-      size: "One Size",
       condition: "Like New",
-      category: "Accessories",
-      color: "Natural",
-      style: "Casual",
       seller: Seller(
         name: "Ines R.",
         university: "Complutense",
@@ -352,11 +122,7 @@ class MockData {
       id: 8,
       name: "High-Waist Jeans",
       price: 28,
-      size: "M",
       condition: "Good",
-      category: "Bottoms",
-      color: "Blue",
-      style: "Casual",
       seller: Seller(
         name: "Nora B.",
         university: "UAM",
@@ -380,11 +146,7 @@ class MockData {
       id: 9,
       name: "Striped Linen Shirt",
       price: 16,
-      size: "L",
       condition: "Good",
-      category: "Tops",
-      color: "White",
-      style: "Casual",
       seller: Seller(
         name: "Kai O.",
         university: "UC3M",
@@ -436,25 +198,7 @@ class MockData {
     ),
   ];
 
-  static const categories = [
-    "All",
-    "Tops",
-    "Bottoms",
-    "Jackets",
-    "Dresses",
-    "Accessories",
-  ];
-  static const sizes = ["All", "XS", "S", "M", "L", "XL"];
-  static const conditions = ["All", "Like New", "Good", "Fair"];
-  static const colorFilters = [
-    ("All", 0xFFe5e7eb),
-    ("Blue", 0xFF3b82f6),
-    ("Black", 0xFF111827),
-    ("Cream", 0xFFfef3c7),
-    ("Green", 0xFF16a34a),
-    ("White", 0xFFf9fafb),
-    ("Multicolor", 0xFFef4444),
-  ];
+  // Removed deprecated static fields: categories, sizes, colorFilters
 
   static const badges = [
     ProfileBadge(
@@ -618,9 +362,5 @@ class MockData {
     "Every swap saves ~7kg of CO₂ compared to buying new.",
     "You just extended this item's life and earned 50 XP with Eco!",
   ];
-  static const exchangeTypes = [
-    ("sell", "Sell", "List for a price"),
-    ("swap", "Swap", "Trade for another item"),
-    ("donate", "Donate", "Give it for free"),
-  ];
+  // Removed deprecated static field: exchangeTypes
 }

@@ -350,7 +350,7 @@ class ProfileScreen extends StatelessWidget {
                                 children: [
                                   Expanded(
                                     child: CachedNetworkImage(
-                                      imageUrl: item.image,
+                                      imageUrl: item.imageURLs.isNotEmpty ? item.imageURLs[0] : item.imagePath,
                                       fit: BoxFit.cover,
                                       errorWidget: (_, __, ___) => const Icon(Icons.image_rounded),
                                     ),
@@ -361,7 +361,7 @@ class ProfileScreen extends StatelessWidget {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          item.name,
+                                          item.title,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
@@ -554,18 +554,14 @@ class ProfileScreen extends StatelessWidget {
                                               child: Stack(
                                                 fit: StackFit.expand,
                                                 children: [
-                                                  CachedNetworkImage(
-                                                    imageUrl: listing.image,
-                                                    fit: BoxFit.cover,
-                                                    errorWidget:
-                                                        (
-                                                          _,
-                                                          __,
-                                                          ___,
-                                                        ) => const Icon(
-                                                          Icons.image_rounded,
-                                                        ),
-                                                  ),
+                                                  if (listing.hasPrimaryImage)
+                                                    CachedNetworkImage(
+                                                      imageUrl: listing.primaryImageUrl,
+                                                      fit: BoxFit.cover,
+                                                      errorWidget: (_, __, ___) => const Icon(Icons.image_rounded),
+                                                    )
+                                                  else
+                                                    const Center(child: Icon(Icons.image_rounded)),
                                                   Positioned(
                                                     top: 8,
                                                     left: 8,
@@ -614,7 +610,7 @@ class ProfileScreen extends StatelessWidget {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    listing.name,
+                                                    listing.title,
                                                     maxLines: 1,
                                                     overflow:
                                                         TextOverflow.ellipsis,
@@ -624,7 +620,7 @@ class ProfileScreen extends StatelessWidget {
                                                     ),
                                                   ),
                                                   Text(
-                                                    '\$${listing.price.toStringAsFixed(0)}',
+                                                    '\$${listing.price}',
                                                     style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
