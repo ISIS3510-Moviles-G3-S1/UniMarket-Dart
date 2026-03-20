@@ -134,13 +134,32 @@ class AuthService {
     try {
       final now = DateTime.now();
 
-      // Update in Firestore
-      await _firestore.collection('users').doc(uid).update({
+      final docRef = _firestore.collection('users').doc(uid);
+      final doc = await docRef.get();
+
+      DateTime? existingLastLogin;
+      if (doc.exists) {
+        final data = doc.data() ?? <String, dynamic>{};
+        final existingTimestamp = data['lastLogin'];
+        if (existingTimestamp is Timestamp) {
+          existingLastLogin = existingTimestamp.toDate();
+        }
+      }
+
+      final updateData = <String, Object>{
         'lastLogin': FieldValue.serverTimestamp(),
-      });
+      };
+      if (existingLastLogin != null) {
+        updateData['previousLogin'] = existingLastLogin;
+      }
+
+      await docRef.update(updateData);
 
       // Save to local SharedPreferences for quick access
       final prefs = await SharedPreferences.getInstance();
+      if (existingLastLogin != null) {
+        await prefs.setString('previousLogin_$uid', existingLastLogin.toIso8601String());
+      }
       await prefs.setString('lastLogin_$uid', now.toIso8601String());
 
       debugPrint('[AuthService] Updated lastLogin for user $uid');
@@ -153,39 +172,50 @@ class AuthService {
   /// Returns true if user hasn't logged in for >= days
   Future<bool> isInactiveForDays(String uid, {int days = 3}) async {
     try {
-      // Try to get lastLogin from SharedPreferences first (faster)
       final prefs = await SharedPreferences.getInstance();
+      final previousLoginStr = prefs.getString('previousLogin_$uid');
       final lastLoginStr = prefs.getString('lastLogin_$uid');
 
+      DateTime? previousLogin;
       DateTime? lastLogin;
 
+      if (previousLoginStr != null) {
+        previousLogin = DateTime.tryParse(previousLoginStr);
+      }
+
       if (lastLoginStr != null) {
-        lastLogin = DateTime.parse(lastLoginStr);
-      } else {
-        // Fallback: fetch from Firestore
+        lastLogin = DateTime.tryParse(lastLoginStr);
+      }
+
+      if (previousLogin == null) {
+        // Need a previous login to evaluate inactivity across sessions.
+        // Try to load from Firestore.
         final doc = await _firestore.collection('users').doc(uid).get();
         if (doc.exists) {
           final data = doc.data() ?? <String, dynamic>{};
-          final timestamp = data['lastLogin'];
-          if (timestamp is Timestamp) {
-            lastLogin = timestamp.toDate();
+          final tsPrev = data['previousLogin'];
+          final tsLast = data['lastLogin'];
+          if (tsPrev is Timestamp) {
+            previousLogin = tsPrev.toDate();
+          }
+          if (tsLast is Timestamp) {
+            lastLogin ??= tsLast.toDate();
           }
         }
       }
 
-      // If no lastLogin found, user is not inactive (first login)
-      if (lastLogin == null) {
-        debugPrint('[AuthService] No lastLogin found for user $uid');
+      if (previousLogin == null) {
+        debugPrint('[AuthService] No previousLogin found for user $uid');
         return false;
       }
 
-      // Check if user is inactive
       final now = DateTime.now();
-      final daysSinceLogin = now.difference(lastLogin).inDays;
-      final isInactive = daysSinceLogin >= days;
+      final daysSincePreviousLogin = now.difference(previousLogin).inDays;
+      final isInactive = daysSincePreviousLogin >= days;
 
       debugPrint(
-          '[AuthService] User $uid - Days since login: $daysSinceLogin (Inactive: $isInactive)');
+        '[AuthService] User $uid - Days since previous login: $daysSincePreviousLogin (Inactive: $isInactive)',
+      );
 
       return isInactive;
     } catch (e) {

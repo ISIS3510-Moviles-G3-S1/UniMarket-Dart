@@ -12,6 +12,7 @@ class AppUser {
   final int ratingStars;
   final DateTime? createdAt;
   final DateTime? lastLogin;
+  final DateTime? previousLogin;
 
   const AppUser({
     required this.uid,
@@ -24,6 +25,7 @@ class AppUser {
     this.ratingStars = 0,
     this.createdAt,
     this.lastLogin,
+    this.previousLogin,
   });
 
   factory AppUser.fromFirebaseUser(User user) {
@@ -39,6 +41,7 @@ class AppUser {
       ratingStars: 0,
       createdAt: user.metadata.creationTime,
       lastLogin: DateTime.now(),
+      previousLogin: null,
     );
   }
 
@@ -55,6 +58,7 @@ class AppUser {
       ratingStars: (data['ratingStars'] as num?)?.toInt() ?? 0,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       lastLogin: (data['lastLogin'] as Timestamp?)?.toDate(),
+      previousLogin: (data['previousLogin'] as Timestamp?)?.toDate(),
     );
   }
 
@@ -69,6 +73,7 @@ class AppUser {
     int? ratingStars,
     DateTime? createdAt,
     DateTime? lastLogin,
+    DateTime? previousLogin,
   }) {
     return AppUser(
       uid: uid ?? this.uid,
@@ -81,6 +86,7 @@ class AppUser {
       ratingStars: ratingStars ?? this.ratingStars,
       createdAt: createdAt ?? this.createdAt,
       lastLogin: lastLogin ?? this.lastLogin,
+      previousLogin: previousLogin ?? this.previousLogin,
     );
   }
 }
