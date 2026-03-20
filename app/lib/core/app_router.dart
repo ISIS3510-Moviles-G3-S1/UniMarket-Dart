@@ -13,6 +13,7 @@ import 'package:uni_market/views/screens/not_found_screen.dart';
 import 'package:uni_market/views/screens/swap_screen.dart';
 import 'package:uni_market/views/screens/donate_screen.dart';
 import 'package:uni_market/views/screens/login_screen.dart';
+import 'package:uni_market/views/screens/register_screen.dart';
 
 // Widgets
 import 'package:uni_market/views/widgets/main_shell.dart';
@@ -28,28 +29,39 @@ GoRouter createAppRouter(SessionViewModel session) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: session,
+
     redirect: (context, state) {
       final location =
           state.matchedLocation.isEmpty ? state.uri.path : state.matchedLocation;
+
       final isLoading = session.isLoading;
       final isAuth = session.isAuthenticated;
+
       final onLoading = location == '/loading';
       final onLogin = location == '/login';
+      final onRegister = location == '/register';
 
+      /// 🔥 FIX CLAVE
+      final onAuthRoute = onLogin || onRegister;
+
+      /// LOADING
       if (isLoading) {
         return onLoading ? null : '/loading';
       }
 
+      /// NOT AUTHENTICATED
       if (!isAuth) {
-        return onLogin ? null : '/login';
+        return onAuthRoute ? null : '/login';
       }
 
-      if (onLogin || onLoading) {
+      /// AUTHENTICATED
+      if (onLogin || onRegister || onLoading) {
         return '/';
       }
 
       return null;
     },
+
     errorBuilder: (_, __) => const NotFoundScreen(),
 
     routes: [
@@ -60,12 +72,19 @@ GoRouter createAppRouter(SessionViewModel session) {
             const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
 
+      /// LOGIN
       GoRoute(
         path: '/login',
         builder: (_, __) => const LoginScreen(),
       ),
 
-      /// MAIN APP (TABS)
+      /// REGISTER ✅ (YA PERMITIDO)
+      GoRoute(
+        path: '/register',
+        builder: (_, __) => const RegisterScreen(),
+      ),
+
+      /// MAIN APP
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             MainShell(navigationShell: navigationShell),

@@ -34,29 +34,48 @@ class AuthService {
   }
 
   Future<AppUser> signUp({
-    required String email,
-    required String password,
-    String? displayName,
-  }) async {
-    try {
-      final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      final user = credential.user!;
-      if (displayName != null && displayName.trim().isNotEmpty) {
-        await user.updateDisplayName(displayName.trim());
-      }
-      return await _hydrateUser(
-        user,
-        overrideDisplayName: displayName,
-      );
-    } on FirebaseAuthException catch (e) {
-      throw AuthFailure.fromFirebaseException(e);
-    } catch (_) {
-      throw const AuthFailure('Unable to sign up. Please try again');
+  required String email,
+  required String password,
+  String? displayName,
+}) async {
+  try {
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    final user = credential.user!;
+
+    if (displayName != null && displayName.trim().isNotEmpty) {
+      await user.updateDisplayName(displayName.trim());
     }
+
+    final docRef = _firestore.collection('users').doc(user.uid);
+
+    await docRef.set({
+      'uid': user.uid,
+      'email': user.email ?? '',
+      'displayName': displayName ??
+          user.displayName ??
+          user.email?.split('@').first ??
+          '',
+      'profilePic': user.photoURL ?? '',
+      'xpPoints': 0,
+      'isVerified': false,
+      'numTransactions': 0,
+      'ratingStars': 0,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    
+    final doc = await docRef.get();
+    return AppUser.fromFirestore(doc);
+
+  } on FirebaseAuthException catch (e) {
+    throw AuthFailure.fromFirebaseException(e);
+  } catch (e) {
+    throw const AuthFailure('Unable to sign up. Please try again');
   }
+}
 
   Future<void> signOut() async {
     try {

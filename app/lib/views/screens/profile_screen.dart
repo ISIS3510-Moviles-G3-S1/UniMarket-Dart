@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_theme.dart';
 import '../../view_models/profile_view_model.dart';
 import '../../view_models/browse_view_model.dart';
+import '../../view_models/session_view_model.dart';
 import '../../models/profile_models.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -683,6 +684,30 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+                child: Consumer<SessionViewModel>(
+                  builder: (context, session, _) => SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: session.isLoading
+                          ? null
+                          : () async {
+                              await session.signOut();
+                            },
+                      child: session.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Log out'),
+                    ),
                   ),
                 ),
               ),

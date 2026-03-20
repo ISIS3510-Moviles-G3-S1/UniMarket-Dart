@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import '../../core/auth_failure.dart';
 import '../../view_models/session_view_model.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -45,11 +48,35 @@ class _LoginScreenState extends State<LoginScreen> {
             email: email,
             password: password,
           );
-    } catch (e) {
+      if (!mounted) return;
       setState(() {
-        _error = "Login failed. Check your credentials";
         _isLoading = false;
       });
+    } on AuthFailure catch (failure) {
+      if (!mounted) return;
+      setState(() {
+        _error = _messageForFailure(failure);
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = "Unable to sign in. Please try again";
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _messageForFailure(AuthFailure failure) {
+    switch (failure.code) {
+      case 'user-not-found':
+        return 'User not found';
+      case 'wrong-password':
+        return 'Incorrect password';
+      case 'invalid-email':
+        return 'Invalid email';
+      default:
+        return failure.message;
     }
   }
 
@@ -133,7 +160,11 @@ class _LoginScreenState extends State<LoginScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _login,
                 child: _isLoading
-                    ? const CircularProgressIndicator()
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Text("Log in"),
               ),
 
@@ -141,9 +172,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
               /// REGISTER
               TextButton(
-                onPressed: () {
-                  // luego conectamos register
-                },
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        context.go('/register');
+                      },
                 child: const Text("Create an account"),
               ),
             ],
