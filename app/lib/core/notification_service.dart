@@ -3,6 +3,8 @@ abstract class NotificationService {
 
   Future<void> initialize();
   Future<void> showInactivityNotification();
+  Future<bool> requestNotificationPermissions();
+  Future<bool> hasNotificationPermission();
 }
 
 class DummyNotificationService implements NotificationService {
@@ -13,4 +15,10 @@ class DummyNotificationService implements NotificationService {
 
   @override
   Future<void> showInactivityNotification() async {}
+
+  @override
+  Future<bool> requestNotificationPermissions() async => false;
+
+  @override
+  Future<bool> hasNotificationPermission() async => false;
 }

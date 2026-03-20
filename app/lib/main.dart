@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
@@ -23,36 +24,108 @@ class RealNotificationService implements NotificationService {
   Future<void> initialize() async {
     _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
+    // Android initialization
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+    // iOS initialization
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
 
     await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    // Request permissions after initialization
+    await requestNotificationPermissions();
+  }
+
+  @override
+  Future<bool> requestNotificationPermissions() async {
+    try {
+      // Check and log current permission status
+      final androidPermission = await Permission.notification.status;
+      print('DEBUG: Android notification permission status: $androidPermission');
+
+      // Request Android notification permission (API 33+)
+      final androidStatus = await Permission.notification.request();
+      print('DEBUG: Android notification permission result: $androidStatus');
+
+      // Request iOS notification permission
+      final iosResult = await _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+      print('DEBUG: iOS notification permission result: $iosResult');
+
+      return androidStatus.isGranted || (iosResult ?? false);
+    } catch (e) {
+      print('ERROR: Failed to request notification permissions: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> hasNotificationPermission() async {
+    try {
+      final status = await Permission.notification.status;
+      print('DEBUG: Current notification permission status: $status');
+      return status.isGranted;
+    } catch (e) {
+      print('ERROR: Failed to check notification permission: $e');
+      return false;
+    }
   }
 
   @override
   Future<void> showInactivityNotification() async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'inactivity_channel',
-      'Inactivity Notifications',
-      channelDescription: 'Notifications for user inactivity',
-      importance: Importance.max,
-      priority: Priority.high,
-      showWhen: false,
-    );
+    try {
+      final hasPermission = await hasNotificationPermission();
+      if (!hasPermission) {
+        print('WARN: Notification permission not granted, requesting...');
+        final granted = await requestNotificationPermissions();
+        if (!granted) {
+          print('WARN: User denied notification permission, skipping notification');
+          return;
+        }
+      }
 
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
+      const AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+        'inactivity_channel',
+        'Inactivity Notifications',
+        channelDescription: 'Notifications for user inactivity',
+        importance: Importance.max,
+        priority: Priority.high,
+        showWhen: false,
+      );
 
-    await _flutterLocalNotificationsPlugin.show(
-      0,
-      'Welcome back!',
-      'It\'s been a while since your last visit. Check out new listings!',
-      platformChannelSpecifics,
-    );
+      const NotificationDetails platformChannelSpecifics =
+          NotificationDetails(android: androidPlatformChannelSpecifics);
+
+      await _flutterLocalNotificationsPlugin.show(
+        0,
+        'Welcome back!',
+        'It\'s been a while since your last visit. Check out new listings!',
+        platformChannelSpecifics,
+      );
+
+      print('DEBUG: Inactivity notification shown');
+    } catch (e) {
+      print('ERROR: Failed to show inactivity notification: $e');
+    }
   }
 }
 
@@ -63,9 +136,15 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize notifications
+  // Initialize notifications (won't fail even if permissions are denied)
   final notificationService = RealNotificationService();
-  await notificationService.initialize();
+  try {
+    await notificationService.initialize();
+    print('DEBUG: Notification service initialized successfully');
+  } catch (e) {
+    print('WARN: Failed to initialize notification service: $e');
+    // Continue anyway, use dummy service
+  }
 
   runApp(UniMarketApp(notificationService: notificationService));
 }
