@@ -10,12 +10,11 @@ class SellViewModel extends ChangeNotifier {
 
   final ListingService _listingService = ListingService();
   SessionViewModel _session;
-    void updateSession(SessionViewModel session) {
-      _session = session;
-    }
-  bool _aiLoading = false;
-  bool _aiDone = false;
-  double _aiProgress = 0;
+
+  void updateSession(SessionViewModel session) {
+    _session = session;
+  }
+
   bool _published = false;
 
   String _title = '';
@@ -27,9 +26,6 @@ class SellViewModel extends ChangeNotifier {
   String _tagsInput = '';
   List<dynamic> _images = [];
 
-  bool get aiLoading => _aiLoading;
-  bool get aiDone => _aiDone;
-  double get aiProgress => _aiProgress;
   bool get published => _published;
 
   String get title => _title;
@@ -77,17 +73,31 @@ class SellViewModel extends ChangeNotifier {
   }
 
   List<dynamic> get images => _images;
-  List<String> get aiTags => _tags;
 
   List<String> _parseTags(String value) {
     return value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+  }
+
+  void applyAnalysisTags(Map<String, List<String>> tags) {
+    final ordered = <String>[];
+    for (final key in const ['category', 'color', 'style', 'pattern']) {
+      ordered.addAll(tags[key] ?? const []);
+    }
+
+    _tags = ordered;
+    _tagsInput = ordered.join(', ');
+
+    if (_title.isEmpty && (tags['category']?.isNotEmpty ?? false)) {
+      _title = tags['category']!.first;
+    }
+
+    notifyListeners();
   }
 
   void setImages(List<dynamic> files) {
     final updated = List<dynamic>.from(_images)..addAll(files);
     _images = updated.take(5).toList();
     notifyListeners();
-    runAiTagging();
   }
 
   void addImage(dynamic file) {
@@ -95,7 +105,6 @@ class SellViewModel extends ChangeNotifier {
     if (_images.length < 5) {
       _images.add(file);
       notifyListeners();
-      runAiTagging();
     }
   }
 
@@ -104,29 +113,6 @@ class SellViewModel extends ChangeNotifier {
       _images.removeAt(index);
       notifyListeners();
     }
-  }
-
-  void runAiTagging() {
-    if (_images.isEmpty) return;
-    _aiLoading = true;
-    _aiProgress = 0;
-    _aiDone = false;
-    notifyListeners();
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(milliseconds: 60));
-      _aiProgress += 4;
-      if (_aiProgress >= 100) {
-        _aiLoading = false;
-        _aiDone = true;
-        _title = _title.isEmpty ? 'Casual Denim Jacket' : _title;
-        _condition = 'Good';
-        _aiProgress = 100;
-        notifyListeners();
-        return false;
-      }
-      notifyListeners();
-      return true;
-    });
   }
 
   Future<void> publish() async {
@@ -162,9 +148,6 @@ class SellViewModel extends ChangeNotifier {
   }
 
   void resetAfterPublish() {
-    _aiLoading = false;
-    _aiDone = false;
-    _aiProgress = 0;
     _published = false;
     _title = '';
     _images = [];

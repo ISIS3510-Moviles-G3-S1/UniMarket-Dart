@@ -8,6 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_theme.dart';
+import '../../views/screens/clothing_analysis_screen.dart';
 import '../../view_models/sell_view_model.dart';
 
 class SellScreen extends StatelessWidget {
@@ -118,7 +119,7 @@ class _SellForm extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Upload a photo - our AI will tag it for you automatically',
+                  'Upload a photo, then open AI Analyze to generate editable tags.',
                   style: TextStyle(fontSize: 13, color: Colors.white70),
                 ),
               ],
@@ -135,7 +136,39 @@ class _SellForm extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 _PhotoUpload(vm: vm),
-                if (vm.aiLoading || vm.aiDone) _AiTaggingBlock(vm: vm),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () async {
+                    final tags = await Navigator.push<Map<String, List<String>>>(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ClothingAnalysisScreen()),
+                    );
+                    if (tags != null) {
+                      vm.applyAnalysisTags(tags);
+                    }
+                  },
+                  icon: const Icon(Icons.auto_awesome_rounded, size: 20),
+                  label: const Text('AI Analyze'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
+                    foregroundColor: isDark ? colorScheme.onPrimary : Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                ),
+                if (vm.tags.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Suggested tags',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: vm.tags.map((tag) => Chip(label: Text(tag))).toList(),
+                  ),
+                ],
                 const SizedBox(height: 20),
                 _TextField(
                   label: 'Title',
@@ -382,68 +415,6 @@ class _PhotoUpload extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _AiTaggingBlock extends StatelessWidget {
-  final SellViewModel vm;
-
-  const _AiTaggingBlock({required this.vm});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: colorScheme.outline),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                vm.aiDone ? Icons.auto_awesome : Icons.auto_awesome,
-                color: vm.aiDone ? AppTheme.sage : AppTheme.accent,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                vm.aiLoading ? 'AI is analyzing your photo...' : 'AI tagging complete!',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-          if (vm.aiLoading) ...[
-            const SizedBox(height: 8),
-            LinearProgressIndicator(
-              value: vm.aiProgress / 100,
-              backgroundColor: colorScheme.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-            ),
-          ],
-          if (vm.aiDone) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                if (vm.aiTags.isNotEmpty)
-                  ...vm.aiTags.map((t) => Chip(label: Text(t))),
-                if (vm.condition.isNotEmpty)
-                  Chip(
-                    label: Text('Condition: ${vm.condition}'),
-                    backgroundColor: colorScheme.surface,
-                  ),
-              ],
-            ),
-          ],
-        ],
-      ),
     );
   }
 }
