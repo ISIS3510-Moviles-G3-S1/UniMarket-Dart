@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_theme.dart';
+import '../../core/price_formatter.dart';
 import '../../view_models/item_detail_view_model.dart';
 import '../../models/item_detail.dart';
 import '../../models/seller.dart';
@@ -189,7 +190,7 @@ class _InfoSection extends StatelessWidget {
           ],
         ),
         Text(
-          '\$${item.price.toStringAsFixed(0)}',
+          PriceFormatter.formatCopFromNum(item.price),
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w800,
@@ -564,7 +565,7 @@ class _SimilarSection extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '\$${(s['price'] as double).toStringAsFixed(0)}',
+                                  PriceFormatter.formatCopFromNum((s['price'] as num?) ?? 0),
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,

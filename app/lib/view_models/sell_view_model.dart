@@ -122,12 +122,14 @@ class SellViewModel extends ChangeNotifier {
         : (user.displayName.trim().isNotEmpty
             ? user.displayName
             : user.email.split('@').first);
+    final parsedPrice = int.tryParse(_price.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+
     // Soporte para múltiples imágenes
     final listing = Listing(
       id: '', // Se asignará por Firestore
       sellerId: '', // Se asignará en ListingService
       title: _title,
-      price: int.tryParse(_price) ?? 0,
+      price: parsedPrice,
       conditionTag: _condition,
       description: _description,
       sellerName: sellerName,
