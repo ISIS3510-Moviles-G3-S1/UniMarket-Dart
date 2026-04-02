@@ -11,6 +11,9 @@ import '../../core/app_theme.dart';
 import '../../views/screens/clothing_analysis_screen.dart';
 import '../../view_models/sell_view_model.dart';
 
+// For AnalysisResult_WithImage type
+export 'clothing_analysis_screen.dart' show AnalysisResult_WithImage;
+
 class SellScreen extends StatelessWidget {
   const SellScreen({super.key});
 
@@ -28,6 +31,9 @@ class SellScreen extends StatelessWidget {
 }
 
 Widget _buildImagePreview(dynamic image, {double width = 140, double height = 160}) {
+  if (image is XFile) {
+    return _PickedImagePreview(image: image, width: width, height: height);
+  }
   if (image is Uint8List) {
     return Image.memory(image, width: width, height: height, fit: BoxFit.cover);
   }
@@ -35,7 +41,18 @@ Widget _buildImagePreview(dynamic image, {double width = 140, double height = 16
     return Image.file(image, width: width, height: height, fit: BoxFit.cover);
   }
   if (image is String) {
-    return CachedNetworkImage(imageUrl: image, width: width, height: height, fit: BoxFit.cover);
+    return CachedNetworkImage(
+      imageUrl: image,
+      width: width,
+      height: height,
+      fit: BoxFit.cover,
+      errorWidget: (_, __, ___) => Container(
+        width: width,
+        height: height,
+        color: Colors.grey.shade300,
+        child: const Icon(Icons.broken_image_rounded, size: 40),
+      ),
+    );
   }
   return Container(
     width: width,
@@ -43,6 +60,36 @@ Widget _buildImagePreview(dynamic image, {double width = 140, double height = 16
     color: Colors.grey.shade300,
     child: const Icon(Icons.image, size: 40),
   );
+}
+
+class _PickedImagePreview extends StatelessWidget {
+  final XFile image;
+  final double width;
+  final double height;
+
+  const _PickedImagePreview({required this.image, required this.width, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kIsWeb && image.path.isNotEmpty) {
+      return Image.file(File(image.path), width: width, height: height, fit: BoxFit.cover);
+    }
+
+    return FutureBuilder<Uint8List>(
+      future: image.readAsBytes(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done || !snapshot.hasData) {
+          return Container(
+            width: width,
+            height: height,
+            color: Colors.grey.shade300,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+        return Image.memory(snapshot.data!, width: width, height: height, fit: BoxFit.cover);
+      },
+    );
+  }
 }
 
 class _PublishSuccess extends StatelessWidget {
@@ -139,12 +186,18 @@ class _SellForm extends StatelessWidget {
                 const SizedBox(height: 12),
                 FilledButton.icon(
                   onPressed: () async {
-                    final tags = await Navigator.push<Map<String, List<String>>>(
+                    final initialImage = vm.images.isNotEmpty ? vm.images.first : null;
+                    final result = await Navigator.push<AnalysisResult_WithImage>(
                       context,
-                      MaterialPageRoute(builder: (_) => const ClothingAnalysisScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => ClothingAnalysisScreen(initialImage: initialImage),
+                      ),
                     );
-                    if (tags != null) {
-                      vm.applyAnalysisTags(tags);
+                    if (result != null) {
+                      vm.applyAnalysisTags(result.tags);
+                      if (result.analyzedImage != null && (vm.images.isEmpty || vm.images.first.path != result.analyzedImage?.path)) {
+                        vm.setImages([result.analyzedImage!]);
+                      }
                     }
                   },
                   icon: const Icon(Icons.auto_awesome_rounded, size: 20),
@@ -312,13 +365,8 @@ class _PhotoUpload extends StatelessWidget {
     final picker = ImagePicker();
     final pickedFiles = await picker.pickMultiImage(imageQuality: 85);
     if (pickedFiles == null || pickedFiles.isEmpty) return;
-    if (kIsWeb) {
-      final bytes = await Future.wait(pickedFiles.map((x) => x.readAsBytes()));
-      vm.setImages(bytes);
-    } else {
-      final files = pickedFiles.map((x) => File(x.path)).toList();
-      vm.setImages(files);
-    }
+    debugPrint('[SellScreen] picked: ${pickedFiles.map((x) => x.name).join(', ')}');
+    vm.setImages(pickedFiles);
   }
 
   @override

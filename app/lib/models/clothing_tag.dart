@@ -48,6 +48,6 @@ class ClothingTag {
 
 String generateClothingTagId() {
   final now = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
-  final random = Random().nextInt(1 << 32).toRadixString(36);
-  return '$now-$random';
+  final randomPart = Random().nextInt(1 << 31).toRadixString(36);
+  return '$now-$randomPart';
 }

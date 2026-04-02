@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 import '../data/listing_service.dart';
 import '../models/listing.dart';
 import 'session_view_model.dart';
@@ -24,7 +25,7 @@ class SellViewModel extends ChangeNotifier {
   String _exchangeType = 'sell';
   List<String> _tags = [];
   String _tagsInput = '';
-  List<dynamic> _images = [];
+  List<XFile> _images = [];
 
   bool get published => _published;
 
@@ -72,7 +73,7 @@ class SellViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<dynamic> get images => _images;
+  List<XFile> get images => _images;
 
   List<String> _parseTags(String value) {
     return value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
@@ -94,16 +95,17 @@ class SellViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setImages(List<dynamic> files) {
-    final updated = List<dynamic>.from(_images)..addAll(files);
+  void setImages(List<XFile> files) {
+    final updated = List<XFile>.from(_images)..addAll(files);
     _images = updated.take(5).toList();
+    debugPrint('[SellVM] selected images: ${_images.map((f) => f.name).join(', ')}');
     notifyListeners();
   }
 
-  void addImage(dynamic file) {
-    if (file is! File && file is! Uint8List) return;
+  void addImage(XFile file) {
     if (_images.length < 5) {
       _images.add(file);
+      debugPrint('[SellVM] add image: ${file.name}');
       notifyListeners();
     }
   }
@@ -144,6 +146,7 @@ class SellViewModel extends ChangeNotifier {
       status: 'active',
       saved: false,
     );
+    debugPrint('[SellVM] publishing ${_images.length} selected images');
     await _listingService.createListing(listing: listing, images: _images);
     _published = true;
     notifyListeners();

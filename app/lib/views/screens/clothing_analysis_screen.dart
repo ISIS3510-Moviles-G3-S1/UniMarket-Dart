@@ -1,19 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/app_theme.dart';
 import '../../models/analysis_result.dart';
 import '../../models/clothing_tag.dart';
 import '../../view_models/clothing_analysis_view_model.dart';
 import '../widgets/loading_analysis_view.dart';
-import '../widgets/tag_chip_widget.dart';
+
+class AnalysisResult_WithImage {
+  final Map<String, List<String>> tags;
+  final XFile? analyzedImage;
+
+  AnalysisResult_WithImage({required this.tags, required this.analyzedImage});
+}
 
 class ClothingAnalysisScreen extends StatelessWidget {
-  const ClothingAnalysisScreen({super.key});
+  final XFile? initialImage;
+
+  const ClothingAnalysisScreen({super.key, this.initialImage});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ClothingAnalysisViewModel(),
+      create: (_) => ClothingAnalysisViewModel(initialImage: initialImage),
       child: const _ClothingAnalysisView(),
     );
   }
@@ -114,6 +124,12 @@ class _ResultsState extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final scheme = Theme.of(context).colorScheme;
+    final categoryTags = provider.tagsFor(TagCategory.category);
+    final colorTags = provider.tagsFor(TagCategory.color);
+    final styleTags = provider.tagsFor(TagCategory.style);
+    final patternTags = provider.tagsFor(TagCategory.pattern);
+
     return SafeArea(
       child: Column(
         children: [
@@ -123,33 +139,193 @@ class _ResultsState extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _SummaryCard(result: result),
-                  const SizedBox(height: 20),
-                  _TagGroupSection(
-                    title: 'Item Type',
-                    tags: provider.tagsFor(TagCategory.category),
-                    onRemove: provider.removeTag,
+                  // Analysis Complete header
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.deepGreen.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle_rounded, color: AppTheme.deepGreen, size: 20),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Analysis Complete',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${result.processingTimeMs}ms',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey.shade600,
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
-                  _TagGroupSection(
-                    title: 'Colors',
-                    tags: provider.tagsFor(TagCategory.color),
-                    onRemove: provider.removeTag,
+                  const SizedBox(height: 24),
+                  // Item Type section
+                  if (categoryTags.isNotEmpty) ...[
+                    Text('ITEM TYPE', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: scheme.onSurfaceVariant)),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: categoryTags
+                                  .map(
+                                    (tag) => Padding(
+                                      padding: const EdgeInsets.only(bottom: 4),
+                                      child: Text(
+                                        tag.name,
+                                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Confidence',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${(result.confidence * 100).round()}%',
+                                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  // Colors section
+                  if (colorTags.isNotEmpty) ...[
+                    // Section headers
+                    Text(
+                      'COLORS',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey.shade600,
+                            letterSpacing: 0.6,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: colorTags
+                          .map(
+                            (tag) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _ColorChip(
+                                tag: tag,
+                                onRemove: () => provider.removeTag(tag.id),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  // Style section
+                  if (styleTags.isNotEmpty) ...[
+                    Text('STYLE', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey.shade600)),
+                    const SizedBox(height: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: styleTags
+                          .map(
+                            (tag) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _ColorChip(
+                                tag: tag,
+                                onRemove: () => provider.removeTag(tag.id),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  // Pattern section
+                  if (patternTags.isNotEmpty) ...[
+                    Text('PATTERN', style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey.shade600)),
+                    const SizedBox(height: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: patternTags
+                          .map(
+                            (tag) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _ColorChip(
+                                tag: tag,
+                                onRemove: () => provider.removeTag(tag.id),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  // Info message
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE3F2FD),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFBBDEFB)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_rounded, color: const Color(0xFF1976D2), size: 18),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'You can edit or remove tags before creating your listing',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.black,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  _TagGroupSection(
-                    title: 'Style',
-                    tags: provider.tagsFor(TagCategory.style),
-                    onRemove: provider.removeTag,
-                  ),
-                  _TagGroupSection(
-                    title: 'Pattern',
-                    tags: provider.tagsFor(TagCategory.pattern),
-                    onRemove: provider.removeTag,
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton.icon(
+                  const SizedBox(height: 24),
+                  OutlinedButton.icon(
                     onPressed: provider.analyzeAnotherItem,
                     icon: const Icon(Icons.refresh_rounded),
                     label: const Text('Analyze Another Item'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.sage,
+                      side: const BorderSide(color: AppTheme.sage),
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
                   ),
                   const SizedBox(height: 28),
                 ],
@@ -158,13 +334,90 @@ class _ResultsState extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-            child: FilledButton.icon(
-              onPressed: () {
-                Navigator.pop<Map<String, List<String>>>(context, provider.buildListingTags());
-              },
-              icon: const Icon(Icons.check_rounded),
-              label: const Text('Create Listing'),
-              style: FilledButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
+            child: // Filled button
+              FilledButton.icon(
+                onPressed: () {
+                  final output = AnalysisResult_WithImage(
+                    tags: provider.buildListingTags(),
+                    analyzedImage: provider.selectedImage,
+                  );
+                  Navigator.pop<AnalysisResult_WithImage>(context, output);
+                },
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Create Listing'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.sage,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 60),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ColorChip extends StatelessWidget {
+  final ClothingTag tag;
+  final VoidCallback onRemove;
+
+  const _ColorChip({required this.tag, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: AppTheme.chipBg,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE5E5DC)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                tag.name,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.black,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${(tag.confidence * 100).round()}%',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppTheme.secondaryText,
+                    ),
+              ),
+            ],
+          ),
+          InkWell(
+            onTap: onRemove,
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              width: 34,
+              height: 34,
+              decoration: const BoxDecoration(
+                color: AppTheme.chipCloseBg,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.close_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -200,46 +453,6 @@ class _SummaryCard extends StatelessWidget {
           Text('Colors: ${result.colors.join(', ')}'),
           if (result.style != null) Text('Style: ${result.style}'),
           if (result.pattern != null) Text('Pattern: ${result.pattern}'),
-        ],
-      ),
-    );
-  }
-}
-
-class _TagGroupSection extends StatelessWidget {
-  final String title;
-  final List<ClothingTag> tags;
-  final ValueChanged<String> onRemove;
-
-  const _TagGroupSection({
-    required this.title,
-    required this.tags,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (tags.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: tags
-                .map(
-                  (tag) => TagChipWidget(
-                    tag: tag,
-                    onRemove: () => onRemove(tag.id),
-                  ),
-                )
-                .toList(),
-          ),
         ],
       ),
     );

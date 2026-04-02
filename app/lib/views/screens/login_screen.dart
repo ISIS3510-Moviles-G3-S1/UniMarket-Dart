@@ -99,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(height: 40),
 
@@ -190,7 +191,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                       child: const Text("Create an account"),
                     ),
-                    const Spacer(),
                   ],
                 ),
               ),
