@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_theme.dart';
+import '../../core/price_formatter.dart';
 import '../../view_models/browse_view_model.dart';
 import '../widgets/filter_sheet.dart';
 import 'browse_screen.dart';
@@ -118,7 +119,7 @@ class _ListingCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '\$${listing.price}',
+                        PriceFormatter.formatCop(listing.price),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,

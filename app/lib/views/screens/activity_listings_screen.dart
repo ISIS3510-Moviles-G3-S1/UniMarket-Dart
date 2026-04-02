@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_theme.dart';
+import '../../core/price_formatter.dart';
 import '../../view_models/profile_view_model.dart';
 
 class ActivityListingsScreen extends StatelessWidget {
@@ -214,7 +215,7 @@ class ActivityListingsScreen extends StatelessWidget {
                                         ),
                                       ),
                                       Text(
-                                        '\$${listing.price}',
+                                        PriceFormatter.formatCop(listing.price),
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: AppTheme.accent,

@@ -1,8 +1,9 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/listing.dart';
 
 class ListingService {
@@ -32,23 +33,36 @@ class ListingService {
     return Listing.fromFirestore(doc);
   }
 
-  Future<String> _uploadImage(dynamic image, String listingId, int index) async {
+  Future<String> _uploadImage(XFile image, String listingId, int index) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('User not authenticated');
-    final ref = _storage.ref().child('listings/${user.uid}/$listingId/image_$index.jpg');
-    if (image is Uint8List) {
-      await ref.putData(image, SettableMetadata(contentType: 'image/jpeg'));
-    } else if (image is File) {
-      await ref.putFile(image);
-    } else {
-      throw Exception('Unsupported image type');
-    }
-    return await ref.getDownloadURL();
+    final bytes = await image.readAsBytes();
+    final ext = _normalizeExtension(image.name);
+    final fileName = _buildUniqueFileName(index, ext);
+    final ref = _storage.ref().child('listings/${user.uid}/$listingId/$fileName');
+    final contentType = _contentTypeForExtension(ext);
+    final metadata = SettableMetadata(
+      contentType: contentType,
+      customMetadata: {
+        'originalFileName': image.name,
+        'originalExtension': ext,
+        'uploadedAt': DateTime.now().toIso8601String(),
+      },
+    );
+
+    debugPrint(
+      '[ListingService] upload start name=${image.name} size=${bytes.length} ext=$ext contentType=$contentType path=${ref.fullPath}',
+    );
+
+    await ref.putData(bytes, metadata);
+    final downloadUrl = await ref.getDownloadURL();
+    debugPrint('[ListingService] upload done url=$downloadUrl');
+    return downloadUrl;
   }
 
   Future<Listing> createListing({
     required Listing listing,
-    required List<dynamic> images,
+    required List<XFile> images,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('User not authenticated');
@@ -84,5 +98,28 @@ class ListingService {
       }
     }
     await _db.collection(_collection).doc(listing.id).delete();
+  }
+
+  String _normalizeExtension(String fileName) {
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.png')) return 'png';
+    if (lower.endsWith('.jpg')) return 'jpg';
+    if (lower.endsWith('.jpeg')) return 'jpg';
+    return 'jpg';
+  }
+
+  String _buildUniqueFileName(int index, String ext) {
+    final stamp = DateTime.now().microsecondsSinceEpoch;
+    return 'image_${index}_$stamp.$ext';
+  }
+
+  String _contentTypeForExtension(String ext) {
+    switch (ext) {
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      default:
+        return 'image/jpeg';
+    }
   }
 }

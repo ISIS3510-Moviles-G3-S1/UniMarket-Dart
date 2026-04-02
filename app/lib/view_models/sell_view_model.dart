@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 import '../data/listing_service.dart';
 import '../models/listing.dart';
 import 'session_view_model.dart';
@@ -10,12 +11,11 @@ class SellViewModel extends ChangeNotifier {
 
   final ListingService _listingService = ListingService();
   SessionViewModel _session;
-    void updateSession(SessionViewModel session) {
-      _session = session;
-    }
-  bool _aiLoading = false;
-  bool _aiDone = false;
-  double _aiProgress = 0;
+
+  void updateSession(SessionViewModel session) {
+    _session = session;
+  }
+
   bool _published = false;
 
   String _title = '';
@@ -25,11 +25,8 @@ class SellViewModel extends ChangeNotifier {
   String _exchangeType = 'sell';
   List<String> _tags = [];
   String _tagsInput = '';
-  List<dynamic> _images = [];
+  List<XFile> _images = [];
 
-  bool get aiLoading => _aiLoading;
-  bool get aiDone => _aiDone;
-  double get aiProgress => _aiProgress;
   bool get published => _published;
 
   String get title => _title;
@@ -76,26 +73,40 @@ class SellViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<dynamic> get images => _images;
-  List<String> get aiTags => _tags;
+  List<XFile> get images => _images;
 
   List<String> _parseTags(String value) {
     return value.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
   }
 
-  void setImages(List<dynamic> files) {
-    final updated = List<dynamic>.from(_images)..addAll(files);
-    _images = updated.take(5).toList();
+  void applyAnalysisTags(Map<String, List<String>> tags) {
+    final ordered = <String>[];
+    for (final key in const ['category', 'color', 'style', 'pattern']) {
+      ordered.addAll(tags[key] ?? const []);
+    }
+
+    _tags = ordered;
+    _tagsInput = ordered.join(', ');
+
+    if (_title.isEmpty && (tags['category']?.isNotEmpty ?? false)) {
+      _title = tags['category']!.first;
+    }
+
     notifyListeners();
-    runAiTagging();
   }
 
-  void addImage(dynamic file) {
-    if (file is! File && file is! Uint8List) return;
+  void setImages(List<XFile> files) {
+    final updated = List<XFile>.from(_images)..addAll(files);
+    _images = updated.take(5).toList();
+    debugPrint('[SellVM] selected images: ${_images.map((f) => f.name).join(', ')}');
+    notifyListeners();
+  }
+
+  void addImage(XFile file) {
     if (_images.length < 5) {
       _images.add(file);
+      debugPrint('[SellVM] add image: ${file.name}');
       notifyListeners();
-      runAiTagging();
     }
   }
 
@@ -106,29 +117,6 @@ class SellViewModel extends ChangeNotifier {
     }
   }
 
-  void runAiTagging() {
-    if (_images.isEmpty) return;
-    _aiLoading = true;
-    _aiProgress = 0;
-    _aiDone = false;
-    notifyListeners();
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(milliseconds: 60));
-      _aiProgress += 4;
-      if (_aiProgress >= 100) {
-        _aiLoading = false;
-        _aiDone = true;
-        _title = _title.isEmpty ? 'Casual Denim Jacket' : _title;
-        _condition = 'Good';
-        _aiProgress = 100;
-        notifyListeners();
-        return false;
-      }
-      notifyListeners();
-      return true;
-    });
-  }
-
   Future<void> publish() async {
     final user = _session.currentUser;
     final sellerName = user == null
@@ -136,12 +124,14 @@ class SellViewModel extends ChangeNotifier {
         : (user.displayName.trim().isNotEmpty
             ? user.displayName
             : user.email.split('@').first);
+    final parsedPrice = int.tryParse(_price.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+
     // Soporte para múltiples imágenes
     final listing = Listing(
       id: '', // Se asignará por Firestore
       sellerId: '', // Se asignará en ListingService
       title: _title,
-      price: int.tryParse(_price) ?? 0,
+      price: parsedPrice,
       conditionTag: _condition,
       description: _description,
       sellerName: sellerName,
@@ -156,15 +146,13 @@ class SellViewModel extends ChangeNotifier {
       status: 'active',
       saved: false,
     );
+    debugPrint('[SellVM] publishing ${_images.length} selected images');
     await _listingService.createListing(listing: listing, images: _images);
     _published = true;
     notifyListeners();
   }
 
   void resetAfterPublish() {
-    _aiLoading = false;
-    _aiDone = false;
-    _aiProgress = 0;
     _published = false;
     _title = '';
     _images = [];

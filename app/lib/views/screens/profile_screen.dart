@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_theme.dart';
+import '../../core/price_formatter.dart';
 import '../../view_models/profile_view_model.dart';
 import '../../view_models/browse_view_model.dart';
 import '../../view_models/session_view_model.dart';
@@ -367,7 +368,7 @@ class ProfileScreen extends StatelessWidget {
                                           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                                         ),
                                         Text(
-                                          '\$${item.price.toStringAsFixed(0)}',
+                                          PriceFormatter.formatCopFromNum(item.price),
                                           style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.sage),
                                         ),
                                       ],
@@ -620,7 +621,7 @@ class ProfileScreen extends StatelessWidget {
                                                     ),
                                                   ),
                                                   Text(
-                                                    '\$${listing.price}',
+                                                    PriceFormatter.formatCop(listing.price),
                                                     style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
