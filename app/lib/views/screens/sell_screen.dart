@@ -404,10 +404,8 @@ class _PhotoUpload extends StatelessWidget {
                 label: Text('Gallery  ${images.length}/5'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  backgroundColor: Colors.white,
-                  foregroundColor: colorScheme.primary,
-                  side: BorderSide(color: colorScheme.primary, width: 2),
                   textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  // No backgroundColor/foregroundColor: usa los del tema
                 ),
               ),
             ),
@@ -419,10 +417,8 @@ class _PhotoUpload extends StatelessWidget {
                 label: Text('Camera  ${images.length}/5'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  backgroundColor: Colors.white,
-                  foregroundColor: colorScheme.primary,
-                  side: BorderSide(color: colorScheme.primary, width: 2),
                   textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  // No backgroundColor/foregroundColor: usa los del tema
                 ),
               ),
             ),
