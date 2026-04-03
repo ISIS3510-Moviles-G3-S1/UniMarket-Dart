@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
+import '../core/photo_quality_analyzer.dart';
+import 'package:flutter/material.dart';
 import '../data/listing_service.dart';
 import '../models/listing.dart';
 import 'session_view_model.dart';
@@ -95,8 +97,38 @@ class SellViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setImages(List<XFile> files) {
-    final updated = List<XFile>.from(_images)..addAll(files);
+  Future<void> setImagesWithQualityCheck(BuildContext context, List<XFile> files) async {
+    final updated = List<XFile>.from(_images);
+    for (final file in files) {
+      if (updated.length >= 5) break;
+      final result = await PhotoQualityAnalyzer.analyze(File(file.path));
+      if (result.qualityScore < 0.5) {
+        // Show warning dialog
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Photo Quality Warning'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('This photo may not be suitable:'),
+                const SizedBox(height: 8),
+                ...result.suggestions.map((s) => Text('• $s')),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        updated.add(file);
+      }
+    }
     _images = updated.take(5).toList();
     debugPrint('[SellVM] selected images: ${_images.map((f) => f.name).join(', ')}');
     notifyListeners();
