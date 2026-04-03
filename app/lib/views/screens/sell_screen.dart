@@ -14,7 +14,6 @@ import '../../core/photo_quality_analyzer.dart';
 import '../../core/photo_quality_vision_service.dart';
 import '../../view_models/sell_view_model.dart';
 
-// For AnalysisResult_WithImage type
 export 'clothing_analysis_screen.dart' show AnalysisResult_WithImage;
 
 class SellScreen extends StatelessWidget {
