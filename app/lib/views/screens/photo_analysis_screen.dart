@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/photo_quality_vision_service.dart';
 import 'package:image/image.dart' as img;
+import '../../core/app_theme.dart';
 
 enum PhotoSourceType { camera, gallery }
 
@@ -300,8 +301,14 @@ class _PhotoAnalysisScreenState extends State<PhotoAnalysisScreen> {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: ElevatedButton(
                     onPressed: () => widget.onRetake(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.deepGreen,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     child: const Text('Try Again'),
                   ),
                 ),
@@ -309,6 +316,12 @@ class _PhotoAnalysisScreenState extends State<PhotoAnalysisScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: widget.onKeep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.deepGreen,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     child: const Text('Keep'),
                   ),
                 ),
