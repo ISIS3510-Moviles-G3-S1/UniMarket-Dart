@@ -361,12 +361,32 @@ class _PhotoUpload extends StatelessWidget {
 
   const _PhotoUpload({required this.vm});
 
+
   Future<void> _pickImages(BuildContext context) async {
     final picker = ImagePicker();
+    final remaining = 5 - vm.images.length;
+    if (remaining <= 0) return;
     final pickedFiles = await picker.pickMultiImage(imageQuality: 85);
     if (pickedFiles == null || pickedFiles.isEmpty) return;
-    debugPrint('[SellScreen] picked: ${pickedFiles.map((x) => x.name).join(', ')}');
-    vm.setImages(pickedFiles);
+    final filesToAdd = pickedFiles.take(remaining).toList();
+    debugPrint('[SellScreen] picked: ${filesToAdd.map((x) => x.name).join(', ')}');
+    vm.setImages(filesToAdd);
+  }
+
+  Future<void> _takePhoto(BuildContext context) async {
+    final picker = ImagePicker();
+    final remaining = 5 - vm.images.length;
+    if (remaining <= 0) return;
+    List<XFile> newPhotos = [];
+    for (int i = 0; i < remaining; i++) {
+      final photo = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+      if (photo == null) break;
+      newPhotos.add(photo);
+      // Opcional: preguntar si quiere tomar otra, aquí solo sigue hasta el límite
+    }
+    if (newPhotos.isNotEmpty) {
+      vm.setImages(newPhotos);
+    }
   }
 
   @override
@@ -381,70 +401,72 @@ class _PhotoUpload extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: images.length >= 5 ? null : () => _pickImages(context),
+                icon: const Icon(Icons.photo_library_rounded),
+                label: Text('Gallery  ${images.length}/5'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  backgroundColor: Colors.white,
+                  foregroundColor: colorScheme.primary,
+                  side: BorderSide(color: colorScheme.primary, width: 2),
+                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: images.length >= 5 ? null : () => _takePhoto(context),
+                icon: const Icon(Icons.camera_alt_rounded),
+                label: Text('Camera  ${images.length}/5'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  backgroundColor: Colors.white,
+                  foregroundColor: colorScheme.primary,
+                  side: BorderSide(color: colorScheme.primary, width: 2),
+                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 12,
           runSpacing: 12,
-          children: List.generate(tileCount, (idx) {
-            if (idx < images.length) {
-              return SizedBox(
-                width: imageSize,
-                height: tileHeight,
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: _buildImagePreview(
-                        images[idx],
-                        width: imageSize,
-                        height: tileHeight,
-                      ),
+          children: List.generate(images.length, (idx) {
+            return SizedBox(
+              width: imageSize,
+              height: tileHeight,
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: _buildImagePreview(
+                      images[idx],
+                      width: imageSize,
+                      height: tileHeight,
                     ),
-                    Positioned(
-                      top: 6,
-                      right: 6,
-                      child: GestureDetector(
-                        onTap: () => vm.removeImageAt(idx),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(Icons.close, color: Colors.white, size: 22),
+                  ),
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: GestureDetector(
+                      onTap: () => vm.removeImageAt(idx),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(14),
                         ),
+                        child: const Icon(Icons.close, color: Colors.white, size: 22),
                       ),
                     ),
-                  ],
-                ),
-              );
-            }
-            return GestureDetector(
-              onTap: () => _pickImages(context),
-              child: Container(
-                width: addTileWidth,
-                height: tileHeight,
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: colorScheme.primary, width: 2.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_a_photo_rounded, size: 36, color: colorScheme.primary),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Add Photo',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: colorScheme.primary),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           }),
@@ -453,10 +475,10 @@ class _PhotoUpload extends StatelessWidget {
           padding: const EdgeInsets.only(top: 12),
           child: Row(
             children: [
-              Icon(Icons.camera_alt_rounded, size: 24, color: colorScheme.onSurface),
+              Icon(Icons.info_outline_rounded, size: 20, color: colorScheme.onSurface),
               const SizedBox(width: 8),
               Text(
-                'JPG, PNG, WEBP up to 10MB. Max 5 photos.',
+                'JPG, PNG, WEBP up to 10MB. Máx 5 photos.',
                 style: TextStyle(fontSize: 12, color: mutedText),
               ),
             ],
