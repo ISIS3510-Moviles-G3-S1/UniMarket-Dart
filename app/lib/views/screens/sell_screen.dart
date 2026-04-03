@@ -9,6 +9,9 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_theme.dart';
 import '../../views/screens/clothing_analysis_screen.dart';
+import '../../views/screens/photo_analysis_screen.dart';
+import '../../core/photo_quality_analyzer.dart';
+import '../../core/photo_quality_vision_service.dart';
 import '../../view_models/sell_view_model.dart';
 
 // For AnalysisResult_WithImage type
@@ -196,8 +199,8 @@ class _SellForm extends StatelessWidget {
                     if (result != null) {
                       vm.applyAnalysisTags(result.tags);
                       if (result.analyzedImage != null && (vm.images.isEmpty || vm.images.first.path != result.analyzedImage?.path)) {
-                        final keep = await vm.analyzeAndPromptPhoto(context, result.analyzedImage!);
-                        if (keep) vm.addImage(result.analyzedImage!);
+                        // Directly add the analyzed image, or add your own prompt here if needed
+                        vm.addImage(result.analyzedImage!);
                       }
                     }
                   },
@@ -363,6 +366,7 @@ class _PhotoUpload extends StatelessWidget {
   const _PhotoUpload({required this.vm});
 
 
+
   Future<void> _pickImages(BuildContext context) async {
     final picker = ImagePicker();
     final remaining = 5 - vm.images.length;
@@ -370,10 +374,24 @@ class _PhotoUpload extends StatelessWidget {
     final pickedFiles = await picker.pickMultiImage(imageQuality: 85);
     if (pickedFiles == null || pickedFiles.isEmpty) return;
     final filesToAdd = pickedFiles.take(remaining).toList();
-    debugPrint('[SellScreen] picked: ${filesToAdd.map((x) => x.name).join(', ')}');
     for (final file in filesToAdd) {
-      final keep = await vm.analyzeAndPromptPhoto(context, file);
-      if (keep) vm.addImage(file);
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PhotoAnalysisScreen(
+            photo: file,
+            sourceType: PhotoSourceType.gallery,
+            onRetake: (ctx) async {
+              Navigator.of(ctx).pop();
+              await _pickImages(ctx);
+            },
+            onKeep: () {
+              vm.addImage(file);
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
+      );
       if (vm.images.length >= 5) break;
     }
   }
@@ -382,14 +400,25 @@ class _PhotoUpload extends StatelessWidget {
     final picker = ImagePicker();
     final remaining = 5 - vm.images.length;
     if (remaining <= 0) return;
-    XFile? photo;
-    bool keep = false;
-    do {
-      photo = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
-      if (photo == null) return;
-      keep = await vm.analyzeAndPromptPhoto(context, photo);
-    } while (!keep);
-    vm.addImage(photo);
+    final photo = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+    if (photo == null) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PhotoAnalysisScreen(
+          photo: photo,
+          sourceType: PhotoSourceType.camera,
+          onRetake: (ctx) async {
+            Navigator.of(ctx).pop();
+            await _takePhoto(ctx);
+          },
+          onKeep: () {
+            vm.addImage(photo);
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
+    );
   }
 
   @override

@@ -44,6 +44,7 @@ class PhotoQualityAnalyzer {
 
     // Brightness
     final brightness = _analyzeBrightness(image);
+    print('[PhotoQualityAnalyzer] Brightness: $brightness');
     if (brightness < minBrightness) {
       issues.add('LOW_LIGHT');
       suggestions.add('Try taking the photo in a brighter area.');
@@ -52,6 +53,7 @@ class PhotoQualityAnalyzer {
 
     // Blur
     final blur = _analyzeBlur(image);
+    print('[PhotoQualityAnalyzer] Blur (variance): $blur');
     if (blur < minBlurVariance) {
       issues.add('BLURRY');
       suggestions.add('Hold the camera steady and retake the picture.');
@@ -59,14 +61,12 @@ class PhotoQualityAnalyzer {
     }
 
     // Resolution
+    print('[PhotoQualityAnalyzer] Resolution: ${image.width}x${image.height}');
     if (image.width < minWidth || image.height < minHeight) {
       issues.add('LOW_RESOLUTION');
       suggestions.add('Use a higher resolution image.');
       score -= 0.2;
     }
-
-    // Framing (optional, simple estimation)
-    // Not implemented: would require object detection or color segmentation
 
     // Clamp score
     score = score.clamp(0.0, 1.0);
@@ -83,16 +83,11 @@ class PhotoQualityAnalyzer {
     for (int y = 0; y < image.height; y++) {
       for (int x = 0; x < image.width; x++) {
         final pixel = image.getPixel(x, y);
-        final r = img.getRed(pixel);
-        final g = img.getGreen(pixel);
-        final b = img.getBlue(pixel);
-        // For image >=4.0.0, getPixel returns a 32-bit int, use bitwise ops:
-        // r = (pixel >> 16) & 0xFF; g = (pixel >> 8) & 0xFF; b = pixel & 0xFF;
-        // But image.getRed/getGreen/getBlue are removed, so use bitwise:
-        final rr = (pixel >> 16) & 0xFF;
-        final gg = (pixel >> 8) & 0xFF;
-        final bb = pixel & 0xFF;
-        final gray = (0.299 * rr + 0.587 * gg + 0.114 * bb).round();
+        // Use only bitwise extraction for compatibility with image >=4.0.0
+        final r = (pixel >> 16) & 0xFF;
+        final g = (pixel >> 8) & 0xFF;
+        final b = pixel & 0xFF;
+        final gray = (0.299 * r + 0.587 * g + 0.114 * b).round();
         sum += gray;
       }
     }

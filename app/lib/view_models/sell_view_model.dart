@@ -97,40 +97,7 @@ class SellViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Returns true if the photo should be kept, false if retake is requested.
-  Future<bool> analyzeAndPromptPhoto(BuildContext context, XFile file) async {
-    final result = await PhotoQualityAnalyzer.analyze(File(file.path));
-    if (result.qualityScore < 0.5) {
-      final choice = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Photo Quality Warning'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('This photo may not be suitable:'),
-              const SizedBox(height: 8),
-              ...result.suggestions.map((s) => Text('• $s')),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Retake'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Keep'),
-            ),
-          ],
-        ),
-      );
-      return choice == true;
-    }
-    return true;
-  }
+
 
   // (keep only one addImage method)
 
