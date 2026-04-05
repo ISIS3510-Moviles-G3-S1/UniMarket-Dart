@@ -3,60 +3,77 @@ import 'chat_message.dart';
 
 class ChatConversation {
   final String id;
-  final String sellerName;
-  final String productID;
-  final String productTitle;
-  final String productImageUrl;
+  final List<String> participants; // [buyerId, sellerId]
+  final String buyerId;
+  final String sellerId;
+  final DateTime createdAt;
   final List<ChatMessage> messages;
-  final int unreadCount;
-  final DateTime lastMessageDate;
 
   ChatConversation({
     String? id,
-    required this.sellerName,
-    required this.productID,
-    required this.productTitle,
-    required this.productImageUrl,
+    required this.participants,
+    required this.buyerId,
+    required this.sellerId,
+    DateTime? createdAt,
     List<ChatMessage>? messages,
-    this.unreadCount = 0,
-    DateTime? lastMessageDate,
   })  : id = id ?? const Uuid().v4(),
-        messages = messages ?? [],
-        lastMessageDate = lastMessageDate ?? DateTime.now();
+        createdAt = createdAt ?? DateTime.now(),
+        messages = messages ?? [];
 
-  /// Returns the last message text or empty string if no messages
+  /// Get the last message preview
   String get lastMessagePreview {
-    if (messages.isEmpty) return '';
-    return messages.last.text;
+    if (messages.isEmpty) return 'No messages';
+    final last = messages.last;
+    if (last.imageURLs.isNotEmpty) {
+      return '📸 Image';
+    }
+    return last.text.isEmpty 
+      ? 'Image message'
+      : last.text.length > 50 
+        ? '${last.text.substring(0, 50)}...'
+        : last.text;
+  }
+
+  /// Add message to conversation
+  void addMessage(ChatMessage message) {
+    messages.add(message);
   }
 
   ChatConversation copyWith({
     String? id,
-    String? sellerName,
-    String? productID,
-    String? productTitle,
-    String? productImageUrl,
+    List<String>? participants,
+    String? buyerId,
+    String? sellerId,
+    DateTime? createdAt,
     List<ChatMessage>? messages,
-    int? unreadCount,
-    DateTime? lastMessageDate,
   }) {
     return ChatConversation(
       id: id ?? this.id,
-      sellerName: sellerName ?? this.sellerName,
-      productID: productID ?? this.productID,
-      productTitle: productTitle ?? this.productTitle,
-      productImageUrl: productImageUrl ?? this.productImageUrl,
+      participants: participants ?? this.participants,
+      buyerId: buyerId ?? this.buyerId,
+      sellerId: sellerId ?? this.sellerId,
+      createdAt: createdAt ?? this.createdAt,
       messages: messages ?? this.messages,
-      unreadCount: unreadCount ?? this.unreadCount,
-      lastMessageDate: lastMessageDate ?? this.lastMessageDate,
     );
   }
 
-  /// Add a message to the conversation
-  ChatConversation addMessage(ChatMessage message) {
-    return copyWith(
-      messages: [...messages, message],
-      lastMessageDate: message.date,
+  /// Convert to Firestore format
+  Map<String, dynamic> toMap() => {
+    'participants': participants,
+    'buyerId': buyerId,
+    'sellerId': sellerId,
+    'createdAt': createdAt.toIso8601String(),
+  };
+
+  /// Create from Firestore document
+  factory ChatConversation.fromMap(String id, Map<String, dynamic> map) {
+    return ChatConversation(
+      id: id,
+      participants: List<String>.from(map['participants'] ?? []),
+      buyerId: map['buyerId'] ?? '',
+      sellerId: map['sellerId'] ?? '',
+      createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
+      messages: [],
     );
   }
 }

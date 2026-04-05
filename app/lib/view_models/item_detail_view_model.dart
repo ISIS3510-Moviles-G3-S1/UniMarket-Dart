@@ -25,20 +25,31 @@ class ItemDetailViewModel extends ChangeNotifier {
   Future<void> loadItem(String id) async {
     final listing = await _listingService.getListingById(id);
     if (listing != null) {
-        _item = ItemDetail(
-          id: id,
-          name: listing.title,
-          price: listing.price.toDouble(),
-          condition: listing.conditionTag,
-          seller: Seller(name: listing.sellerName, university: '', rating: listing.rating, sales: 0, avatar: '', verified: false),
-          aiScore: 0,
-          description: listing.description,
-          images: listing.imageURLs.isNotEmpty ? [listing.imageURLs[0]] : [listing.imagePath],
-          tags: listing.tags,
-        );
+      _item = ItemDetail(
+        id: id,
+        name: listing.title,
+        price: listing.price.toDouble(),
+        condition: listing.conditionTag,
+        seller: Seller(
+          id: listing.sellerId,
+          name: listing.sellerName,
+          university: '',
+          rating: listing.rating,
+          sales: 0,
+          avatar: '',
+          verified: false,
+        ),
+        aiScore: 0,
+        description: listing.description,
+        images: listing.imageURLs.isNotEmpty
+            ? [listing.imageURLs[0]]
+            : [listing.imagePath],
+        tags: listing.tags,
+      );
     } else {
       _item = null;
     }
+
     _activeImageIndex = 0;
     _saved = false;
     _messageSent = false;

@@ -1,105 +1,137 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../models/chat_conversation.dart';
 import '../models/chat_message.dart';
 
 class ChatStore extends ChangeNotifier {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  
   List<ChatConversation> _conversations = [];
+  String? _currentUserId;
 
   List<ChatConversation> get conversations => _conversations;
+  String? get currentUserId => _currentUserId;
 
-  /// Returns the sum of all unread counts across conversations
-  int get totalUnreadCount {
-    return _conversations.fold<int>(
-      0,
-      (sum, conv) => sum + conv.unreadCount,
-    );
+  /// Initialize the store with current user
+  Future<void> initialize() async {
+    _currentUserId = _auth.currentUser?.uid;
+    notifyListeners();
   }
 
-  /// Start a new conversation or reuse existing if product+seller match
-  String startConversation({
-    required String productID,
-    required String productTitle,
-    required String sellerName,
-    required String productImageUrl,
-  }) {
-    // Check if conversation already exists for this product and seller
-    final existingIndex = _conversations.indexWhere(
-      (conv) => conv.productID == productID && conv.sellerName == sellerName,
-    );
-
-    if (existingIndex != -1) {
-      // Reuse existing conversation - move to top
-      final existing = _conversations.removeAt(existingIndex);
-      _conversations.insert(0, existing);
-      notifyListeners();
-      return existing.id;
+  /// Get total unread count across all conversations
+  int get totalUnreadCount {
+    int count = 0;
+    for (final conv in _conversations) {
+      for (final msg in conv.messages) {
+        if (msg.senderId != _currentUserId && msg.readAt == null) {
+          count++;
+        }
+      }
     }
+    return count;
+  }
 
-    // Create new conversation with initial message
-    final initialMessage = ChatMessage(
-      text: 'Hi! Is this still available?',
-      isFromCurrentUser: true,
-    );
+  /// Start a new conversation with a seller
+  Future<String> startConversation({
+    required String buyerId,
+    required String sellerId,
+    String? initialMessage,
+  }) async {
+    try {
+      // Check if conversation already exists
+      final existing = await _firestore
+          .collection('conversations')
+          .where('participants', arrayContains: buyerId)
+          .where('buyerId', isEqualTo: buyerId)
+          .where('sellerId', isEqualTo: sellerId)
+          .get();
 
-    final newConversation = ChatConversation(
-      sellerName: sellerName,
-      productID: productID,
-      productTitle: productTitle,
-      productImageUrl: productImageUrl,
-      messages: [initialMessage],
-      unreadCount: 0,
-    );
+      if (existing.docs.isNotEmpty) {
+        return existing.docs.first.id;
+      }
 
-    // Insert at the top
-    _conversations.insert(0, newConversation);
-    notifyListeners();
+      // Create new conversation
+      final conversationRef = await _firestore.collection('conversations').add({
+        'participants': [buyerId, sellerId],
+        'buyerId': buyerId,
+        'sellerId': sellerId,
+        'createdAt': Timestamp.now(),
+      });
 
-    return newConversation.id;
+      // Add initial message
+      if (initialMessage != null && initialMessage.trim().isNotEmpty) {
+        await conversationRef.collection('messages').add(
+          ChatMessage(
+            senderId: buyerId,
+            text: initialMessage.trim(),
+          ).toMap(),
+        );
+      }
+
+      notifyListeners();
+      return conversationRef.id;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   /// Send a message in a conversation
-  void sendMessage({
+  Future<void> sendMessage({
     required String conversationId,
     required String text,
-    bool isFromCurrentUser = true,
-  }) {
-    final trimmedText = text.trim();
-    if (trimmedText.isEmpty) return;
+    List<String>? imageURLs,
+  }) async {
+    try {
+      if (_currentUserId == null) return;
+      if (text.trim().isEmpty && (imageURLs?.isEmpty ?? true)) return;
 
-    final index = _conversations.indexWhere((conv) => conv.id == conversationId);
-    if (index == -1) return;
-
-    final message = ChatMessage(
-      text: trimmedText,
-      isFromCurrentUser: isFromCurrentUser,
-    );
-
-    var updatedConversation = _conversations[index].addMessage(message);
-
-    // If message is from other user (seller), increment unread
-    if (!isFromCurrentUser) {
-      updatedConversation = updatedConversation.copyWith(
-        unreadCount: updatedConversation.unreadCount + 1,
+      final message = ChatMessage(
+        senderId: _currentUserId!,
+        text: text.trim(),
+        imageURLs: imageURLs ?? [],
       );
+
+      await _firestore
+          .collection('conversations')
+          .doc(conversationId)
+          .collection('messages')
+          .add(message.toMap());
+
+      notifyListeners();
+    } catch (e) {
+      rethrow;
     }
-
-    // Move conversation to top
-    _conversations.removeAt(index);
-    _conversations.insert(0, updatedConversation);
-
-    notifyListeners();
   }
 
-  /// Mark conversation as read (clear unread count)
-  void markConversationAsRead(String conversationId) {
-    final index = _conversations.indexWhere((conv) => conv.id == conversationId);
-    if (index == -1) return;
+  /// Mark messages as read
+  Future<void> markConversationAsRead(String conversationId) async {
+    try {
+      if (_currentUserId == null) return;
 
-    final conversation = _conversations[index];
-    if (conversation.unreadCount == 0) return;
+      final batch = _firestore.batch();
+      final messagesRef = _firestore
+          .collection('conversations')
+          .doc(conversationId)
+          .collection('messages');
 
-    _conversations[index] = conversation.copyWith(unreadCount: 0);
-    notifyListeners();
+      final unreadMessages = await messagesRef
+          .where('senderId', isNotEqualTo: _currentUserId)
+          .where('readAt', isNull: true)
+          .get();
+
+      for (final doc in unreadMessages.docs) {
+        batch.update(doc.reference, {
+          'readAt': Timestamp.now(),
+        });
+      }
+
+      await batch.commit();
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   /// Get conversation by ID
@@ -109,5 +141,53 @@ class ChatStore extends ChangeNotifier {
     } catch (e) {
       return null;
     }
+  }
+
+  /// Stream conversations for current user
+  Stream<List<ChatConversation>> streamConversations() {
+    if (_currentUserId == null) return Stream.value([]);
+
+    return _firestore
+        .collection('conversations')
+        .where('participants', arrayContains: _currentUserId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<ChatConversation> conversations = [];
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final conversation = ChatConversation.fromMap(doc.id, data);
+
+        // Load messages for this conversation
+        final messagesSnapshot = await doc.reference
+            .collection('messages')
+            .orderBy('sentAt', descending: false)
+            .get();
+
+        final messages = messagesSnapshot.docs
+            .map((msgDoc) => ChatMessage.fromMap(msgDoc.id, msgDoc.data()))
+            .toList();
+
+        conversations.add(conversation.copyWith(messages: messages));
+      }
+
+      _conversations = conversations;
+      notifyListeners();
+      return conversations;
+    });
+  }
+
+  /// Stream messages for a specific conversation
+  Stream<List<ChatMessage>> streamConversationMessages(String conversationId) {
+    return _firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .orderBy('sentAt', descending: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ChatMessage.fromMap(doc.id, doc.data()))
+            .toList());
   }
 }

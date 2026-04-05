@@ -122,8 +122,8 @@ class DummyNotificationService implements NotificationService {
 
   @override
   Future<bool> arePermissionsGranted() async {
-    final status = await Permission.notification.status;
-    return status.isGranted;
+    debugPrint('DummyNotificationService: arePermissionsGranted called (web-default true)');
+    return true;
   }
 
   @override

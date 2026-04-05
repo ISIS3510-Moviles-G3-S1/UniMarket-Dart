@@ -11,10 +11,14 @@ class ItemDetail {
   final String description;
   final List<String> images;
   final List<String> tags;
-  // Removed deprecated field: exchangeType
+  final String? size;
+  final String? category;
+  final String? color;
+  final String? style;
+  final String? exchangeType;
 
-  const ItemDetail({
-    required this.id,
+  ItemDetail({
+    required dynamic id,
     required this.name,
     required this.price,
     required this.condition,
@@ -23,5 +27,10 @@ class ItemDetail {
     required this.description,
     required this.images,
     required this.tags,
-  });
+    this.size,
+    this.category,
+    this.color,
+    this.style,
+    this.exchangeType,
+  }) : id = id?.toString() ?? '';
 }

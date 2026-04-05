@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_theme.dart';
 import '../../core/chat_store.dart';
+import '../../core/price_formatter.dart';
 import '../../view_models/home_view_model.dart';
 import '../../view_models/session_view_model.dart';
 import '../../models/listing.dart';

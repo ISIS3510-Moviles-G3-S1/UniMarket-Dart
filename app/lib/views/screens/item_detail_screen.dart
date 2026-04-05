@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_theme.dart';
 import '../../core/chat_store.dart';
+import '../../core/price_formatter.dart';
 import '../../view_models/item_detail_view_model.dart';
 import '../../models/item_detail.dart';
 import '../../models/seller.dart';
@@ -343,21 +344,29 @@ class _InfoSection extends StatelessWidget {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () {
-                  final chatStore = context.read<ChatStore>();
-                  final conversationId = chatStore.startConversation(
-                    productID: item.id.toString(),
-                    productTitle: item.name,
-                    sellerName: item.seller.name,
-                    productImageUrl: item.images.isNotEmpty
-                        ? item.images.first
-                        : 'uni_market_logo.png',
-                  );
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ChatThreadView(conversationId: conversationId),
-                    ),
-                  );
+                onPressed: () async {
+                  try {
+                    final chatStore = context.read<ChatStore>();
+                    final conversationId = await chatStore.startConversation(
+                      buyerId: chatStore.currentUserId ?? 'current_user',
+                      sellerId: item.seller.id,
+                    );
+
+                    if (context.mounted) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ChatThreadView(conversationId: conversationId),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error starting chat: $e')),
+                      );
+                    }
+                  }
                 },
                 icon: const Icon(
                   Icons.mail_outline,

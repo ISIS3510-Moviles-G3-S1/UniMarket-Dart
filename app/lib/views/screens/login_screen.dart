@@ -88,63 +88,31 @@ class _LoginScreenState extends State<LoginScreen> {
         final errorMessage = _error ?? sessionViewModel.errorMessage;
 
         return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 40),
-
-              /// LOGO
-              Column(
-                children: [
-                  Image.asset(
-                    'assets/images/uni_market_logo.png',
-                    height: 80,
-                    width: 80,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "UniMarket",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 40),
-
-              /// TITLE
-              const Text(
-                "Welcome back",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - 48),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(height: 40),
 
                     /// LOGO
                     Column(
-                      children: const [
-                        Icon(Icons.checkroom, size: 60),
-                        SizedBox(height: 10),
+                      children: [
+                        Image.asset(
+                          'assets/images/uni_market_logo.png',
+                          height: 80,
+                          width: 80,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 10),
                         Text(
                           "UniMarket",
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ],
@@ -180,52 +148,52 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 16),
 
-              /// ERROR
-              if (errorMessage != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
-                      width: 1,
+                    /// PASSWORD
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: "Password",
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: Theme.of(context).colorScheme.error,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          errorMessage,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
 
                     const SizedBox(height: 24),
 
-                    /// ERROR
-                    if (_error != null)
-                      Text(
-                        _error!,
-                        style: const TextStyle(color: Colors.red),
+                    if (errorMessage != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Theme.of(context).colorScheme.error,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                errorMessage,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(height: 24),
+                    ],
 
-                    const SizedBox(height: 12),
-
-                    /// LOGIN BUTTON
                     ElevatedButton(
                       onPressed: _isLoading ? null : _login,
                       child: _isLoading
@@ -239,7 +207,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 16),
 
-                    /// REGISTER
                     TextButton(
                       onPressed: _isLoading
                           ? null
@@ -251,11 +218,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-            );
-          },
-        ),
-      ),
-    );
+            ),
+          ),
+        );
       },
     );
   }

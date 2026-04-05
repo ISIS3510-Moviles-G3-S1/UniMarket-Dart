@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'firebase_options.dart';
 import 'core/app_router.dart';
 import 'core/auth_service.dart';
 import 'core/chat_store.dart';
+import 'core/notification_service.dart';
 import 'core/theme/theme_context.dart';
 import 'view_models/browse_view_model.dart';
 import 'view_models/home_view_model.dart';
@@ -22,8 +24,9 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize notification service
-  final notificationService = RealNotificationService();
+  // Initialize notification service.
+  // Use the dummy implementation on web to avoid unsupported native plugin startup errors.
+  final notificationService = kIsWeb ? DummyNotificationService() : RealNotificationService();
   await notificationService.initialize();
   final permissionGranted = await notificationService.requestNotificationPermission();
   debugPrint('[Main] Notification permission granted: $permissionGranted');
@@ -49,6 +52,7 @@ class UniMarketApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeContext()),
 
         Provider(create: (_) => AuthService()),
+        Provider<NotificationService>.value(value: notificationService),
 
         ChangeNotifierProvider<SessionViewModel>(
           create: (context) => SessionViewModel(
@@ -58,7 +62,11 @@ class UniMarketApp extends StatelessWidget {
         ),
 
         ChangeNotifierProvider<ChatStore>(
-          create: (_) => ChatStore(),
+          create: (_) {
+            final store = ChatStore();
+            store.initialize();
+            return store;
+          },
         ),
 
         ChangeNotifierProxyProvider<SessionViewModel, ProfileViewModel>(

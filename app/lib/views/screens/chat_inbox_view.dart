@@ -58,6 +58,12 @@ class ChatInboxView extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final conversation = conversations[index];
+              final unreadCount = conversation.messages
+                  .where((msg) =>
+                      msg.senderId != chatStore.currentUserId &&
+                      msg.readAt == null)
+                  .length;
+
               return GestureDetector(
                 onTap: () {
                   Navigator.of(context).push(
@@ -69,13 +75,13 @@ class ChatInboxView extends StatelessWidget {
                   );
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTheme.white,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -85,20 +91,22 @@ class ChatInboxView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
-                        width: 60,
-                        height: 60,
+                        width: 56,
+                        height: 56,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          color: AppTheme.gray.withValues(alpha: 0.1),
+                          color: AppTheme.accent.withOpacity(0.15),
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.asset(
-                            'assets/images/${conversation.productImageUrl}',
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) {
-                              return const Icon(Icons.shopping_bag);
-                            },
+                        child: Center(
+                          child: Text(
+                            conversation.sellerId
+                                .substring(0, 1)
+                                .toUpperCase(),
+                            style:
+                                Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.accent,
+                                    ),
                           ),
                         ),
                       ),
@@ -108,8 +116,9 @@ class ChatInboxView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              conversation.sellerName,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              conversation.sellerId,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
                                 color: AppTheme.foreground,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -119,7 +128,8 @@ class ChatInboxView extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               conversation.lastMessagePreview,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
                                 color: AppTheme.muted,
                               ),
                               maxLines: 1,
@@ -129,7 +139,7 @@ class ChatInboxView extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      if (conversation.unreadCount > 0)
+                      if (unreadCount > 0)
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -140,8 +150,9 @@ class ChatInboxView extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '${conversation.unreadCount}',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            '$unreadCount',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
                               color: AppTheme.white,
                               fontWeight: FontWeight.w600,
                             ),

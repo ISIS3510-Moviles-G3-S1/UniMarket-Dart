@@ -187,4 +187,7 @@ class BrowseViewModel extends ChangeNotifier {
     });
     return filtered;
   }
+
+  List<Listing> get filteredItems => filteredAndSorted;
 }
+

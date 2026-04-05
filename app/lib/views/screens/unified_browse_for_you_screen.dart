@@ -145,10 +145,11 @@ class _ForYouContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final searchLower = vm.search.toLowerCase();
     final filteredItems = vm.forYouRecommendations.where((item) {
-      final searchLower = vm.search.toLowerCase();
-      return item.name.toLowerCase().contains(searchLower) ||
-          item.category.toLowerCase().contains(searchLower);
+      final categoryQuery = item.tags.isNotEmpty ? item.tags.first.toLowerCase() : '';
+      return item.title.toLowerCase().contains(searchLower) ||
+          categoryQuery.contains(searchLower);
     }).toList();
     return Stack(
       children: [
@@ -239,7 +240,7 @@ class _ListingCard extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   CachedNetworkImage(
-                    imageUrl: listing.image,
+                    imageUrl: listing.primaryImageUrl,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
                       color: isDark ? colorScheme.surfaceContainerHighest : AppTheme.muted,
@@ -274,7 +275,7 @@ class _ListingCard extends StatelessWidget {
                         border: Border.all(color: isDark ? colorScheme.outline : AppTheme.foreground),
                       ),
                       child: Text(
-                        listing.condition,
+                        listing.conditionTag,
                         style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w500),
                       ),
                     ),
@@ -288,7 +289,7 @@ class _ListingCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    listing.name,
+                    listing.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
@@ -298,11 +299,11 @@ class _ListingCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        ' 24${listing.price.toStringAsFixed(0)}',
+                        '\$${listing.price.toStringAsFixed(0)}',
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.sage),
                       ),
                       Text(
-                        listing.seller,
+                        listing.sellerName,
                         style: TextStyle(fontSize: 10, color: mutedText),
                       ),
                     ],

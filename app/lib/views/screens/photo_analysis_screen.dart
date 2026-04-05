@@ -91,9 +91,13 @@ class _PhotoAnalysisScreenState extends State<PhotoAnalysisScreen> {
     _analyzeFeedback();
   }
 
-  int _colorDistance(int a, int b) {
-    int ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
-    int br = (b >> 16) & 0xFF, bg = (b >> 8) & 0xFF, bb = b & 0xFF;
+  int _colorDistance(img.Pixel a, img.Pixel b) {
+    final ar = a.r.toInt();
+    final ag = a.g.toInt();
+    final ab = a.b.toInt();
+    final br = b.r.toInt();
+    final bg = b.g.toInt();
+    final bb = b.b.toInt();
     return ((ar - br).abs() + (ag - bg).abs() + (ab - bb).abs());
   }
 
