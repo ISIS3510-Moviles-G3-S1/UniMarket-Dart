@@ -34,11 +34,6 @@ class HomeScreen extends StatelessWidget {
                     : AppTheme.background,
                 elevation: 0,
                 toolbarHeight: 56,
-                title: const Text('UniMarket'),
-                titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppTheme.foreground,
-                  fontWeight: FontWeight.w600,
-                ),
                 actions: [
                   Consumer<ChatStore>(
                     builder: (context, chatStore, _) {
@@ -166,74 +161,6 @@ class HomeScreen extends StatelessWidget {
                           : AppTheme.background,
                   child: Column(
                     children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.accent.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: AppTheme.accent.withValues(alpha: 0.4),
-                            ),
-                          ),
-                          child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.eco_rounded,
-                              size: 14,
-                              color: AppTheme.accent,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Sustainable Fashion for Students',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: AppTheme.accent,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Consumer<SessionViewModel>(
-                          builder: (context, session, _) => SizedBox(
-                            height: 34,
-                            child: OutlinedButton.icon(
-                              onPressed: session.isLoading
-                                  ? null
-                                  : () async {
-                                      await session.signOut();
-                                    },
-                              icon: session.isLoading
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.logout_rounded, size: 18),
-                              label: const Text('Log out', style: TextStyle(fontSize: 13)),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppTheme.deepGreen,
-                                side: BorderSide(color: AppTheme.deepGreen.withOpacity(0.5)),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                minimumSize: const Size(88, 34),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
                       Image.asset(
                         'assets/images/uni_market_logo.png',
                         height: 90,
