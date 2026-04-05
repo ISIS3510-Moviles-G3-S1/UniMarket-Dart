@@ -7,7 +7,7 @@ import 'firebase_options.dart';
 
 import 'core/app_router.dart';
 import 'core/auth_service.dart';
-import 'core/notification_service.dart';
+import 'core/chat_store.dart';
 import 'core/theme/theme_context.dart';
 import 'view_models/browse_view_model.dart';
 import 'view_models/home_view_model.dart';
@@ -55,6 +55,10 @@ class UniMarketApp extends StatelessWidget {
             authService: context.read<AuthService>(),
             notificationService: context.read<NotificationService>(),
           ),
+        ),
+
+        ChangeNotifierProvider<ChatStore>(
+          create: (_) => ChatStore(),
         ),
 
         ChangeNotifierProxyProvider<SessionViewModel, ProfileViewModel>(
