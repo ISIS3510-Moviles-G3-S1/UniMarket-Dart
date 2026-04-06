@@ -1,6 +1,27 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /listings/{listingId} {
+      allow read: if isSignedIn();
+      // Demo-friendly: allow authenticated writes.
+      allow create, update, delete: if isSignedIn();
+    }
+
+    match /meetup_transactions/{transactionId} {
+      allow read: if isSignedIn();
+      // Demo-friendly: allow authenticated users to create and confirm transactions.
+      allow create, update: if isSignedIn();
+    }
+
     match /conversations/{conversationId} {
       allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
       match /messages/{messageId} {

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../core/meetup_qr_payload.dart';
 import '../data/meetup_transaction_service.dart';
@@ -57,6 +58,11 @@ class GenerateQrViewModel extends ChangeNotifier {
           ).encode();
     } on MeetupTransactionException catch (e) {
       _errorMessage = e.message;
+    } on FirebaseException catch (e) {
+      _errorMessage =
+          e.code == 'permission-denied'
+              ? 'Firestore permission denied. Update/deploy firestore.rules first.'
+              : 'Firestore error: ${e.message ?? e.code}';
     } catch (_) {
       _errorMessage = 'Could not generate QR. Please try again.';
     } finally {
