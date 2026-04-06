@@ -13,6 +13,7 @@ import '../views/screens/not_found_screen.dart';
 import '../views/screens/login_screen.dart';
 import '../views/screens/register_screen.dart';
 import '../views/screens/chat_screen.dart';
+import '../views/screens/inbox_screen.dart';
 
 // Widgets
 import 'package:uni_market/views/widgets/main_shell.dart';
@@ -106,6 +107,12 @@ GoRouter createAppRouter(SessionViewModel session) {
             ),
           );
         },
+      ),
+
+      /// INBOX
+      GoRoute(
+        path: '/inbox',
+        builder: (_, __) => const InboxScreen(),
       ),
 
       /// ITEM DETAIL
