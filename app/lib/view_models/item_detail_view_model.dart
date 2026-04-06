@@ -1,6 +1,3 @@
-// ...existing code...
-// ...existing code...
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +25,7 @@ class ItemDetailViewModel extends ChangeNotifier {
     if (listing != null) {
         _item = ItemDetail(
           id: id,
+          sellerId: listing.sellerId,
           name: listing.title,
           price: listing.price.toDouble(),
           condition: listing.conditionTag,
@@ -76,23 +74,8 @@ class ItemDetailViewModel extends ChangeNotifier {
   }
 
   List<Map<String, dynamic>> get similarItems => [
-    {
-      'id': 1,
-      'name': 'Item 1',
-      'price': 10.0,
-      'image': 'https://via.placeholder.com/150',
-    },
-    {
-      'id': 2,
-      'name': 'Item 2',
-      'price': 20.0,
-      'image': 'https://via.placeholder.com/150',
-    },
-    {
-      'id': 3,
-      'name': 'Item 3',
-      'price': 30.0,
-      'image': 'https://via.placeholder.com/150',
-    },
+    {'id': 1, 'name': 'Item 1', 'price': 10.0, 'image': 'https://via.placeholder.com/150'},
+    {'id': 2, 'name': 'Item 2', 'price': 20.0, 'image': 'https://via.placeholder.com/150'},
+    {'id': 3, 'name': 'Item 3', 'price': 30.0, 'image': 'https://via.placeholder.com/150'},
   ];
 }
