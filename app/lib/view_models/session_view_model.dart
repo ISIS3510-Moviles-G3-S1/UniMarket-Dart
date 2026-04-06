@@ -52,7 +52,7 @@ class SessionViewModel extends ChangeNotifier {
     } on AuthFailure catch (failure) {
       _setError(failure.message);
       rethrow;
-    } catch (e) {
+    } catch (_) {
       const failure = AuthFailure('Unable to sign in. Please try again');
       _setError(failure.message);
       throw failure;

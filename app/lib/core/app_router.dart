@@ -28,6 +28,7 @@ GoRouter createAppRouter(SessionViewModel session) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    refreshListenable: session,
 
     redirect: (context, state) {
       final location =
