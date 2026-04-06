@@ -54,11 +54,12 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     } on AuthFailure catch (failure) {
       if (!mounted) return;
+      final errorMessage = _messageForFailure(failure);
       setState(() {
-        _error = _messageForFailure(failure);
+        _error = errorMessage;
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _error = "Unable to sign in. Please try again";
@@ -198,6 +199,8 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
       ),
+    );
+      },
     );
   }
 }
