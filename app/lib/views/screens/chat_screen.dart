@@ -8,12 +8,14 @@ class ChatScreen extends StatefulWidget {
   final String conversationId;
   final String otherUserId;
   final String otherUserName;
+  final String itemName;
 
   const ChatScreen({
     super.key,
     required this.conversationId,
     required this.otherUserId,
     required this.otherUserName,
+    required this.itemName,
   });
 
   @override
@@ -23,13 +25,13 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  bool _readMarked = false;
+  bool _initialSent = false;
+  int _previousMessageCount = 0;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChatViewModel>().markMessagesAsRead();
-    });
   }
 
   @override
@@ -80,7 +82,22 @@ class _ChatScreenState extends State<ChatScreen> {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 final messages = snapshot.data ?? [];
-                WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                if (messages.isNotEmpty && !_readMarked) {
+                  _readMarked = true;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    context.read<ChatViewModel>().markMessagesAsRead();
+                  });
+                }
+                if (messages.isEmpty && !_initialSent) {
+                  _initialSent = true;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    context.read<ChatViewModel>().sendInitialMessage();
+                  });
+                }
+                if (messages.length > _previousMessageCount) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                  _previousMessageCount = messages.length;
+                }
                 return ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.all(16),

@@ -65,11 +65,13 @@ class ItemDetailViewModel extends ChangeNotifier {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null || _item == null) return;
 
-    final conversationId = '${currentUser.uid}_${_item!.seller.id}';
+    final ids = [currentUser.uid, _item!.seller.id]..sort();
+    final conversationId = ids.join('_');
     final otherUserId = _item!.seller.id;
     final otherUserName = _item!.seller.name;
+    final itemName = Uri.encodeComponent(_item!.name);
 
-    context.go('/chat/$conversationId/$otherUserId/$otherUserName');
+    context.go('/chat/$conversationId/$otherUserId/$otherUserName/$itemName');
     _messageSent = true;
     notifyListeners();
   }
