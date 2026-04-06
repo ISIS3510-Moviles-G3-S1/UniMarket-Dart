@@ -5,6 +5,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import '../models/item_detail.dart';
 import '../models/seller.dart';
 import '../data/listing_service.dart';
@@ -30,7 +32,7 @@ class ItemDetailViewModel extends ChangeNotifier {
           name: listing.title,
           price: listing.price.toDouble(),
           condition: listing.conditionTag,
-          seller: Seller(name: listing.sellerName, university: '', rating: listing.rating, sales: 0, avatar: '', verified: false),
+          seller: Seller(id: listing.sellerId, name: listing.sellerName, university: '', rating: listing.rating, sales: 0, avatar: '', verified: false),
           aiScore: 0,
           description: listing.description,
           images: listing.imageURLs.isNotEmpty ? [listing.imageURLs[0]] : [listing.imagePath],
@@ -59,7 +61,15 @@ class ItemDetailViewModel extends ChangeNotifier {
     }
   }
 
-  void sendMessage() {
+  void sendMessage(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null || _item == null) return;
+
+    final conversationId = '${currentUser.uid}_${_item!.seller.id}';
+    final otherUserId = _item!.seller.id;
+    final otherUserName = _item!.seller.name;
+
+    context.go('/chat/$conversationId/$otherUserId/$otherUserName');
     _messageSent = true;
     notifyListeners();
   }
