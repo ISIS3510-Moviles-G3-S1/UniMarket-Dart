@@ -48,6 +48,9 @@ dependencies:
   qr_flutter: ^4.1.0
   mobile_scanner: ^6.0.2
 
+  # Added for photo quality analysis
+  image: ^3.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

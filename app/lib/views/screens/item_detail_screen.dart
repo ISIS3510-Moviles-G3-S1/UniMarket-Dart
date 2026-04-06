@@ -368,7 +368,7 @@ class _InfoSection extends StatelessWidget {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: vm.messageSent ? null : vm.sendMessage,
+                onPressed: vm.messageSent ? null : () => vm.sendMessage(context),
                 icon: Icon(
                   vm.messageSent
                       ? Icons.check_circle_outline
