@@ -133,11 +133,6 @@ class MeetupTransactionService {
         'confirmedAt': FieldValue.serverTimestamp(),
       });
 
-      transaction.update(listingRef, {
-        'status': 'sold',
-        'soldAt': FieldValue.serverTimestamp(),
-      });
-
       return meetupTx.copyWith(
         status: MeetupTransactionStatus.confirmed,
         confirmedAt: DateTime.now(),
