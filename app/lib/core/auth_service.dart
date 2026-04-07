@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'analytics_event.dart';
+import 'analytics_service.dart';
 import '../models/app_user.dart';
 import 'auth_failure.dart';
 
@@ -114,7 +116,15 @@ class AuthService {
     final doc = await docRef.get();
 
     if (doc.exists) {
-      return AppUser.fromFirestore(doc);
+      final user = AppUser.fromFirestore(doc);
+      if (user.profilePic.trim().isNotEmpty) {
+        return user;
+      }
+      final authPhoto = firebaseUser.photoURL ?? '';
+      if (authPhoto.trim().isNotEmpty) {
+        return user.copyWith(profilePic: authPhoto);
+      }
+      return user;
     }
 
     await docRef.set({
@@ -228,6 +238,34 @@ class AuthService {
       debugPrint(
         '[AuthService] User $uid - Days since previous login: $daysSincePreviousLogin (Inactive: $isInactive)',
       );
+
+      // --- Analytics: Type-2 Business Question (inactivity & re-engagement) ---
+      AnalyticsService.instance.track(
+        AnalyticsEvent.userInactivityChecked(
+          userId: uid,
+          daysSinceLastInteraction: daysSincePreviousLogin,
+          isInactive: isInactive,
+          thresholdDays: days,
+        ),
+      );
+
+      if (isInactive) {
+        AnalyticsService.instance.track(
+          AnalyticsEvent.reengagementNotificationTriggered(
+            userId: uid,
+            daysInactive: daysSincePreviousLogin,
+            thresholdDays: days,
+          ),
+        );
+      } else {
+        AnalyticsService.instance.track(
+          AnalyticsEvent.userActiveNoNotification(
+            userId: uid,
+            daysSinceLastInteraction: daysSincePreviousLogin,
+          ),
+        );
+      }
+      // -----------------------------------------------------------------------
 
       return isInactive;
     } catch (e) {

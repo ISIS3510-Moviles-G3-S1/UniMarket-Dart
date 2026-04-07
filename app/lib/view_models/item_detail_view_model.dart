@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -74,10 +73,12 @@ class ItemDetailViewModel extends ChangeNotifier {
     final ids = [currentUser.uid, _item!.seller.id]..sort();
     final conversationId = ids.join('_');
     final otherUserId = _item!.seller.id;
-    final otherUserName = _item!.seller.name;
-    final itemName = Uri.encodeComponent(_item!.name);
+    final otherUserName = _item!.seller.name.trim();
+    final itemName = _item!.name.trim();
 
-    context.go('/chat/$conversationId/$otherUserId/$otherUserName/$itemName');
+    context.go(
+      '/chat/$conversationId/$otherUserId?otherUserName=${Uri.encodeQueryComponent(otherUserName)}&itemName=${Uri.encodeQueryComponent(itemName)}',
+    );
     _messageSent = true;
     notifyListeners();
   }

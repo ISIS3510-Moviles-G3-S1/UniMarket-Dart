@@ -6,15 +6,14 @@ import '../../core/app_theme.dart';
 import '../../core/price_formatter.dart';
 import '../../view_models/profile_view_model.dart';
 import '../widgets/seller_performance_feedback_card.dart';
+import '../widgets/eco_message_card.dart';
+import '../widgets/sustainability_progress_card.dart';
 import '../../view_models/browse_view_model.dart';
 import '../../view_models/session_view_model.dart';
 import '../../models/profile_models.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-
-  static const String _selectedAvatarUrl =
-      'https://api.dicebear.com/7.x/adventurer/png?seed=Valentina&backgroundColor=f2f2f2';
 
   @override
   Widget build(BuildContext context) {
@@ -72,19 +71,29 @@ class ProfileScreen extends StatelessWidget {
                           border: Border.all(color: AppTheme.sage, width: 2),
                         ),
                         child: ClipOval(
-                          child: Image.network(
-                            _selectedAvatarUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: const Color(0xFFF2F2F2),
-                              alignment: Alignment.center,
-                              child: const Icon(
-                                Icons.person_rounded,
-                                size: 34,
-                                color: AppTheme.deepGreen,
-                              ),
-                            ),
-                          ),
+                          child: vm.profileAvatar.trim().isNotEmpty
+                              ? CachedNetworkImage(
+                                  imageUrl: vm.profileAvatar.trim(),
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, __, ___) => Container(
+                                    color: const Color(0xFFF2F2F2),
+                                    alignment: Alignment.center,
+                                    child: const Icon(
+                                      Icons.person_rounded,
+                                      size: 34,
+                                      color: AppTheme.deepGreen,
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  color: const Color(0xFFF2F2F2),
+                                  alignment: Alignment.center,
+                                  child: const Icon(
+                                    Icons.person_rounded,
+                                    size: 34,
+                                    color: AppTheme.deepGreen,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -158,143 +167,29 @@ class ProfileScreen extends StatelessWidget {
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Consumer<SessionViewModel>(
-                  builder: (context, sessionVm, _) {
-                    final uid = sessionVm.currentUser?.uid ?? 'Not available';
-                    return Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'My UID',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color:
-                                    isDark
-                                        ? colorScheme.onSurface
-                                        : AppTheme.deepGreen,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SelectableText(
-                              uid,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: mutedText,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                child: Consumer<ProfileViewModel>(
+                  builder: (context, vm, _) => EcoMessageCard(
+                    message: vm.ecoMessage,
+                    isLoading: vm.isGeneratingEcoMessage,
+                  ),
                 ),
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Consumer<ProfileViewModel>(
-                  builder:
-                      (context, vm, _) => Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Sustainability Level',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: mutedText,
-                                ),
-                              ),
-                              Text(
-                                'Level ${vm.currentLevel.level} – ${vm.currentLevel.name}',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                              if (vm.nextLevel != null) ...[
-                                const SizedBox(height: 4),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        'Next up',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: mutedText,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Level ${vm.nextLevel!.level} · ${vm.nextLevel!.name}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${vm.nextLevel!.minXp - vm.xp} XP to go',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: mutedText,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: 12),
-                              LinearProgressIndicator(
-                                value: vm.levelProgress / 100,
-                                minHeight: 10,
-                                backgroundColor: colorScheme.surfaceContainerHighest,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  isDark ? colorScheme.primary : AppTheme.deepGreen,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '${vm.currentLevel.minXp} XP',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: mutedText,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${vm.xp} XP',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    vm.nextLevel?.minXp.toString() ?? 'MAX',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: mutedText,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                  builder: (context, vm, _) => SustainabilityProgressCard(
+                    xp: vm.xp,
+                    xpToNext: vm.xpToNext,
+                    levelInfo: SustainabilityLevelInfo(
+                      title: vm.ecoLevelInfo.title,
+                      nextTitle: vm.ecoLevelInfo.nextTitle,
+                      minXP: vm.ecoLevelInfo.minXP,
+                      maxXP: vm.ecoLevelInfo.maxXP,
+                    ),
+                  ),
                 ),
               ),
             ),

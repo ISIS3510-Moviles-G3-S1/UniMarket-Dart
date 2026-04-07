@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../core/analytics_event.dart';
+import '../core/analytics_service.dart';
 import '../core/meetup_qr_payload.dart';
 import '../data/meetup_transaction_service.dart';
 import '../models/meetup_transaction.dart';
@@ -64,6 +66,14 @@ class ScanQrViewModel extends ChangeNotifier {
       _confirmedTransaction = transaction;
       _successMessage = 'Pickup confirmed successfully. Transaction updated.';
       _hasHandledScan = true;
+
+      AnalyticsService.instance.track(
+        AnalyticsEvent.userMeaningfulInteraction(
+          userId: currentUserId,
+          interactionType: 'buy',
+          timestamp: DateTime.now().toUtc().toIso8601String(),
+        ),
+      );
     } on FormatException {
       _errorMessage = 'Invalid QR format. Please scan a valid meetup QR.';
     } on MeetupTransactionException catch (e) {

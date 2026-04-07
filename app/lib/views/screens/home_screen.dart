@@ -51,15 +51,14 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('¡Te extrañamos! 👀'),
+        title: const Text('¡We miss you!!'),
         content: const Text(
-          'Han pasado unos días desde tu última visita. '
-          '¡Hay nuevos artículos esperándote!'
+          'It looks like you haven\'t been active for a while. There are new items waiting for you!'
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Entendido'),
+            child: const Text('Got it'),
           ),
           FilledButton(
             onPressed: () {

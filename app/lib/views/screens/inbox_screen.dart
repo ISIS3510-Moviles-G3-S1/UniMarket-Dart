@@ -139,57 +139,74 @@ class _InboxScreenState extends State<InboxScreen> {
               final otherUserId = participants.firstWhere(
                 (id) => id != currentUser.uid,
                 orElse: () => '',
-              );
+              ).toString();
+              final canLookupUser = otherUserId.isNotEmpty;
 
               final lastMessageText = data['lastMessageText'] as String? ?? 'No messages';
               final lastMessageAt = data['lastMessageAt'] as Timestamp?;
 
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                leading: CircleAvatar(
-                  backgroundColor: AppTheme.accent.withValues(alpha: 0.2),
-                  child: Icon(
-                    Icons.person,
-                    color: AppTheme.accent,
-                  ),
-                ),
-                title: FutureBuilder<DocumentSnapshot>(
-                  future: _firestore.collection('users').doc(otherUserId).get(),
-                  builder: (context, userSnap) {
-                    if (userSnap.hasData && userSnap.data?.exists == true) {
-                      final userData = userSnap.data!.data() as Map<String, dynamic>;
-                      final displayName = userData['displayName'] as String? ?? 'Unknown';
-                      return Text(displayName);
-                    }
-                    return const Text('Unknown User');
-                  },
-                ),
-                subtitle: Text(
-                  lastMessageText,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  spacing: 4,
-                  children: [
-                    if (lastMessageAt != null)
-                      Text(
-                        _formatTime(lastMessageAt.toDate()),
-                        style: Theme.of(context).textTheme.labelSmall,
+              return FutureBuilder<DocumentSnapshot?>(
+                future:
+                    canLookupUser
+                        ? _firestore.collection('users').doc(otherUserId).get()
+                        : Future.value(null),
+                builder: (context, userSnap) {
+                  String otherUserName = 'Unknown User';
+                  if (userSnap.hasData && userSnap.data?.exists == true) {
+                    final userData = userSnap.data!.data() as Map<String, dynamic>?;
+                    otherUserName =
+                        (userData?['displayName'] as String?)?.trim().isNotEmpty == true
+                            ? (userData?['displayName'] as String).trim()
+                            : 'Unknown User';
+                  }
+
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: CircleAvatar(
+                      backgroundColor: AppTheme.accent.withValues(alpha: 0.2),
+                      child: Icon(
+                        Icons.person,
+                        color: AppTheme.accent,
                       ),
-                    // TODO: Add unread count badge
-                  ],
-                ),
-                onTap: () {
-                  // Navigate to chat screen
-                  final ids = [currentUser.uid, otherUserId]..sort();
-                  final conversationId = ids.join('_');
-                  // Navigate to chat - you'll need to pass the other user's name
-                  // For now, just use the ID as a placeholder
-                  context.go('/chat/$conversationId/$otherUserId/User/${Uri.encodeComponent('Item')}');
+                    ),
+                    title: Text(otherUserName),
+                    subtitle: Text(
+                      lastMessageText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      spacing: 4,
+                      children: [
+                        if (lastMessageAt != null)
+                          Text(
+                            _formatTime(lastMessageAt.toDate()),
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        // TODO: Add unread count badge
+                      ],
+                    ),
+                    onTap: () {
+                      if (!canLookupUser) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'This conversation has missing participant data. Delete it and start a new chat.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+
+                      final conversationId = doc.id;
+                      context.go(
+                        '/chat/$conversationId/$otherUserId?otherUserName=${Uri.encodeQueryComponent(otherUserName)}&itemName=${Uri.encodeQueryComponent('')}',
+                      );
+                    },
+                  );
                 },
               );
             },
