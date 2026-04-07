@@ -5,19 +5,43 @@ import 'package:flutter/foundation.dart';
 import '../models/app_user.dart';
 import '../models/profile_models.dart';
 import '../models/listing.dart';
+import '../core/eco_service.dart';
 import '../data/listing_service.dart';
 import 'session_view_model.dart';
 
+class EcoLevelInfo {
+  const EcoLevelInfo({
+    required this.title,
+    required this.nextTitle,
+    required this.xpToNext,
+    required this.minXP,
+    required this.maxXP,
+  });
+
+  final String title;
+  final String nextTitle;
+  final int xpToNext;
+  final int minXP;
+  final int maxXP;
+}
+
 class ProfileViewModel extends ChangeNotifier {
-  ProfileViewModel(this._session) {
+  ProfileViewModel(this._session, {EcoService? ecoService}) : _ecoService = ecoService ?? EcoService() {
     _session.addListener(_forwardSessionChanges);
     _startListingsListener();
+    Future.microtask(() => _maybeGenerateEcoMessage(forceRefresh: true));
   }
 
   final SessionViewModel _session;
+  final EcoService _ecoService;
   final ListingService _listingService = ListingService();
   StreamSubscription<List<Listing>>? _listingsSub;
   List<Listing> _listings = [];
+  String _ecoMessage = '';
+  bool _isGeneratingEcoMessage = false;
+  String? _lastEcoRequestHash;
+  DateTime? _lastEcoRequestAt;
+  int _ecoRequestToken = 0;
 
   AppUser? get _user => _session.currentUser;
 
@@ -61,11 +85,40 @@ class ProfileViewModel extends ChangeNotifier {
 
   List<Listing> get listings => _listings;
 
-  Level get currentLevel => const Level(level: 1, name: 'Newcomer', minXp: 0);
+  String get ecoMessage => _ecoMessage.isEmpty ? _buildFallbackEcoMessage() : _ecoMessage;
 
-  Level? get nextLevel => null;
+  bool get isGeneratingEcoMessage => _isGeneratingEcoMessage;
 
-  double get levelProgress => 0;
+  int get soldCount => _listings.where((item) => item.isSold).length;
+
+  EcoLevelInfo get ecoLevelInfo => _buildEcoLevelInfo(xp);
+
+  int get xpToNext => ecoLevelInfo.xpToNext;
+
+  Level get currentLevel {
+    final info = ecoLevelInfo;
+    final levelNumber = _extractLevelNumber(info.title);
+    final levelName = _extractLevelName(info.title);
+    return Level(level: levelNumber, name: levelName, minXp: info.minXP);
+  }
+
+  Level? get nextLevel {
+    final info = ecoLevelInfo;
+    if (info.nextTitle == 'Max Level') {
+      return null;
+    }
+    final levelNumber = _extractLevelNumber(info.nextTitle);
+    final levelName = _extractLevelName(info.nextTitle);
+    return Level(level: levelNumber, name: levelName, minXp: info.maxXP);
+  }
+
+  double get levelProgress {
+    final info = ecoLevelInfo;
+    final denominator = (info.maxXP - info.minXP).toDouble();
+    if (denominator <= 0) return 100;
+    final progress = ((xp - info.minXP) / denominator).clamp(0.0, 1.0);
+    return progress * 100;
+  }
 
   Future<void> deleteListing(String id) async {
     final listing = _listings.firstWhere((l) => l.id == id, orElse: () => const Listing(
@@ -86,18 +139,156 @@ class ProfileViewModel extends ChangeNotifier {
     final user = _user;
     if (user == null) {
       _listings = [];
+      _ecoMessage = '';
+      _isGeneratingEcoMessage = false;
+      _lastEcoRequestHash = null;
+      _lastEcoRequestAt = null;
       notifyListeners();
       return;
     }
     _listingsSub = _listingService.getListingsBySellerId(user.uid).listen((items) {
       _listings = items;
       notifyListeners();
+      Future.microtask(_maybeGenerateEcoMessage);
     });
   }
 
   void _forwardSessionChanges() {
     _startListingsListener();
     notifyListeners();
+    Future.microtask(_maybeGenerateEcoMessage);
+  }
+
+  Future<void> refreshEcoMessage() => _maybeGenerateEcoMessage(forceRefresh: true);
+
+  Future<void> _maybeGenerateEcoMessage({bool forceRefresh = false}) async {
+    final user = _user;
+    if (user == null) {
+      _ecoMessage = '';
+      _isGeneratingEcoMessage = false;
+      notifyListeners();
+      return;
+    }
+
+    final info = ecoLevelInfo;
+    final fallback = _buildFallbackEcoMessage();
+    if (_ecoMessage != fallback) {
+      _ecoMessage = fallback;
+      notifyListeners();
+    }
+
+    final requestHash = [
+      profileName,
+      profileRating.toStringAsFixed(2),
+      xp.toString(),
+      info.title,
+      info.xpToNext.toString(),
+      soldCount.toString(),
+      profileTransactions.toString(),
+    ].join('|');
+
+    final now = DateTime.now();
+    final recentlyRequested =
+        _lastEcoRequestHash == requestHash &&
+        _lastEcoRequestAt != null &&
+        now.difference(_lastEcoRequestAt!) < const Duration(minutes: 5);
+
+    if (!forceRefresh && recentlyRequested) {
+      return;
+    }
+
+    _lastEcoRequestHash = requestHash;
+    _lastEcoRequestAt = now;
+
+    final requestToken = ++_ecoRequestToken;
+    _isGeneratingEcoMessage = true;
+    notifyListeners();
+
+    try {
+      final aiMessage = await _ecoService.generateRecommendation(
+        displayName: profileName,
+        rating: profileRating,
+        xp: xp,
+        levelTitle: info.title,
+        xpToNext: info.xpToNext,
+        soldCount: soldCount,
+        transactions: profileTransactions,
+      );
+
+      if (requestToken != _ecoRequestToken) return;
+      _ecoMessage = aiMessage.trim();
+    } catch (_) {
+      // Keep fallback message on API errors.
+    } finally {
+      if (requestToken == _ecoRequestToken) {
+        _isGeneratingEcoMessage = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  EcoLevelInfo _buildEcoLevelInfo(int xp) {
+    switch (xp) {
+      case >= 0 && < 100:
+        return EcoLevelInfo(
+          title: 'Level 1 - Newcomer',
+          nextTitle: 'Level 2 - Eco Learner',
+          xpToNext: 100 - xp,
+          minXP: 0,
+          maxXP: 100,
+        );
+      case >= 100 && < 300:
+        return EcoLevelInfo(
+          title: 'Level 2 - Eco Learner',
+          nextTitle: 'Level 3 - Eco Enthusiast',
+          xpToNext: 300 - xp,
+          minXP: 100,
+          maxXP: 300,
+        );
+      case >= 300 && < 600:
+        return EcoLevelInfo(
+          title: 'Level 3 - Eco Enthusiast',
+          nextTitle: 'Level 4 - Eco Explorer',
+          xpToNext: 600 - xp,
+          minXP: 300,
+          maxXP: 600,
+        );
+      case >= 600 && < 1000:
+        return EcoLevelInfo(
+          title: 'Level 4 - Eco Explorer',
+          nextTitle: 'Level 5 - Sustainability Star',
+          xpToNext: 1000 - xp,
+          minXP: 600,
+          maxXP: 1000,
+        );
+      default:
+        return const EcoLevelInfo(
+          title: 'Level 5 - Sustainability Star',
+          nextTitle: 'Max Level',
+          xpToNext: 0,
+          minXP: 1000,
+          maxXP: 10000,
+        );
+    }
+  }
+
+  String _buildFallbackEcoMessage() {
+    final info = ecoLevelInfo;
+    if (info.xpToNext <= 0) {
+      return 'Amazing work, $profileName! You reached Max Level and are leading by example on UniMarket.';
+    }
+    return "You're just ${info.xpToNext} XP away from ${info.nextTitle}. Keep going, $profileName!";
+  }
+
+  int _extractLevelNumber(String title) {
+    final match = RegExp(r'Level\s+(\d+)').firstMatch(title);
+    return int.tryParse(match?.group(1) ?? '') ?? 1;
+  }
+
+  String _extractLevelName(String title) {
+    final parts = title.split('-');
+    if (parts.length < 2) return title.trim();
+    return parts.sublist(1).join('-').trim();
   }
 
   @override
