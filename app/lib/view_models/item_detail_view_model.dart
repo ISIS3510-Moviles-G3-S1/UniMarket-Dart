@@ -32,6 +32,7 @@ class ItemDetailViewModel extends ChangeNotifier {
           name: listing.title,
           price: listing.price.toDouble(),
           condition: listing.conditionTag,
+          exchangeType: listing.exchangeType,
           seller: Seller(id: listing.sellerId, name: listing.sellerName, university: '', rating: listing.rating, sales: 0, avatar: '', verified: false),
           aiScore: 0,
           description: listing.description,
