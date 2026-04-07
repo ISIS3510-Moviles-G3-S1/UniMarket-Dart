@@ -12,7 +12,7 @@ class SellerPerformanceService {
     : _db = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _db;
-  final String _collection = 'listings';
+  final String _collection = 'meetup_transactions';
 
   Future<int> countSoldListingsForSeller({
     required String sellerId,
@@ -39,13 +39,17 @@ class SellerPerformanceService {
           return snapshot.docs.where((doc) {
             final data = doc.data();
             final status = (data['status'] as String?)?.toLowerCase() ?? '';
-            if (status != 'sold') return false;
+            if (status != 'confirmed') return false;
 
-            final soldAtValue = data['soldAt'];
-            final soldAt = soldAtValue is Timestamp ? soldAtValue.toDate() : null;
-            if (soldAt == null) return false;
+            final buyerId = (data['buyerId'] as String?) ?? '';
+            if (buyerId == sellerId) return false;
 
-            return !soldAt.isBefore(window.start) && soldAt.isBefore(window.end);
+            final confirmedAtValue = data['confirmedAt'];
+            final confirmedAt =
+                confirmedAtValue is Timestamp ? confirmedAtValue.toDate() : null;
+            if (confirmedAt == null) return false;
+
+            return !confirmedAt.isBefore(window.start) && confirmedAt.isBefore(window.end);
           }).length;
         });
   }
@@ -58,10 +62,10 @@ class SellerPerformanceService {
     final query = _db
         .collection(_collection)
         .where('sellerId', isEqualTo: sellerId)
-        .where('status', isEqualTo: 'sold')
-        .where('soldAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-        .where('soldAt', isLessThan: Timestamp.fromDate(end))
-        .orderBy('soldAt', descending: true);
+      .where('status', isEqualTo: 'confirmed')
+      .where('confirmedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+      .where('confirmedAt', isLessThan: Timestamp.fromDate(end))
+      .orderBy('confirmedAt', descending: true);
 
     try {
       final aggregateSnapshot = await query.count().get();
@@ -91,13 +95,16 @@ class SellerPerformanceService {
     return snapshot.docs.where((doc) {
       final data = doc.data();
       final status = (data['status'] as String?)?.toLowerCase() ?? '';
-      if (status != 'sold') return false;
+      if (status != 'confirmed') return false;
 
-      final soldAtValue = data['soldAt'];
-      final soldAt = soldAtValue is Timestamp ? soldAtValue.toDate() : null;
-      if (soldAt == null) return false;
+      final buyerId = (data['buyerId'] as String?) ?? '';
+      if (buyerId == sellerId) return false;
 
-      final isInWindow = !soldAt.isBefore(start) && soldAt.isBefore(end);
+      final confirmedAtValue = data['confirmedAt'];
+      final confirmedAt = confirmedAtValue is Timestamp ? confirmedAtValue.toDate() : null;
+      if (confirmedAt == null) return false;
+
+      final isInWindow = !confirmedAt.isBefore(start) && confirmedAt.isBefore(end);
       return isInWindow;
     }).length;
   }
