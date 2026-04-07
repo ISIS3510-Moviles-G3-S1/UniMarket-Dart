@@ -86,23 +86,23 @@ GoRouter createAppRouter(SessionViewModel session) {
 
       /// CHAT
       GoRoute(
-        path: '/chat/:conversationId/:otherUserId/:otherUserName/:itemName',
+        path: '/chat/:conversationId/:otherUserId',
         builder: (context, state) {
           final conversationId = state.pathParameters['conversationId']!;
           final otherUserId = state.pathParameters['otherUserId']!;
-          final otherUserName = state.pathParameters['otherUserName']!;
-          final itemName = Uri.decodeComponent(state.pathParameters['itemName']!);
+          final otherUserName = (state.uri.queryParameters['otherUserName'] ?? '').trim();
+          final itemName = (state.uri.queryParameters['itemName'] ?? '').trim();
           return ChangeNotifierProvider(
             create: (_) => ChatViewModel(
               conversationId: conversationId,
               otherUserId: otherUserId,
-              otherUserName: otherUserName,
+              otherUserName: otherUserName.isEmpty ? 'User' : otherUserName,
               itemName: itemName,
             ),
             child: ChatScreen(
               conversationId: conversationId,
               otherUserId: otherUserId,
-              otherUserName: otherUserName,
+              otherUserName: otherUserName.isEmpty ? 'User' : otherUserName,
               itemName: itemName,
             ),
           );
