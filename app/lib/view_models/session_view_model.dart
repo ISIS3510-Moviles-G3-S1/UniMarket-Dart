@@ -16,8 +16,8 @@ class SessionViewModel extends ChangeNotifier {
       final lastPostDate = await ListingService().getLastPostDate(currentUser!.uid);
       if (lastPostDate == null) {
         await _notificationService.showNotification(
-          title: '¡Publica tu primer artículo!',
-          body: 'Aún no has publicado ningún artículo. ¡Anímate a publicar tu primer artículo hoy!',
+          title: '¡Upload your first!',
+          body: 'You haven\'t posted any items yet. Upload your first item today!',
         );
         return;
       }
@@ -25,8 +25,8 @@ class SessionViewModel extends ChangeNotifier {
       final daysSinceLastPost = DateTime.now().difference(lastPostDate).inDays;
       if (daysSinceLastPost >= 15) {
         await _notificationService.showNotification(
-          title: '¡Te extrañamos!',
-          body: 'Hace más de $daysSinceLastPost días que no publicas un artículo. ¡Publica uno nuevo hoy!',
+          title: '¡It\'s been a while!',
+          body: 'It\'s been more than $daysSinceLastPost days since you last posted an item. Upload a new one today!',
         );
       }
     }
@@ -80,8 +80,8 @@ class SessionViewModel extends ChangeNotifier {
       final isInactive = await checkInactivity(days: 3);
       if (isInactive) {
         await _notificationService.showNotification(
-          title: '¡Te extrañamos!',
-          body: 'Hace más de 3 días que no inicias sesión. ¡Vuelve a UniMarket!',
+          title: '¡We miss you!!',
+          body: 'It looks like you haven\'t been active for a while. There are new items waiting for you!',
         );
       }
 
