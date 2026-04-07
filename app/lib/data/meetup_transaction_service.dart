@@ -133,9 +133,6 @@ class MeetupTransactionService {
         'confirmedAt': FieldValue.serverTimestamp(),
       });
 
-      // This is the data point used by the Type 2 seller-performance feature.
-      // Once the buyer confirms the meetup, the listing is considered sold and
-      // gets a soldAt timestamp so we can count it within a time window.
       transaction.update(listingRef, {
         'status': 'sold',
         'soldAt': FieldValue.serverTimestamp(),

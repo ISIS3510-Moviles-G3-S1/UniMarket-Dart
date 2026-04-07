@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import '../models/item_detail.dart';
+import '../models/listing.dart';
 import '../models/seller.dart';
 import '../data/listing_service.dart';
 import '../view_models/browse_view_model.dart';
@@ -11,6 +12,7 @@ import '../view_models/browse_view_model.dart';
 class ItemDetailViewModel extends ChangeNotifier {
   ItemDetail? _item;
   final ListingService _listingService = ListingService();
+  List<Map<String, dynamic>> _similarItems = const [];
   int _activeImageIndex = 0;
   bool _saved = false;
   bool _messageSent = false;
@@ -19,6 +21,7 @@ class ItemDetailViewModel extends ChangeNotifier {
   int get activeImageIndex => _activeImageIndex;
   bool get saved => _saved;
   bool get messageSent => _messageSent;
+  List<Map<String, dynamic>> get similarItems => _similarItems;
 
   Future<void> loadItem(String id) async {
     final listing = await _listingService.getListingById(id);
@@ -35,8 +38,13 @@ class ItemDetailViewModel extends ChangeNotifier {
           images: listing.imageURLs.isNotEmpty ? [listing.imageURLs[0]] : [listing.imagePath],
           tags: listing.tags,
         );
+
+        // Load similar real listings from Firestore and keep only active items.
+        final allListings = await _listingService.getListings().first;
+        _similarItems = _buildSimilarItems(currentListingId: id, listings: allListings);
     } else {
       _item = null;
+      _similarItems = const [];
     }
     _activeImageIndex = 0;
     _saved = false;
@@ -73,9 +81,44 @@ class ItemDetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<Map<String, dynamic>> get similarItems => [
-    {'id': 1, 'name': 'Item 1', 'price': 10.0, 'image': 'https://via.placeholder.com/150'},
-    {'id': 2, 'name': 'Item 2', 'price': 20.0, 'image': 'https://via.placeholder.com/150'},
-    {'id': 3, 'name': 'Item 3', 'price': 30.0, 'image': 'https://via.placeholder.com/150'},
-  ];
+  List<Map<String, dynamic>> _buildSimilarItems({
+    required String currentListingId,
+    required List<Listing> listings,
+  }) {
+    Listing? current;
+    for (final listing in listings) {
+      if (listing.id == currentListingId) {
+        current = listing;
+        break;
+      }
+    }
+
+    final currentTags = current?.tags ?? const <String>[];
+
+    final filtered = listings
+        .where((l) => l.id != currentListingId)
+        .where((l) => !l.isSold)
+        .toList();
+
+    filtered.sort((a, b) {
+      int score(Listing listing) {
+        final overlap = listing.tags.where((t) => currentTags.contains(t)).length;
+        final sameCondition = listing.conditionTag == current?.conditionTag ? 1 : 0;
+        return overlap * 10 + sameCondition;
+      }
+
+      return score(b).compareTo(score(a));
+    });
+
+    return filtered.take(8).map((l) {
+      final image = l.imageURLs.isNotEmpty ? l.imageURLs.first : l.imagePath;
+
+      return {
+        'id': l.id,
+        'name': l.title,
+        'price': l.price,
+        'image': image,
+      };
+    }).toList();
+  }
 }

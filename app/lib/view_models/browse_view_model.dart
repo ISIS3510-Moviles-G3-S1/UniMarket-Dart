@@ -45,7 +45,8 @@ class BrowseViewModel extends ChangeNotifier {
 
   void _listenListings() {
     _listingService.getListings().listen((listings) {
-      _listings = listings;
+      // Browse should only show active inventory, not sold listings.
+      _listings = listings.where((listing) => !listing.isSold).toList();
       for (final l in _listings) {
           _savedItems[l.id] = l.saved;
           final cat = l.tags.isNotEmpty ? l.tags[0] : 'Other';

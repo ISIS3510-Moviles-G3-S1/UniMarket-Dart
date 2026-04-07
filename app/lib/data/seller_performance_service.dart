@@ -26,6 +26,30 @@ class SellerPerformanceService {
     );
   }
 
+  Stream<int> watchSoldListingsForSeller({
+    required String sellerId,
+    required SellerPerformancePeriod period,
+  }) {
+    final window = period.window;
+    return _db
+        .collection(_collection)
+        .where('sellerId', isEqualTo: sellerId)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.where((doc) {
+            final data = doc.data();
+            final status = (data['status'] as String?)?.toLowerCase() ?? '';
+            if (status != 'sold') return false;
+
+            final soldAtValue = data['soldAt'];
+            final soldAt = soldAtValue is Timestamp ? soldAtValue.toDate() : null;
+            if (soldAt == null) return false;
+
+            return !soldAt.isBefore(window.start) && soldAt.isBefore(window.end);
+          }).length;
+        });
+  }
+
   Future<int> countSoldListingsInWindow({
     required String sellerId,
     required DateTime start,

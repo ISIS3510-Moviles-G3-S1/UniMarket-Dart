@@ -29,6 +29,7 @@ class SellerPerformanceViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? _loadedUserId;
   int _loadToken = 0;
+  StreamSubscription<int>? _soldCountSubscription;
 
   SellerPerformancePeriod get selectedPeriod => _selectedPeriod;
   SellerPerformanceStatus get status => _status;
@@ -52,6 +53,8 @@ class SellerPerformanceViewModel extends ChangeNotifier {
   Future<void> loadPerformance() async {
     final user = _session.currentUser;
     if (user == null) {
+      await _soldCountSubscription?.cancel();
+      _soldCountSubscription = null;
       _setError('Sign in to see your seller performance.');
       return;
     }
@@ -59,26 +62,38 @@ class SellerPerformanceViewModel extends ChangeNotifier {
     final requestedUserId = user.uid;
     final requestedPeriod = _selectedPeriod;
     final requestToken = ++_loadToken;
+    await _soldCountSubscription?.cancel();
+    _soldCountSubscription = null;
     _status = SellerPerformanceStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final count = await _service.countSoldListingsForSeller(
-        sellerId: requestedUserId,
-        period: requestedPeriod,
-      );
+      _soldCountSubscription = _service
+          .watchSoldListingsForSeller(
+            sellerId: requestedUserId,
+            period: requestedPeriod,
+          )
+          .listen(
+            (count) {
+              if (_loadToken != requestToken || _session.currentUser?.uid != requestedUserId) {
+                return;
+              }
 
-      if (_loadToken != requestToken || _session.currentUser?.uid != requestedUserId) {
-        return;
-      }
-
-      _loadedUserId = requestedUserId;
-      _soldCount = count;
-      _feedbackMessage = _buildFeedbackMessage(count, requestedPeriod);
-      _status = SellerPerformanceStatus.success;
-      _errorMessage = null;
-      notifyListeners();
+              _loadedUserId = requestedUserId;
+              _soldCount = count;
+              _feedbackMessage = _buildFeedbackMessage(count, requestedPeriod);
+              _status = SellerPerformanceStatus.success;
+              _errorMessage = null;
+              notifyListeners();
+            },
+            onError: (error) {
+              if (_loadToken != requestToken || _session.currentUser?.uid != requestedUserId) {
+                return;
+              }
+              _setError('Unable to load seller performance: $error');
+            },
+          );
     } on FirebaseException catch (e) {
       if (_loadToken != requestToken || _session.currentUser?.uid != requestedUserId) {
         return;
@@ -132,6 +147,7 @@ class SellerPerformanceViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _soldCountSubscription?.cancel();
     _session.removeListener(_handleSessionChanged);
     super.dispose();
   }
