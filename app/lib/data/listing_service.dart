@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -24,19 +23,42 @@ class ListingService {
   final _collection = 'listings';
 
   Stream<List<Listing>> getListings() {
-    return _db.collection(_collection)
-        .orderBy('createdAt', descending: true)
+    return _db
+        .collection(_collection)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Listing.fromFirestore(doc)).toList());
+        .map((snapshot) {
+          final listings =
+              snapshot.docs.map((doc) => Listing.fromFirestore(doc)).toList();
+          listings.sort((a, b) {
+            final aCreated = a.createdAt;
+            final bCreated = b.createdAt;
+            if (aCreated == null && bCreated == null) return 0;
+            if (aCreated == null) return 1;
+            if (bCreated == null) return -1;
+            return bCreated.compareTo(aCreated);
+          });
+          return listings;
+        });
   }
 
   Stream<List<Listing>> getListingsBySellerId(String sellerId) {
     return _db
         .collection(_collection)
         .where('sellerId', isEqualTo: sellerId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Listing.fromFirestore(doc)).toList());
+        .map((snapshot) {
+          final listings =
+              snapshot.docs.map((doc) => Listing.fromFirestore(doc)).toList();
+          listings.sort((a, b) {
+            final aCreated = a.createdAt;
+            final bCreated = b.createdAt;
+            if (aCreated == null && bCreated == null) return 0;
+            if (aCreated == null) return 1;
+            if (bCreated == null) return -1;
+            return bCreated.compareTo(aCreated);
+          });
+          return listings;
+        });
   }
 
   Future<Listing?> getListingById(String id) async {
