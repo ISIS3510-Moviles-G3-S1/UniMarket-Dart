@@ -12,6 +12,7 @@ import 'core/theme/theme_context.dart';
 import 'view_models/browse_view_model.dart';
 import 'view_models/home_view_model.dart';
 import 'view_models/profile_view_model.dart';
+import 'view_models/seller_performance_view_model.dart';
 import 'view_models/sell_view_model.dart';
 import 'view_models/session_view_model.dart';
 
@@ -68,6 +69,14 @@ class UniMarketApp extends StatelessWidget {
 
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => BrowseViewModel()),
+        ChangeNotifierProxyProvider<SessionViewModel, SellerPerformanceViewModel>(
+          create: (context) => SellerPerformanceViewModel(context.read<SessionViewModel>()),
+          update: (_, session, previous) {
+            if (previous == null) return SellerPerformanceViewModel(session);
+            previous.updateSession(session);
+            return previous;
+          },
+        ),
         ChangeNotifierProxyProvider<SessionViewModel, SellViewModel>(
           create: (context) => SellViewModel(context.read<SessionViewModel>()),
           update: (_, session, previous) {

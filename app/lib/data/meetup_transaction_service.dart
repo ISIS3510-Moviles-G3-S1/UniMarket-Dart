@@ -34,6 +34,13 @@ class MeetupTransactionService {
       );
     }
 
+    if (sellerId == buyerId) {
+      throw const MeetupTransactionException(
+        code: 'invalid-buyer',
+        message: 'Seller and buyer must be different users.',
+      );
+    }
+
     final listingRef = _db.collection('listings').doc(listingId);
     final listingDoc = await listingRef.get();
     if (!listingDoc.exists) {
@@ -79,7 +86,6 @@ class MeetupTransactionService {
     }
 
     final txRef = _db.collection(_collection).doc(payload.transactionId);
-    final listingRef = _db.collection('listings').doc(payload.listingId);
 
     return _db.runTransaction((transaction) async {
       final txSnap = await transaction.get(txRef);
@@ -111,23 +117,6 @@ class MeetupTransactionService {
         );
       }
 
-      final listingSnap = await transaction.get(listingRef);
-      if (!listingSnap.exists) {
-        throw const MeetupTransactionException(
-          code: 'missing-listing',
-          message: 'Listing not found for this transaction.',
-        );
-      }
-
-      final listingData = listingSnap.data() ?? <String, dynamic>{};
-      final listingSellerId = (listingData['sellerId'] as String?) ?? '';
-      if (listingSellerId != payload.sellerId) {
-        throw const MeetupTransactionException(
-          code: 'wrong-seller',
-          message: 'Listing owner does not match seller in QR.',
-        );
-      }
-
       transaction.update(txRef, {
         'status': meetupStatusToString(MeetupTransactionStatus.confirmed),
         'confirmedAt': FieldValue.serverTimestamp(),
@@ -138,5 +127,18 @@ class MeetupTransactionService {
         confirmedAt: DateTime.now(),
       );
     });
+  }
+
+  Stream<Set<String>> watchConfirmedListingIds() {
+    return _db
+        .collection(_collection)
+        .where('status', isEqualTo: meetupStatusToString(MeetupTransactionStatus.confirmed))
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => (doc.data()['listingId'] as String?) ?? '')
+              .where((id) => id.trim().isNotEmpty)
+              .toSet();
+        });
   }
 }

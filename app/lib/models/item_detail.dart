@@ -7,6 +7,7 @@ class ItemDetail {
   final String name;
   final double price;
   final String condition;
+  final String exchangeType;
   final Seller seller;
   final int aiScore;
   final String description;
@@ -20,6 +21,7 @@ class ItemDetail {
     required this.name,
     required this.price,
     required this.condition,
+    this.exchangeType = 'sell',
     required this.seller,
     required this.aiScore,
     required this.description,

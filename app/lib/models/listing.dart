@@ -1,4 +1,39 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+/// Firestore-backed listing status values.
+///
+/// These helpers keep the app's listing states consistent when we count sold
+/// items for seller performance feedback.
+enum ListingStatus { active, sold, reserved, archived }
+
+String listingStatusToString(ListingStatus status) {
+  switch (status) {
+    case ListingStatus.sold:
+      return 'sold';
+    case ListingStatus.reserved:
+      return 'reserved';
+    case ListingStatus.archived:
+      return 'archived';
+    case ListingStatus.active:
+      return 'active';
+  }
+}
+
+ListingStatus listingStatusFromString(String? value) {
+  switch ((value ?? '').trim().toLowerCase()) {
+    case 'sold':
+      return ListingStatus.sold;
+    case 'reserved':
+      return ListingStatus.reserved;
+    case 'archived':
+      return ListingStatus.archived;
+    case 'available':
+    case 'active':
+    default:
+      return ListingStatus.active;
+  }
+}
+
 /// Light listing for browse grid and home featured.
 class Listing {
     Map<String, dynamic> toJson() => toFirestore();
@@ -39,6 +74,10 @@ class Listing {
     this.status = 'active',
     this.saved = false,
   });
+
+  ListingStatus get listingStatus => listingStatusFromString(status);
+  bool get isSold => listingStatus == ListingStatus.sold;
+  bool get isActive => listingStatus == ListingStatus.active;
 
   Listing copyWith({bool? saved}) => Listing(
     id: id,
@@ -105,7 +144,7 @@ class Listing {
       soldAt: (data['soldAt'] is Timestamp) ? (data['soldAt'] as Timestamp).toDate() : null,
       imagePath: data['imagePath'] ?? '',
       imageURLs: _coerceStringList(rawImages),
-      status: data['status'] ?? 'active',
+      status: listingStatusToString(listingStatusFromString(data['status']?.toString())),
       saved: false,
     );
   }
@@ -126,7 +165,7 @@ class Listing {
       'soldAt': soldAt,
       'imagePath': imagePath,
       'imageURLs': imageURLs,
-      'status': status,
+      'status': listingStatusToString(listingStatusFromString(status)),
     };
   }
 }

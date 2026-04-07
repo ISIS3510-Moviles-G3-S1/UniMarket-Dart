@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_theme.dart';
 import '../../core/price_formatter.dart';
 import '../../view_models/profile_view_model.dart';
+import '../widgets/seller_performance_feedback_card.dart';
 import '../../view_models/browse_view_model.dart';
 import '../../view_models/session_view_model.dart';
 import '../../models/profile_models.dart';
@@ -49,161 +50,110 @@ class ProfileScreen extends StatelessWidget {
             ),
             SliverToBoxAdapter(
               child: Consumer<ProfileViewModel>(
-                builder:
-                    (context, vm, _) => Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        border: Border(
-                          bottom: BorderSide(
-                            color: colorScheme.outline.withValues(alpha: 0.60),
-                          ),
-                        ),
+                builder: (context, vm, _) => Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: colorScheme.outline.withValues(alpha: 0.60),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 72,
-                            height: 72,
-                            padding: const EdgeInsets.all(2.5),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppTheme.sage, width: 2),
-                            ),
-                            child: ClipOval(
-                              child: Image.network(
-                                _selectedAvatarUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (_, __, ___) => Container(
-                                      color: const Color(0xFFF2F2F2),
-                                      alignment: Alignment.center,
-                                      child: const Icon(
-                                        Icons.person_rounded,
-                                        size: 34,
-                                        color: AppTheme.deepGreen,
-                                      ),
-                                    ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        padding: const EdgeInsets.all(2.5),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.sage, width: 2),
+                        ),
+                        child: ClipOval(
+                          child: Image.network(
+                            _selectedAvatarUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: const Color(0xFFF2F2F2),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.person_rounded,
+                                size: 34,
+                                color: AppTheme.deepGreen,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              vm.profileName,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? colorScheme.onSurface : AppTheme.deepGreen,
+                              ),
+                            ),
+                            Text(
+                              '${vm.profileUniversity} · Member since ${vm.profileSince}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: mutedText,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
                               children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  size: 21,
+                                  color: Color(0xFF2F2F2F),
+                                ),
+                                const SizedBox(width: 8),
                                 Text(
-                                  vm.profileName,
+                                  '${vm.profileRating}',
                                   style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w800,
-                                    color: isDark ? colorScheme.onSurface : AppTheme.deepGreen,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onSurface,
                                   ),
                                 ),
                                 Text(
-                                  '${vm.profileUniversity} · Member since ${vm.profileSince}',
+                                  ' · ${vm.profileTransactions} transactions',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: mutedText,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.star_rounded,
-                                      size: 21,
-                                      color: Color(0xFF2F2F2F),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '${vm.profileRating}',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    Text(
-                                      ' · ${vm.profileTransactions} transactions',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: mutedText,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '${vm.xp} XP Points',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppTheme.sage,
-                                  ),
-                                ),
                               ],
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            Text(
+                              '${vm.xp} XP Points',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.sage,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
+                  ),
+                ),
               ),
             ),
             SliverToBoxAdapter(
-              child: Container(
-                margin: const EdgeInsets.all(16),
+              child: Padding(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 108,
-                      width: 86,
-                      child: Image.asset(
-                        'assets/images/eco_llama.jpeg',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Eco says:',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "You've sold 3 items this month. You're just 220 XP away from Level 5 - Sustainability Star. Keep it up to unlock new badges and rewards!",
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: mutedText,
-                              height: 1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                child: const SellerPerformanceFeedbackCard(),
               ),
             ),
             SliverToBoxAdapter(

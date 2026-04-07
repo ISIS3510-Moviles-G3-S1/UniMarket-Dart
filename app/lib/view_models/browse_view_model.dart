@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import '../models/listing.dart';
 import '../data/listing_service.dart';
+import '../data/meetup_transaction_service.dart';
 
 
 import '../core/recommendation_service.dart';
@@ -9,7 +11,12 @@ import '../core/ai_recommendation_decorator.dart';
 
 class BrowseViewModel extends ChangeNotifier {
   List<Listing> _listings = [];
+  List<Listing> _allListings = [];
+  Set<String> _confirmedListingIds = {};
   late ListingService _listingService;
+  final MeetupTransactionService _meetupService = MeetupTransactionService();
+  StreamSubscription<List<Listing>>? _listingsSub;
+  StreamSubscription<Set<String>>? _confirmedSub;
   final Map<String, bool> _savedItems = {};
   String _search = '';
   String _category = 'All';
@@ -41,19 +48,36 @@ class BrowseViewModel extends ChangeNotifier {
   BrowseViewModel() {
     _listingService = ListingService();
     _listenListings();
+    _listenConfirmedTransactions();
   }
 
   void _listenListings() {
-    _listingService.getListings().listen((listings) {
-      _listings = listings;
-      for (final l in _listings) {
-          _savedItems[l.id] = l.saved;
-          final cat = l.tags.isNotEmpty ? l.tags[0] : 'Other';
-          _categoryInteractionCounts[cat] = (_categoryInteractionCounts[cat] ?? 0);
-      }
-      _updateRecommendationService();
-      notifyListeners();
+    _listingsSub = _listingService.getListings().listen((listings) {
+      _allListings = listings;
+      _recomputeVisibleListings();
     });
+  }
+
+  void _listenConfirmedTransactions() {
+    _confirmedSub = _meetupService.watchConfirmedListingIds().listen((confirmedIds) {
+      _confirmedListingIds = confirmedIds;
+      _recomputeVisibleListings();
+    });
+  }
+
+  void _recomputeVisibleListings() {
+    _listings = _allListings
+        .where((listing) => !listing.isSold)
+        .where((listing) => !_confirmedListingIds.contains(listing.id))
+        .toList();
+
+    for (final l in _listings) {
+      _savedItems[l.id] = l.saved;
+      final cat = l.tags.isNotEmpty ? l.tags[0] : 'Other';
+      _categoryInteractionCounts[cat] = (_categoryInteractionCounts[cat] ?? 0);
+    }
+    _updateRecommendationService();
+    notifyListeners();
   }
 
   void _updateRecommendationService() {
@@ -186,5 +210,12 @@ class BrowseViewModel extends ChangeNotifier {
       return b.id.compareTo(a.id);
     });
     return filtered;
+  }
+
+  @override
+  void dispose() {
+    _listingsSub?.cancel();
+    _confirmedSub?.cancel();
+    super.dispose();
   }
 }

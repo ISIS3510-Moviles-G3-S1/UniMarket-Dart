@@ -174,7 +174,7 @@ class _InfoSection extends StatelessWidget {
             : item.aiScore >= 80
             ? AppTheme.warmBeige
             : secondaryTextColor;
-    final exchangeLabel = 'Free / Donate';
+    final exchangeLabel = _exchangeLabelFor(item.exchangeType);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,6 +431,21 @@ class _InfoSection extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+String _exchangeLabelFor(String exchangeType) {
+  switch (exchangeType.trim().toLowerCase()) {
+    case 'free':
+    case 'donate':
+    case 'free/donate':
+    case 'free-donate':
+      return 'Free / Donate';
+    case 'swap':
+      return 'Swap';
+    case 'sell':
+    default:
+      return 'For Sale';
   }
 }
 
