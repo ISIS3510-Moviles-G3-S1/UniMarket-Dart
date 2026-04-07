@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import '../core/photo_quality_analyzer.dart';
 import 'package:flutter/material.dart';
+import '../core/analytics_event.dart';
+import '../core/analytics_service.dart';
 import '../data/listing_service.dart';
 import '../models/listing.dart';
 import 'session_view_model.dart';
@@ -148,6 +150,18 @@ class SellViewModel extends ChangeNotifier {
     debugPrint('[SellVM] publishing ${_images.length} selected images');
     await _listingService.createListing(listing: listing, images: _images);
     _published = true;
+
+    final userId = user?.uid ?? '';
+    if (userId.isNotEmpty) {
+      AnalyticsService.instance.track(
+        AnalyticsEvent.userMeaningfulInteraction(
+          userId: userId,
+          interactionType: 'sell',
+          timestamp: DateTime.now().toUtc().toIso8601String(),
+        ),
+      );
+    }
+
     notifyListeners();
   }
 

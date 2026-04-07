@@ -59,5 +59,69 @@ class AnalyticsEvent {
         parameters: {'method': AnalyticsValue.string(method)},
       );
 
+  // ---------------------------------------------------------------------------
+  // Type-2 Business Question: User inactivity & engagement timing
+  // ---------------------------------------------------------------------------
 
+  /// Fired on every meaningful user interaction (buy, like, sell).
+  static AnalyticsEvent userMeaningfulInteraction({
+    required String userId,
+    required String interactionType, // "buy" | "like" | "sell"
+    required String timestamp,       // ISO-8601
+  }) =>
+      AnalyticsEvent(
+        name: 'user_meaningful_interaction',
+        parameters: {
+          'user_id': AnalyticsValue.string(userId),
+          'interaction_type': AnalyticsValue.string(interactionType),
+          'timestamp': AnalyticsValue.string(timestamp),
+        },
+      );
+
+  /// Fired every time the app evaluates whether the user is inactive.
+  static AnalyticsEvent userInactivityChecked({
+    required String userId,
+    required int daysSinceLastInteraction,
+    required bool isInactive,
+    required int thresholdDays,
+  }) =>
+      AnalyticsEvent(
+        name: 'user_inactivity_checked',
+        parameters: {
+          'user_id': AnalyticsValue.string(userId),
+          'days_since_last_interaction': AnalyticsValue.int(daysSinceLastInteraction),
+          'is_inactive': AnalyticsValue.boolType(isInactive),
+          'threshold_days': AnalyticsValue.int(thresholdDays),
+        },
+      );
+
+  /// Fired ONLY when a re-engagement notification is actually triggered.
+  static AnalyticsEvent reengagementNotificationTriggered({
+    required String userId,
+    required int daysInactive,
+    required int thresholdDays,
+    String notificationType = 'inactivity_nudge',
+  }) =>
+      AnalyticsEvent(
+        name: 'reengagement_notification_triggered',
+        parameters: {
+          'user_id': AnalyticsValue.string(userId),
+          'days_inactive': AnalyticsValue.int(daysInactive),
+          'threshold_days': AnalyticsValue.int(thresholdDays),
+          'notification_type': AnalyticsValue.string(notificationType),
+        },
+      );
+
+  /// Fired when the inactivity check passes (user is active — no notification sent).
+  static AnalyticsEvent userActiveNoNotification({
+    required String userId,
+    required int daysSinceLastInteraction,
+  }) =>
+      AnalyticsEvent(
+        name: 'user_active_no_notification',
+        parameters: {
+          'user_id': AnalyticsValue.string(userId),
+          'days_since_last_interaction': AnalyticsValue.int(daysSinceLastInteraction),
+        },
+      );
 }

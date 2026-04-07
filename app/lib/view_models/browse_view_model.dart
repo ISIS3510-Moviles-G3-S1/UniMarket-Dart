@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../core/analytics_event.dart';
+import '../core/analytics_service.dart';
 import '../models/listing.dart';
 import '../data/listing_service.dart';
 
@@ -84,9 +87,24 @@ class BrowseViewModel extends ChangeNotifier {
   // User favorites an item
   void toggleSave(String itemId) {
     _savedItems[itemId] = !_savedItems[itemId]!;
+    final isNowSaved = _savedItems[itemId]!;
     final item = _listings.firstWhere((l) => l.id == itemId);
     final cat = item.tags.isNotEmpty ? item.tags[0] : 'Other';
     _categoryInteractionCounts[cat] = (_categoryInteractionCounts[cat] ?? 0) + 1;
+
+    if (isNowSaved) {
+      final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (userId.isNotEmpty) {
+        AnalyticsService.instance.track(
+          AnalyticsEvent.userMeaningfulInteraction(
+            userId: userId,
+            interactionType: 'like',
+            timestamp: DateTime.now().toUtc().toIso8601String(),
+          ),
+        );
+      }
+    }
+
     _updateRecommendationService();
     notifyListeners();
   }
