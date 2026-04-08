@@ -101,8 +101,6 @@ class SellViewModel extends ChangeNotifier {
 
 
 
-  // (keep only one addImage method)
-
   void addImage(XFile file) {
     if (_images.length < 5) {
       _images.add(file);

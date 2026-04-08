@@ -1,6 +1,6 @@
 import '../models/listing.dart';
 import '../core/recommendation_system.dart';
-import 'ai_recommendation_decorator.dart';
+
 
 class RecommendationService {
   final List<Listing> allItems;
@@ -24,9 +24,7 @@ class RecommendationService {
     ItemRecommendation base = AllItemsRecommendation(allItems);
     base = TagFilterDecorator(base, userFrequentTags);
     base = NewItemPriorityDecorator(base, newThreshold, itemUploadDates);
-    if (aiApiUrl != null && userId != null) {
-      base = AIRecommendationDecorator(base, apiUrl: aiApiUrl!, userId: userId!);
-    }
+    // IA eliminada: no se aplica AIRecommendationDecorator
     return base.getItems();
   }
 
