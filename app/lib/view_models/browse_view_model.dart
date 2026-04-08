@@ -11,7 +11,7 @@ import '../data/meetup_transaction_service.dart';
 
 import '../core/recommendation_service.dart';
 import '../core/recommendation_system.dart';
-import '../core/ai_recommendation_decorator.dart';
+
 
 
 class BrowseViewModel extends ChangeNotifier {
@@ -184,9 +184,9 @@ class BrowseViewModel extends ChangeNotifier {
   }
 
 
-  // 'For You' recommendations (favoritos + similaridad de tags)
+  // 'For You' recommendations (favorites + tag similarity)
   List<Listing> get forYouRecommendations {
-    // 1. Obtener los favoritos, vistos y comprados
+    // 1. Get favorites, viewed, and purchased items
     final favoriteIds = _savedItems.entries.where((e) => e.value).map((e) => e.key).toSet();
     final allInteractedIds = <String>{}
       ..addAll(favoriteIds)
@@ -194,19 +194,19 @@ class BrowseViewModel extends ChangeNotifier {
       ..addAll(_purchasedItemIds);
     final interactedListings = _listings.where((l) => allInteractedIds.contains(l.id)).toList();
 
-    // 2. Obtener todos los tags de los ítems con los que interactuó
+    // 2. Get all tags from items the user interacted with
     final interactedTags = <String>{};
     for (final item in interactedListings) {
       interactedTags.addAll(item.tags.where((t) => t.trim().isNotEmpty));
     }
 
-    // LOG: Mostrar tags de interacción
+    // LOG: Show interacted tags
     debugPrint('[ForYou] Interacted tags: ${interactedTags.join(", ")}');
 
-    // 3. Incluir todos los ítems que tengan al menos un tag similar a los de interacción (usando similaridad de strings)
-    const double similarityThreshold = 0.6; // Puedes ajustar este valor
+    // 3. Include all items with at least one tag similar to the interacted tags (using string similarity)
+    const double similarityThreshold = 0.6; // You can adjust this value
     final similarListings = _listings.where((l) {
-      if (allInteractedIds.contains(l.id)) return false; // No incluir repetidos
+      if (allInteractedIds.contains(l.id)) return false; // Do not include duplicates
       for (final tag in l.tags) {
         for (final interactedTag in interactedTags) {
           final similarity = StringSimilarity.compareTwoStrings(
@@ -220,27 +220,16 @@ class BrowseViewModel extends ChangeNotifier {
       return false;
     }).toList();
 
-    // 4. Combinar interactuados y similares, sin duplicados
+    // 4. Combine interacted and similar items, without duplicates
     final allForYou = [...interactedListings, ...similarListings];
 
-    // LOG: Mostrar cuántos ítems se recomiendan
+    // LOG: Show how many items are recommended
     debugPrint('[ForYou] Total recommendations: ${allForYou.length}');
 
     return allForYou;
   }
 
-  // 'For You' recomendaciones IA (asíncrono)
-  Future<List<Listing>> getForYouAIRecommendations() async {
-    final base = AllItemsRecommendation(_listings);
-    final tagFiltered = TagFilterDecorator(base, _categoryInteractionCounts.keys.toList());
-    final newPriority = NewItemPriorityDecorator(tagFiltered, DateTime.now().subtract(Duration(days: 5)), _itemUploadDates);
-    final ai = AIRecommendationDecorator(
-      newPriority,
-      apiUrl: 'http://localhost:8000/recommend', // Cambia por la IP de tu PC si usas dispositivo físico
-      userId: 'demo-user',
-    );
-    return await ai.getRecommendedItems();
-  }
+
 
   // New item counts per frequent category
   Map<String, int> get forYouNewItemCounts => _recommendationService.getNewItemCounts();
