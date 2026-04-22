@@ -108,7 +108,6 @@ class SellViewModel extends ChangeNotifier {
   }
 
   String? get tagsError {
-    if (_tags.isEmpty) return 'At least one tag is required.';
     return null;
   }
 
@@ -133,7 +132,7 @@ class SellViewModel extends ChangeNotifier {
   }
 
   String? get firstPublishValidationError {
-    return imageError ?? titleError ?? priceError ?? tagsError ?? descriptionError;
+    return imageError ?? titleError ?? priceError ?? descriptionError;
   }
 
   bool get canPublish => firstPublishValidationError == null;
@@ -179,6 +178,13 @@ class SellViewModel extends ChangeNotifier {
     final validationError = firstPublishValidationError;
     if (validationError != null) {
       throw ArgumentError(validationError);
+    }
+
+    if (_tags.isEmpty) {
+      final online = await _listingService.isOnlineNow();
+      if (online) {
+        throw ArgumentError('Add at least one tag, or publish while offline to use automatic tag generation later.');
+      }
     }
 
     final user = _session.currentUser;

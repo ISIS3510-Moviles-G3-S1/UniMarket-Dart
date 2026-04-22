@@ -109,6 +109,10 @@ class ListingService {
     await _syncPendingOperations();
   }
 
+  Future<bool> isOnlineNow() async {
+    return _isOnline();
+  }
+
   Future<String> _uploadImage(XFile image, String listingId, int index) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('User not authenticated');
@@ -260,7 +264,7 @@ class ListingService {
     }
   }
 
-  Future<void> deleteListing(Listing listing) async {
+  Future<bool> deleteListing(Listing listing) async {
     final isOnline = await _isOnline();
     if (!isOnline) {
       await _enqueueOperation({
@@ -271,11 +275,12 @@ class ListingService {
         'imageURLs': listing.imageURLs,
         'queuedAt': DateTime.now().toUtc().toIso8601String(),
       });
-      return;
+      return true;
     }
 
     try {
       await _deleteListingOnline(listing.id, listing.imageURLs);
+      return false;
     } catch (e) {
       debugPrint('[ListingService] deleteListing online failed, queueing offline: $e');
       await _enqueueOperation({
@@ -286,6 +291,7 @@ class ListingService {
         'imageURLs': listing.imageURLs,
         'queuedAt': DateTime.now().toUtc().toIso8601String(),
       });
+      return true;
     }
   }
 
@@ -375,6 +381,7 @@ class ListingService {
 
     final listingMap = Map<String, dynamic>.from(listingRaw);
     final sellerId = op['sellerId']?.toString() ?? listingMap['sellerId']?.toString() ?? '';
+    final shouldGeneratePendingTags = op['pendingTags'] == true;
 
     final imagePaths = (op['imagePaths'] as List?)
             ?.map((e) => e.toString())
@@ -382,28 +389,33 @@ class ListingService {
             .toList() ??
         const <String>[];
 
-    final docRef = _db.collection(_collection).doc();
-    final remoteListingId = docRef.id;
+    final existingRemoteListingId = op['remoteListingId']?.toString() ?? '';
+    final remoteListingId = existingRemoteListingId.isNotEmpty
+        ? existingRemoteListingId
+        : _db.collection(_collection).doc().id;
 
-    final imageUrls = <String>[];
-    for (int i = 0; i < imagePaths.length && i < 5; i++) {
-      final path = imagePaths[i];
-      if (path.trim().isEmpty) continue;
-      final url = await _uploadImage(XFile(path), remoteListingId, i);
-      imageUrls.add(url);
+    if (existingRemoteListingId.isEmpty) {
+      final imageUrls = <String>[];
+      for (int i = 0; i < imagePaths.length && i < 5; i++) {
+        final path = imagePaths[i];
+        if (path.trim().isEmpty) continue;
+        final url = await _uploadImage(XFile(path), remoteListingId, i);
+        imageUrls.add(url);
+      }
+
+      final firestoreData = _queuedListingToFirestoreData(listingMap)
+        ..addAll({
+          'sellerId': sellerId,
+          'createdAt': FieldValue.serverTimestamp(),
+          'imageURLs': imageUrls,
+          'imagePath': imageUrls.isNotEmpty ? imageUrls[0] : '',
+          'tagsPending': shouldGeneratePendingTags,
+        });
+
+      await _db.collection(_collection).doc(remoteListingId).set(firestoreData);
+      op['remoteListingId'] = remoteListingId;
     }
 
-    final firestoreData = _queuedListingToFirestoreData(listingMap)
-      ..addAll({
-        'sellerId': sellerId,
-        'createdAt': FieldValue.serverTimestamp(),
-        'imageURLs': imageUrls,
-        'imagePath': imageUrls.isNotEmpty ? imageUrls[0] : '',
-      });
-
-    await docRef.set(firestoreData);
-
-    final shouldGeneratePendingTags = op['pendingTags'] == true;
     if (shouldGeneratePendingTags) {
       await _generateAndUpdateTags(
         listingId: remoteListingId,
@@ -419,7 +431,7 @@ class ListingService {
     required String listingIdOverride,
   }) async {
     if (listingIdOverride.trim().isEmpty || listingIdOverride.startsWith('local_')) {
-      return;
+      throw StateError('Update is waiting for local create sync.');
     }
 
     final listingRaw = op['listing'];
@@ -442,7 +454,7 @@ class ListingService {
         const <String>[];
 
     if (listingIdOverride.startsWith('local_')) {
-      return;
+      throw StateError('Delete is waiting for local create sync.');
     }
 
     await _deleteListingOnline(listingIdOverride, imageUrls);

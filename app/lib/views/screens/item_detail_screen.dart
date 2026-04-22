@@ -319,53 +319,70 @@ class _InfoSectionState extends State<_InfoSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _isEditMode
-                  ? TextField(
-                      controller: _titleController,
-                      decoration: const InputDecoration(labelText: 'Title'),
-                    )
-                  : Text(
-                      item.name,
-                      style:
-                          Theme.of(context).textTheme.titleLarge ??
-                          const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                    ),
-            ),
-            if (isSeller)
-              IconButton(
-                onPressed: vm.isUpdating
-                    ? null
-                    : () {
-                        setState(() {
-                          if (_isEditMode) {
+        if (_isEditMode)
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(labelText: 'Title'),
+                ),
+              ),
+              if (isSeller)
+                IconButton(
+                  onPressed: vm.isUpdating
+                      ? null
+                      : () {
+                          setState(() {
                             _syncFromItem();
-                          }
-                          _isEditMode = !_isEditMode;
-                        });
-                      },
-                icon: Icon(_isEditMode ? Icons.close_rounded : Icons.edit_rounded),
+                            _isEditMode = false;
+                          });
+                        },
+                  icon: const Icon(Icons.close_rounded),
+                ),
+            ],
+          )
+        else
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  item.name,
+                  style:
+                      Theme.of(context).textTheme.titleLarge ??
+                      const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                ),
               ),
-            IconButton(
-              onPressed: () => vm.toggleSaved(context),
-              icon: Icon(
-                vm.saved ? Icons.favorite : Icons.favorite_border_outlined,
-                color: vm.saved ? Colors.red : secondaryTextColor,
-                size: 22,
+              if (isSeller)
+                IconButton(
+                  onPressed: vm.isUpdating
+                      ? null
+                      : () {
+                          setState(() {
+                            _isEditMode = true;
+                          });
+                        },
+                  icon: const Icon(Icons.edit_rounded),
+                ),
+              IconButton(
+                onPressed: () => vm.toggleSaved(context),
+                icon: Icon(
+                  vm.saved ? Icons.favorite : Icons.favorite_border_outlined,
+                  color: vm.saved ? Colors.red : secondaryTextColor,
+                  size: 22,
+                ),
               ),
-            ),
-            IconButton(
-              onPressed: () {},
-              icon: Icon(
-                Icons.ios_share_outlined,
-                color: secondaryTextColor,
-                size: 22,
+              IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.ios_share_outlined,
+                  color: secondaryTextColor,
+                  size: 22,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        const SizedBox(height: 8),
         if (_isEditMode)
           TextField(
             controller: _priceController,
