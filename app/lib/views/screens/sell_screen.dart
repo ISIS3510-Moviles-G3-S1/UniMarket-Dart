@@ -144,6 +144,7 @@ class _SellForm extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final mutedText = isDark ? colorScheme.onSurface.withOpacity(0.72) : AppTheme.mutedForeground;
+    final publishValidationError = vm.firstPublishValidationError;
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -231,6 +232,8 @@ class _SellForm extends StatelessWidget {
                   value: vm.title,
                   onChanged: (v) => vm.title = v,
                   hint: 'e.g. Vintage Denim Jacket',
+                  errorText: vm.titleError,
+                  maxLength: SellViewModel.titleMaxLength,
                 ),
                 const SizedBox(height: 12),
                 _TextField(
@@ -239,6 +242,7 @@ class _SellForm extends StatelessWidget {
                   onChanged: (v) => vm.price = v,
                   hint: '0.00',
                   keyboardType: TextInputType.number,
+                  errorText: vm.priceError,
                 ),
                 const SizedBox(height: 12),
                 _TextField(
@@ -246,6 +250,7 @@ class _SellForm extends StatelessWidget {
                   value: vm.tagsInput,
                   onChanged: (v) => vm.tagsInput = v,
                   hint: 'e.g. jackets, denim, blue',
+                  errorText: vm.tagsError,
                 ),
                 const SizedBox(height: 12),
                 _TextField(
@@ -254,6 +259,8 @@ class _SellForm extends StatelessWidget {
                   onChanged: (v) => vm.description = v,
                   hint: 'Describe the item...',
                   maxLines: 3,
+                  errorText: vm.descriptionError,
+                  maxLength: SellViewModel.descriptionMaxLength,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -339,8 +346,30 @@ class _SellForm extends StatelessWidget {
                   }).toList(),
                 ),
                 const SizedBox(height: 24),
+                if (publishValidationError != null) ...[
+                  Text(
+                    publishValidationError,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 FilledButton.icon(
-                  onPressed: vm.title.isEmpty ? null : () => vm.publish(),
+                  onPressed: vm.canPublish
+                      ? () async {
+                          try {
+                            await vm.publish();
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(e.toString().replaceFirst('Invalid argument(s): ', ''))),
+                            );
+                          }
+                        }
+                      : null,
                   icon: const Icon(Icons.upload_rounded, size: 20),
                   label: const Text('Publish Listing'),
                   style: FilledButton.styleFrom(
@@ -595,7 +624,9 @@ class _TextField extends StatefulWidget {
   final String value;
   final ValueChanged<String> onChanged;
   final String hint;
+  final String? errorText;
   final TextInputType? keyboardType;
+  final int? maxLength;
   final int maxLines;
 
   const _TextField({
@@ -603,7 +634,9 @@ class _TextField extends StatefulWidget {
     required this.value,
     required this.onChanged,
     required this.hint,
+    this.errorText,
     this.keyboardType,
+    this.maxLength,
     this.maxLines = 1,
   });
 
@@ -646,8 +679,10 @@ class _TextFieldState extends State<_TextField> {
         TextField(
           controller: _controller,
           onChanged: widget.onChanged,
+          maxLength: widget.maxLength,
           decoration: InputDecoration(
             hintText: widget.hint,
+            errorText: widget.errorText,
             filled: true,
             fillColor: colorScheme.surface,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
