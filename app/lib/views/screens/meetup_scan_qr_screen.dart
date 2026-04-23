@@ -30,10 +30,11 @@ class _MeetupScanQrScreenState extends State<MeetupScanQrScreen> {
         body: Consumer2<ScanQrViewModel, SessionViewModel>(
           builder: (context, vm, session, _) {
             final currentUserId = session.currentUser?.uid;
+            final currentUserEmail = session.currentUser?.email?.trim().toLowerCase();
 
-            if (currentUserId == null || currentUserId.isEmpty) {
+            if (currentUserId == null || currentUserId.isEmpty || currentUserEmail == null || currentUserEmail.isEmpty) {
               return const Center(
-                child: Text('You must be signed in to confirm a meetup.'),
+                child: Text('You must be signed in with an email account to confirm a meetup.'),
               );
             }
 
@@ -53,6 +54,7 @@ class _MeetupScanQrScreenState extends State<MeetupScanQrScreen> {
                           await vm.processScannedCode(
                             rawValue: barcode?.rawValue,
                             currentUserId: currentUserId,
+                            currentUserEmail: currentUserEmail,
                           );
 
                           if (vm.isConfirmed) {

@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
@@ -19,6 +20,9 @@ import 'view_models/session_view_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+  await Hive.openBox<dynamic>('listing_drafts_v1');
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

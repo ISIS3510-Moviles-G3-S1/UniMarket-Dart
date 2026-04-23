@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// AnalyticsValue: Represents a value for analytics parameters.
 enum AnalyticsValueType { string, int, doubleType, boolType }
 
@@ -143,7 +141,7 @@ class AnalyticsEvent {
       );
 
   // ---------------------------------------------------------------------------
-  // Type-1 Business Question: Automatic theme switching by time-of-day
+  // Type-3 Business Question: Theme preference (automatic vs manual)
   // ---------------------------------------------------------------------------
 
   /// Fired when the app AUTOMATICALLY switches theme based on time-of-day context.
@@ -223,6 +221,30 @@ class AnalyticsEvent {
           'initial_theme': AnalyticsValue.string(initialTheme),
           'hour_of_day': AnalyticsValue.int(hourOfDay),
           'timestamp': AnalyticsValue.string(timestamp),
+        },
+      );
+
+  /// Fired when a user explicitly chooses their theme mode.
+  ///
+  /// Use this event to measure preference split between:
+  /// - automatic mode (time-based switching)
+  /// - manual mode (fixed light/dark)
+  static AnalyticsEvent themePreferenceSelected({
+    required String sessionId,
+    String? userId,
+    required String preferenceMode, // "automatic" | "manual"
+    required String selectedTheme,  // "light" | "dark"
+    required String timestamp,      // ISO-8601
+  }) =>
+      AnalyticsEvent(
+        name: 'theme_preference_selected',
+        parameters: {
+          'session_id': AnalyticsValue.string(sessionId),
+          if (userId != null) 'user_id': AnalyticsValue.string(userId),
+          'preference_mode': AnalyticsValue.string(preferenceMode),
+          'selected_theme': AnalyticsValue.string(selectedTheme),
+          'timestamp': AnalyticsValue.string(timestamp),
+          'is_automatic': AnalyticsValue.boolType(preferenceMode == 'automatic'),
         },
       );
 }

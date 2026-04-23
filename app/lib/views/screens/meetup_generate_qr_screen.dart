@@ -20,11 +20,11 @@ class MeetupGenerateQrScreen extends StatefulWidget {
 }
 
 class _MeetupGenerateQrScreenState extends State<MeetupGenerateQrScreen> {
-  final TextEditingController _buyerIdController = TextEditingController();
+  final TextEditingController _buyerEmailController = TextEditingController();
 
   @override
   void dispose() {
-    _buyerIdController.dispose();
+    _buyerEmailController.dispose();
     super.dispose();
   }
 
@@ -37,6 +37,7 @@ class _MeetupGenerateQrScreenState extends State<MeetupGenerateQrScreen> {
         body: Consumer2<GenerateQrViewModel, SessionViewModel>(
           builder: (context, vm, session, _) {
             final currentUserId = session.currentUser?.uid ?? '';
+            final currentUserEmail = session.currentUser?.email?.trim().toLowerCase() ?? '';
 
             return ListView(
               padding: const EdgeInsets.all(16),
@@ -47,11 +48,12 @@ class _MeetupGenerateQrScreenState extends State<MeetupGenerateQrScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _buyerIdController,
+                  controller: _buyerEmailController,
+                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                    labelText: 'Buyer User ID',
+                    labelText: 'Buyer Email',
                     helperText:
-                        'Use the buyer\'s Firebase uid so only that buyer can confirm.',
+                        'Use the buyer\'s email so only that account can confirm.',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -63,7 +65,8 @@ class _MeetupGenerateQrScreenState extends State<MeetupGenerateQrScreen> {
                             vm.generateQrForListing(
                               listingId: widget.listingId,
                               sellerId: widget.sellerId,
-                              buyerId: _buyerIdController.text.trim(),
+                              sellerEmail: currentUserEmail,
+                              buyerEmail: _buyerEmailController.text.trim().toLowerCase(),
                               currentUserId: currentUserId,
                             );
                           },

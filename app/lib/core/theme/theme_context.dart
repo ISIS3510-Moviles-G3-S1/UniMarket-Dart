@@ -1,11 +1,14 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../analytics_service.dart';
 import '../analytics_event.dart';
 import 'theme_strategy.dart';
 import 'day_theme_strategy.dart';
 import 'night_theme_strategy.dart';
+
+enum ThemeSelectionMode { automatic, light, dark }
 
 /// [Strategy Pattern] — Context class that owns and delegates to a [ThemeStrategy].
 ///
@@ -34,18 +37,24 @@ import 'night_theme_strategy.dart';
 ///      (for automatic time/condition-based switching), or call [setStrategy]
 ///      at runtime for an imperative override.
 class ThemeContext extends ChangeNotifier {
+  static const String _themeSelectionStorageKeyBase = 'theme_selection_mode_v1';
+  static const String _lastThemeStorageKeyBase = 'theme_last_active_v1';
+
   /// Ordered list of strategies evaluated for automatic switching.
   /// The first strategy whose [ThemeStrategy.isActiveFor] returns `true` wins.
   final List<ThemeStrategy> _autoStrategies;
 
   ThemeStrategy _currentStrategy;
   Timer? _pollingTimer;
+  StreamSubscription<User?>? _authSub;
 
   /// `true` while a manual strategy override is in effect.
   bool _manualOverride = false;
 
   /// `true` after the initial theme has been set (prevents duplicate init events).
   bool _isInitialized = false;
+
+  ThemeSelectionMode _selectionMode = ThemeSelectionMode.automatic;
 
   /// Cached analytics service for tracking theme changes.
   final AnalyticsService _analytics = AnalyticsService.instance;
@@ -68,6 +77,10 @@ class ThemeContext extends ChangeNotifier {
           DateTime.now(),
         ) {
     _startPolling();
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((_) {
+      unawaited(_restoreSelectionMode());
+    });
+    unawaited(_restoreSelectionMode());
     // Fire session initialization event on next frame
     Future.microtask(() => _fireSessionInitializedEvent());
   }
@@ -88,6 +101,9 @@ class ThemeContext extends ChangeNotifier {
   /// time-based strategy selection.
   bool get isManualOverride => _manualOverride;
 
+  /// Current user-selected mode exposed to the UI.
+  ThemeSelectionMode get selectionMode => _selectionMode;
+
   /// Forces [strategy] to be the active strategy, bypassing the automatic
   /// time-based check.
   ///
@@ -99,17 +115,34 @@ class ThemeContext extends ChangeNotifier {
   /// context.read<ThemeContext>().setStrategy(NightThemeStrategy());
   /// ```
   void setStrategy(ThemeStrategy strategy) {
+    _setManualStrategy(strategy, trackAnalyticsEvents: true);
+  }
+
+  void _setManualStrategy(
+    ThemeStrategy strategy, {
+    required bool trackAnalyticsEvents,
+  }) {
+    _selectionMode = _modeForStrategy(strategy);
+    unawaited(_persistSelectionMode(_selectionMode));
+
     final previousTheme = _getThemeName(_currentStrategy);
     final newTheme = _getThemeName(strategy);
 
     _manualOverride = true;
     _pollingTimer?.cancel();
 
-    // Fire manual override event BEFORE applying the new strategy
-    _fireManualOverrideEvent(
-      fromTheme: previousTheme,
-      toTheme: newTheme,
-    );
+    if (trackAnalyticsEvents) {
+      // Fire manual override event BEFORE applying the new strategy.
+      _fireManualOverrideEvent(
+        fromTheme: previousTheme,
+        toTheme: newTheme,
+      );
+
+      _fireThemePreferenceSelectedEvent(
+        preferenceMode: 'manual',
+        selectedTheme: newTheme,
+      );
+    }
 
     _applyStrategy(strategy);
   }
@@ -117,9 +150,85 @@ class ThemeContext extends ChangeNotifier {
   /// Reverts to automatic time-based strategy selection and restarts
   /// the polling timer.
   void clearManualOverride() {
+    setAutomaticMode();
+  }
+
+  /// Enables automatic time-based switching.
+  void setAutomaticMode({
+    bool trackPreferenceEvent = true,
+    bool syncToCurrentTime = true,
+  }) {
+    _selectionMode = ThemeSelectionMode.automatic;
+    unawaited(_persistSelectionMode(_selectionMode));
     _manualOverride = false;
-    _autoSwitch();
+
+    if (syncToCurrentTime) {
+      _autoSwitch();
+    }
+
     _startPolling();
+
+    if (trackPreferenceEvent) {
+      _fireThemePreferenceSelectedEvent(
+        preferenceMode: 'automatic',
+        selectedTheme: _getThemeName(_currentStrategy),
+      );
+    }
+
+    notifyListeners();
+  }
+
+  /// Locks theme to light mode.
+  void setLightMode() => _setManualStrategy(DayThemeStrategy(), trackAnalyticsEvents: true);
+
+  /// Locks theme to dark mode.
+  void setDarkMode() => _setManualStrategy(NightThemeStrategy(), trackAnalyticsEvents: true);
+
+  Future<void> _restoreSelectionMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final scope = _currentPreferenceScope();
+      final storedValue = prefs.getString(_themeSelectionStorageKeyForScope(scope));
+      final lastThemeName = prefs.getString(_lastThemeStorageKeyForScope(scope));
+
+      final lastThemeStrategy = _strategyForThemeName(lastThemeName);
+      if (lastThemeStrategy != null) {
+        _currentStrategy = lastThemeStrategy;
+      }
+
+      switch (storedValue) {
+        case 'light':
+          _setManualStrategy(DayThemeStrategy(), trackAnalyticsEvents: false);
+          break;
+        case 'dark':
+          _setManualStrategy(NightThemeStrategy(), trackAnalyticsEvents: false);
+          break;
+        case 'automatic':
+          setAutomaticMode(
+            trackPreferenceEvent: false,
+            syncToCurrentTime: false,
+          );
+          break;
+        default:
+          if (lastThemeStrategy != null) {
+            notifyListeners();
+          }
+      }
+    } catch (_) {
+      // Keep default automatic behavior if persistence is unavailable.
+    }
+  }
+
+  Future<void> _persistSelectionMode(ThemeSelectionMode mode) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _themeSelectionStorageKeyForScope(_currentPreferenceScope()),
+        mode.name,
+      );
+    } catch (_) {
+      // Ignore persistence errors; theme selection still works in-memory.
+    }
   }
 
   /// Pauses the background polling timer.
@@ -149,6 +258,52 @@ class ThemeContext extends ChangeNotifier {
     if (strategy is DayThemeStrategy) return 'light';
     if (strategy is NightThemeStrategy) return 'dark';
     return 'unknown';
+  }
+
+  ThemeSelectionMode _modeForStrategy(ThemeStrategy strategy) {
+    if (strategy is DayThemeStrategy) return ThemeSelectionMode.light;
+    if (strategy is NightThemeStrategy) return ThemeSelectionMode.dark;
+    return ThemeSelectionMode.automatic;
+  }
+
+  ThemeStrategy? _strategyForThemeName(String? themeName) {
+    switch (themeName) {
+      case 'light':
+        return DayThemeStrategy();
+      case 'dark':
+        return NightThemeStrategy();
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _persistLastThemeName(String themeName) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _lastThemeStorageKeyForScope(_currentPreferenceScope()),
+        themeName,
+      );
+    } catch (_) {
+      // Ignore persistence errors; theme selection still works in-memory.
+    }
+  }
+
+  String _currentPreferenceScope() {
+    final user = FirebaseAuth.instance.currentUser;
+    final uid = user?.uid.trim() ?? '';
+    if (uid.isNotEmpty) {
+      return 'uid_$uid';
+    }
+    return 'guest';
+  }
+
+  String _themeSelectionStorageKeyForScope(String scope) {
+    return '${_themeSelectionStorageKeyBase}_$scope';
+  }
+
+  String _lastThemeStorageKeyForScope(String scope) {
+    return '${_lastThemeStorageKeyBase}_$scope';
   }
 
   /// Starts a one-minute polling timer that re-evaluates the active
@@ -181,6 +336,7 @@ class ThemeContext extends ChangeNotifier {
   /// Updates [_currentStrategy] and notifies all listeners.
   void _applyStrategy(ThemeStrategy strategy) {
     _currentStrategy = strategy;
+    unawaited(_persistLastThemeName(_getThemeName(strategy)));
     notifyListeners();
   }
 
@@ -244,9 +400,27 @@ class ThemeContext extends ChangeNotifier {
     );
   }
 
+  void _fireThemePreferenceSelectedEvent({
+    required String preferenceMode,
+    required String selectedTheme,
+  }) {
+    final now = DateTime.now();
+
+    _analytics.track(
+      AnalyticsEvent.themePreferenceSelected(
+        sessionId: _analytics.sessionId,
+        userId: _analytics.currentUserId,
+        preferenceMode: preferenceMode,
+        selectedTheme: selectedTheme,
+        timestamp: now.toIso8601String(),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _pollingTimer?.cancel();
+    _authSub?.cancel();
     super.dispose();
   }
 }

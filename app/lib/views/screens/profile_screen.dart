@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_theme.dart';
+import '../../core/theme/theme_context.dart';
 import '../../core/price_formatter.dart';
 import '../../view_models/profile_view_model.dart';
 import '../widgets/seller_performance_feedback_card.dart';
@@ -191,7 +192,7 @@ class ProfileScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                 child: Consumer<SessionViewModel>(
                   builder: (context, sessionVm, _) {
-                    final uid = sessionVm.currentUser?.uid ?? 'Not available';
+                    final email = sessionVm.currentUser?.email ?? 'Not available';
                     return Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -199,7 +200,7 @@ class ProfileScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'My UID',
+                              'My email',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
@@ -208,11 +209,61 @@ class ProfileScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             SelectableText(
-                              uid,
+                              email,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: mutedText,
                               ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Consumer<ThemeContext>(
+                  builder: (context, themeCtx, _) {
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Theme mode',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? colorScheme.onSurface : AppTheme.deepGreen,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('Automatic'),
+                                  selected:
+                                      themeCtx.selectionMode == ThemeSelectionMode.automatic,
+                                  onSelected: (_) => themeCtx.setAutomaticMode(),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Light'),
+                                  selected: themeCtx.selectionMode == ThemeSelectionMode.light,
+                                  onSelected: (_) => themeCtx.setLightMode(),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Dark'),
+                                  selected: themeCtx.selectionMode == ThemeSelectionMode.dark,
+                                  onSelected: (_) => themeCtx.setDarkMode(),
+                                ),
+                              ],
                             ),
                           ],
                         ),

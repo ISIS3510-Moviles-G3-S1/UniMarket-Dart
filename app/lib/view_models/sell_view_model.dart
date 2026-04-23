@@ -1,27 +1,33 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
-import '../core/photo_quality_analyzer.dart';
 import 'package:flutter/material.dart';
 import '../core/analytics_event.dart';
 import '../core/analytics_service.dart';
+import '../data/listing_draft_storage.dart';
 import '../data/listing_service.dart';
 import '../models/listing.dart';
 import 'session_view_model.dart';
 
 class SellViewModel extends ChangeNotifier {
-  SellViewModel(this._session);
+  SellViewModel(this._session) {
+    unawaited(_restoreDraft());
+  }
 
   static const int titleMaxLength = 80;
   static const int descriptionMinLength = 10;
   static const int descriptionMaxLength = 300;
 
   final ListingService _listingService = ListingService();
+  final ListingDraftStorage _draftStorage = ListingDraftStorage();
   SessionViewModel _session;
+  bool _isRestoringDraft = false;
+  bool _draftRestored = false;
 
   void updateSession(SessionViewModel session) {
     _session = session;
+    _draftRestored = false;
+    unawaited(_restoreDraft());
   }
 
   bool _published = false;
@@ -40,30 +46,35 @@ class SellViewModel extends ChangeNotifier {
   String get title => _title;
   set title(String v) {
     _title = v;
+    unawaited(_persistDraft());
     notifyListeners();
   }
 
   String get description => _description;
   set description(String v) {
     _description = v;
+    unawaited(_persistDraft());
     notifyListeners();
   }
 
   String get price => _price;
   set price(String v) {
     _price = v;
+    unawaited(_persistDraft());
     notifyListeners();
   }
 
   String get condition => _condition;
   set condition(String v) {
     _condition = v;
+    unawaited(_persistDraft());
     notifyListeners();
   }
 
   String get exchangeType => _exchangeType;
   set exchangeType(String v) {
     _exchangeType = v;
+    unawaited(_persistDraft());
     notifyListeners();
   }
 
@@ -71,6 +82,7 @@ class SellViewModel extends ChangeNotifier {
   set tags(List<String> v) {
     _tags = v;
     _tagsInput = _tags.join(', ');
+    unawaited(_persistDraft());
     notifyListeners();
   }
 
@@ -78,10 +90,15 @@ class SellViewModel extends ChangeNotifier {
   set tagsInput(String v) {
     _tagsInput = v;
     _tags = _parseTags(v);
+    unawaited(_persistDraft());
     notifyListeners();
   }
 
   List<XFile> get images => _images;
+
+  bool get draftRestored => _draftRestored;
+
+  String? get currentUserId => _session.currentUser?.uid;
 
   bool get _hasNegativePriceSign => _price.contains('-');
 
@@ -154,6 +171,7 @@ class SellViewModel extends ChangeNotifier {
       _title = tags['category']!.first;
     }
 
+    unawaited(_persistDraft());
     notifyListeners();
   }
 
@@ -163,6 +181,7 @@ class SellViewModel extends ChangeNotifier {
     if (_images.length < 5) {
       _images.add(file);
       debugPrint('[SellVM] add image: ${file.name}');
+      unawaited(_persistDraft());
       notifyListeners();
     }
   }
@@ -170,6 +189,7 @@ class SellViewModel extends ChangeNotifier {
   void removeImageAt(int index) {
     if (index >= 0 && index < _images.length) {
       _images.removeAt(index);
+      unawaited(_persistDraft());
       notifyListeners();
     }
   }
@@ -217,6 +237,7 @@ class SellViewModel extends ChangeNotifier {
     debugPrint('[SellVM] publishing ${_images.length} selected images');
     await _listingService.createListing(listing: listing, images: _images);
     _published = true;
+    await _clearDraft();
 
     final userId = user?.uid ?? '';
     if (userId.isNotEmpty) {
@@ -244,6 +265,93 @@ class SellViewModel extends ChangeNotifier {
     _exchangeType = 'sell';
     _tags = [];
     _tagsInput = '';
+    unawaited(_clearDraft());
     notifyListeners();
+  }
+
+  String get _draftUserId {
+    final id = _session.currentUser?.uid ?? '';
+    return id.trim().isEmpty ? 'anonymous' : id.trim();
+  }
+
+  Future<void> _restoreDraft() async {
+    if (_published) return;
+
+    final draft = await _draftStorage.loadDraft(_draftUserId);
+    if (draft == null) return;
+
+    _isRestoringDraft = true;
+    _draftRestored = true;
+    _title = (draft['title'] as String?) ?? '';
+    _description = (draft['description'] as String?) ?? '';
+    _price = (draft['price'] as String?) ?? '';
+    _condition = (draft['condition'] as String?) ?? 'Good';
+    _exchangeType = (draft['exchangeType'] as String?) ?? 'sell';
+    _tagsInput = (draft['tagsInput'] as String?) ?? '';
+    _tags = (draft['tags'] as List?)
+            ?.map((e) => e.toString())
+            .where((e) => e.trim().isNotEmpty)
+            .toList() ??
+        _parseTags(_tagsInput);
+    _images = (draft['imagePaths'] as List?)
+            ?.map((e) => e.toString())
+            .where((e) => e.trim().isNotEmpty)
+            .map((path) => XFile(path))
+            .toList() ??
+        [];
+    _isRestoringDraft = false;
+    notifyListeners();
+  }
+
+  void discardRestoredDraft() {
+    _draftRestored = false;
+    _title = '';
+    _description = '';
+    _price = '';
+    _condition = 'Good';
+    _exchangeType = 'sell';
+    _tags = [];
+    _tagsInput = '';
+    _images = [];
+    unawaited(_clearDraft());
+    notifyListeners();
+  }
+
+  void continueDraft() {
+    _draftRestored = false;
+    notifyListeners();
+  }
+
+  Future<void> _persistDraft() async {
+    if (_isRestoringDraft) return;
+    if (_published) return;
+
+    final hasAnyData =
+        _title.trim().isNotEmpty ||
+        _description.trim().isNotEmpty ||
+        _price.trim().isNotEmpty ||
+        _tagsInput.trim().isNotEmpty ||
+        _images.isNotEmpty;
+
+    if (!hasAnyData) {
+      await _clearDraft();
+      return;
+    }
+
+    await _draftStorage.saveDraft(
+      userId: _draftUserId,
+      title: _title,
+      description: _description,
+      price: _price,
+      condition: _condition,
+      exchangeType: _exchangeType,
+      tags: _tags,
+      tagsInput: _tagsInput,
+      imagePaths: _images.map((e) => e.path).where((e) => e.trim().isNotEmpty).toList(),
+    );
+  }
+
+  Future<void> _clearDraft() async {
+    await _draftStorage.clearDraft(_draftUserId);
   }
 }
