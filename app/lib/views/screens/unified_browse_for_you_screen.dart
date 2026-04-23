@@ -298,7 +298,7 @@ class _ListingCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        ' 24${listing.price.toStringAsFixed(0)}',
+                           '\$${listing.price.toStringAsFixed(0)}', // Muestra el símbolo de dólar correctamente
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.sage),
                       ),
                       Text(
