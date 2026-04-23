@@ -23,6 +23,7 @@ Future<void> main() async {
 
   await Hive.initFlutter();
   await Hive.openBox<dynamic>('listing_drafts_v1');
+  await Hive.openBox<List>('fyp_fav_relations');
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -76,7 +77,14 @@ class UniMarketApp extends StatelessWidget {
         ),
 
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
-        ChangeNotifierProvider(create: (_) => BrowseViewModel()),
+        ChangeNotifierProxyProvider<SessionViewModel, BrowseViewModel>(
+          create: (_) => BrowseViewModel(),
+          update: (context, session, browse) {
+            browse ??= BrowseViewModel();
+            browse.reloadFavoritesForCurrentUser();
+            return browse;
+          },
+        ),
         ChangeNotifierProxyProvider<SessionViewModel, SellerPerformanceViewModel>(
           create: (context) => SellerPerformanceViewModel(context.read<SessionViewModel>()),
           update: (_, session, previous) {

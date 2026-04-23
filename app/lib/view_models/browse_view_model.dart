@@ -7,6 +7,7 @@ import '../core/analytics_service.dart';
 import '../models/listing.dart';
 import '../data/listing_service.dart';
 import '../data/meetup_transaction_service.dart';
+import '../data/fyp_fav_relation_storage.dart';
 
 
 import '../core/recommendation_service.dart';
@@ -15,6 +16,7 @@ import '../core/recommendation_system.dart';
 
 
 class BrowseViewModel extends ChangeNotifier {
+  final FypFavRelationStorage _favStorage = FypFavRelationStorage();
   List<Listing> _listings = [];
   List<Listing> _allListings = [];
   late ListingService _listingService;
@@ -58,6 +60,21 @@ class BrowseViewModel extends ChangeNotifier {
     _listingService = ListingService();
     _listenListings();
     _listenConfirmedSales();
+    reloadFavoritesForCurrentUser();
+  }
+
+  Future<void> reloadFavoritesForCurrentUser() async {
+    _savedItems.clear();
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (userId.isEmpty) {
+      notifyListeners();
+      return;
+    }
+    final relations = await _favStorage.getRelationsByFavId(userId);
+    for (final fypItemId in relations) {
+      _savedItems[fypItemId] = true;
+    }
+    notifyListeners();
   }
 
   void _listenListings() {
@@ -106,16 +123,18 @@ class BrowseViewModel extends ChangeNotifier {
 
 
   // User favorites an item
-  void toggleSave(String itemId) {
+  Future<void> toggleSave(String itemId) async {
     _savedItems[itemId] = !_savedItems[itemId]!;
     final isNowSaved = _savedItems[itemId]!;
     final item = _listings.firstWhere((l) => l.id == itemId);
     final cat = item.tags.isNotEmpty ? item.tags[0] : 'Other';
     _categoryInteractionCounts[cat] = (_categoryInteractionCounts[cat] ?? 0) + 1;
 
-    if (isNowSaved) {
-      final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-      if (userId.isNotEmpty) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (userId.isNotEmpty) {
+      if (isNowSaved) {
+        // Guardar relación en Hive
+        await _favStorage.addRelation(favId: userId, fypItemId: itemId);
         AnalyticsService.instance.track(
           AnalyticsEvent.userMeaningfulInteraction(
             userId: userId,
@@ -124,6 +143,9 @@ class BrowseViewModel extends ChangeNotifier {
             category: cat,
           ),
         );
+      } else {
+        // Eliminar relación de Hive
+        await _favStorage.removeRelation(favId: userId, fypItemId: itemId);
       }
     }
 
