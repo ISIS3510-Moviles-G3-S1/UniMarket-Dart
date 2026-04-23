@@ -204,6 +204,7 @@ class _InfoSectionState extends State<_InfoSection> {
 
   late final TextEditingController _titleController;
   late final TextEditingController _priceController;
+  late final TextEditingController _sizeController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _tagsController;
 
@@ -216,6 +217,7 @@ class _InfoSectionState extends State<_InfoSection> {
     super.initState();
     _titleController = TextEditingController();
     _priceController = TextEditingController();
+    _sizeController = TextEditingController();
     _descriptionController = TextEditingController();
     _tagsController = TextEditingController();
     _syncFromItem();
@@ -233,6 +235,7 @@ class _InfoSectionState extends State<_InfoSection> {
     final item = widget.item;
     _titleController.text = item.name;
     _priceController.text = item.price.toInt().toString();
+    _sizeController.text = item.size;
     _descriptionController.text = item.description;
     _tagsController.text = item.tags.join(', ');
     _condition = item.condition;
@@ -243,6 +246,7 @@ class _InfoSectionState extends State<_InfoSection> {
   void dispose() {
     _titleController.dispose();
     _priceController.dispose();
+    _sizeController.dispose();
     _descriptionController.dispose();
     _tagsController.dispose();
     super.dispose();
@@ -259,6 +263,7 @@ class _InfoSectionState extends State<_InfoSection> {
       await widget.vm.updateListingDetails(
         title: _titleController.text,
         priceText: _priceController.text,
+        size: _sizeController.text,
         condition: _condition,
         exchangeType: _exchangeType,
         description: _descriptionController.text,
@@ -397,6 +402,31 @@ class _InfoSectionState extends State<_InfoSection> {
               fontWeight: FontWeight.w800,
               color: AppTheme.sage,
             ),
+          ),
+        const SizedBox(height: 8),
+        if (_isEditMode)
+          TextField(
+            controller: _sizeController,
+            decoration: const InputDecoration(labelText: 'Size'),
+          )
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Chip(
+                label: Text(
+                  item.size.trim().isEmpty ? 'Size not set' : item.size,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: chipTextColor,
+                  ),
+                ),
+                backgroundColor: AppTheme.cardBg,
+                side: BorderSide(color: borderColor),
+                shape: const StadiumBorder(),
+              ),
+            ],
           ),
         const SizedBox(height: 8),
         if (_isEditMode)

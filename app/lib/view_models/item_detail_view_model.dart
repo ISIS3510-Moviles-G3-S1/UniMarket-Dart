@@ -45,6 +45,7 @@ class ItemDetailViewModel extends ChangeNotifier {
           price: listing.price.toDouble(),
           condition: listing.conditionTag,
           exchangeType: listing.exchangeType,
+          size: listing.size,
           seller: Seller(id: listing.sellerId, name: listing.sellerName, university: '', rating: listing.rating, sales: 0, avatar: '', verified: false),
           aiScore: 0,
           description: listing.description,
@@ -99,6 +100,7 @@ class ItemDetailViewModel extends ChangeNotifier {
   Future<void> updateListingDetails({
     required String title,
     required String priceText,
+    required String size,
     required String condition,
     required String exchangeType,
     required String description,
@@ -118,6 +120,9 @@ class ItemDetailViewModel extends ChangeNotifier {
     if (price <= 0) {
       throw ArgumentError('Price must be greater than 0.');
     }
+    if (size.trim().isEmpty) {
+      throw ArgumentError('Size is required.');
+    }
     if (normalizedDescription.isEmpty) {
       throw ArgumentError('Description is required.');
     }
@@ -134,6 +139,7 @@ class ItemDetailViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final existingListing = await _listingService.getListingById(current.id);
       final listing = Listing(
         id: current.id,
         sellerId: current.sellerId,
@@ -150,6 +156,7 @@ class ItemDetailViewModel extends ChangeNotifier {
         soldAt: null,
         imagePath: imagePath,
         imageURLs: currentImages,
+        size: size.trim(),
         status: 'active',
         saved: _saved,
       );

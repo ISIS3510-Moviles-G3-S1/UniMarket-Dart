@@ -301,6 +301,14 @@ class _SellForm extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 _TextField(
+                  label: 'Size',
+                  value: vm.size,
+                  onChanged: (v) => vm.size = v,
+                  hint: 'e.g. S, M, L, XL, One Size',
+                  errorText: vm.sizeError,
+                ),
+                const SizedBox(height: 12),
+                _TextField(
                   label: 'Tags (comma separated)',
                   value: vm.tagsInput,
                   onChanged: (v) => vm.tagsInput = v,

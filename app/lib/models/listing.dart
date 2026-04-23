@@ -52,6 +52,7 @@ class Listing {
   final DateTime? soldAt;
   final String imagePath;
   final List<String> imageURLs;
+  final String size;
   final String status;
   final bool saved;
 
@@ -71,6 +72,7 @@ class Listing {
     this.soldAt,
     this.imagePath = '',
     this.imageURLs = const [],
+    this.size = '',
     this.status = 'active',
     this.saved = false,
   });
@@ -83,6 +85,7 @@ class Listing {
     bool? saved,
     String? status,
     DateTime? soldAt,
+    String? size,
   }) => Listing(
     id: id,
     sellerId: sellerId,
@@ -99,6 +102,7 @@ class Listing {
     soldAt: soldAt ?? this.soldAt,
     imagePath: imagePath,
     imageURLs: imageURLs,
+    size: size ?? this.size,
     status: status ?? this.status,
     saved: saved ?? this.saved,
   );
@@ -123,6 +127,37 @@ class Listing {
     return [];
   }
 
+  static String _normalizeSize(String raw) {
+    final normalized = raw.trim().toLowerCase();
+    if (normalized.isEmpty) return '';
+    if (normalized == 'one size' || normalized == 'onesize') return 'One Size';
+    return normalized.toUpperCase();
+  }
+
+  static String _extractSizeFromTags(List<String> tags) {
+    for (final tag in tags) {
+      final normalized = tag.trim().toLowerCase();
+      if (normalized.isEmpty) continue;
+
+      if (normalized == 'one size' || normalized == 'onesize') {
+        return 'One Size';
+      }
+
+      if (const {'xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl'}.contains(normalized)) {
+        return normalized.toUpperCase();
+      }
+
+      if (normalized.startsWith('size ')) {
+        return _normalizeSize(normalized.replaceFirst('size ', ''));
+      }
+
+      if (normalized.startsWith('talla ')) {
+        return _normalizeSize(normalized.replaceFirst('talla ', ''));
+      }
+    }
+    return '';
+  }
+
   factory Listing.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     final rawImages =
@@ -132,6 +167,9 @@ class Listing {
         data['imageUrl'] ??
         data['image'] ??
         [];
+    final parsedTags = List<String>.from(data['tags'] ?? []);
+    final explicitSize = (data['size'] ?? '').toString();
+
     return Listing(
       id: doc.id,
       sellerId: data['sellerId'] ?? '',
@@ -141,13 +179,16 @@ class Listing {
       description: data['description'] ?? '',
       sellerName: data['sellerName'] ?? '',
       exchangeType: data['exchangeType'] ?? data['exchange_type'] ?? 'sell',
-      tags: List<String>.from(data['tags'] ?? []),
+      tags: parsedTags,
       rating: (data['rating'] ?? 0).toDouble(),
       imageName: data['imageName'] ?? '',
       createdAt: (data['createdAt'] is Timestamp) ? (data['createdAt'] as Timestamp).toDate() : null,
       soldAt: (data['soldAt'] is Timestamp) ? (data['soldAt'] as Timestamp).toDate() : null,
       imagePath: data['imagePath'] ?? '',
       imageURLs: _coerceStringList(rawImages),
+      size: _normalizeSize(explicitSize).isNotEmpty
+          ? _normalizeSize(explicitSize)
+          : _extractSizeFromTags(parsedTags),
       status: listingStatusToString(listingStatusFromString(data['status']?.toString())),
       saved: false,
     );
@@ -169,6 +210,7 @@ class Listing {
       'soldAt': soldAt,
       'imagePath': imagePath,
       'imageURLs': imageURLs,
+      'size': size,
       'status': listingStatusToString(listingStatusFromString(status)),
     };
   }

@@ -35,6 +35,7 @@ class SellViewModel extends ChangeNotifier {
   String _title = '';
   String _description = '';
   String _price = '';
+  String _size = '';
   String _condition = 'Good';
   String _exchangeType = 'sell';
   List<String> _tags = [];
@@ -67,6 +68,13 @@ class SellViewModel extends ChangeNotifier {
   String get condition => _condition;
   set condition(String v) {
     _condition = v;
+    unawaited(_persistDraft());
+    notifyListeners();
+  }
+
+  String get size => _size;
+  set size(String v) {
+    _size = v;
     unawaited(_persistDraft());
     notifyListeners();
   }
@@ -148,8 +156,13 @@ class SellViewModel extends ChangeNotifier {
     return null;
   }
 
+  String? get sizeError {
+    if (_size.trim().isEmpty) return 'Size is required.';
+    return null;
+  }
+
   String? get firstPublishValidationError {
-    return imageError ?? titleError ?? priceError ?? descriptionError;
+    return imageError ?? titleError ?? priceError ?? sizeError ?? descriptionError;
   }
 
   bool get canPublish => firstPublishValidationError == null;
@@ -231,6 +244,7 @@ class SellViewModel extends ChangeNotifier {
       soldAt: null,
       imagePath: '',
       imageURLs: const [],
+      size: _size.trim(),
       status: 'active',
       saved: false,
     );
@@ -261,6 +275,7 @@ class SellViewModel extends ChangeNotifier {
     _title = '';
     _images = [];
     _price = '';
+    _size = '';
     _condition = 'Good';
     _exchangeType = 'sell';
     _tags = [];
@@ -285,6 +300,7 @@ class SellViewModel extends ChangeNotifier {
     _title = (draft['title'] as String?) ?? '';
     _description = (draft['description'] as String?) ?? '';
     _price = (draft['price'] as String?) ?? '';
+    _size = (draft['size'] as String?) ?? '';
     _condition = (draft['condition'] as String?) ?? 'Good';
     _exchangeType = (draft['exchangeType'] as String?) ?? 'sell';
     _tagsInput = (draft['tagsInput'] as String?) ?? '';
@@ -308,6 +324,7 @@ class SellViewModel extends ChangeNotifier {
     _title = '';
     _description = '';
     _price = '';
+    _size = '';
     _condition = 'Good';
     _exchangeType = 'sell';
     _tags = [];
@@ -330,6 +347,7 @@ class SellViewModel extends ChangeNotifier {
         _title.trim().isNotEmpty ||
         _description.trim().isNotEmpty ||
         _price.trim().isNotEmpty ||
+        _size.trim().isNotEmpty ||
         _tagsInput.trim().isNotEmpty ||
         _images.isNotEmpty;
 
@@ -343,6 +361,7 @@ class SellViewModel extends ChangeNotifier {
       title: _title,
       description: _description,
       price: _price,
+      size: _size,
       condition: _condition,
       exchangeType: _exchangeType,
       tags: _tags,

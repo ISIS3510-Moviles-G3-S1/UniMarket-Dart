@@ -12,9 +12,15 @@ import '../../models/listing.dart';
 class _ListingCard extends StatelessWidget {
   final Listing listing;
   final BrowseViewModel vm;
+  final bool isMatch;
   final VoidCallback? onTap;
 
-  const _ListingCard({required this.listing, required this.vm, this.onTap});
+  const _ListingCard({
+    required this.listing,
+    required this.vm,
+    required this.isMatch,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +103,32 @@ class _ListingCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (isMatch)
+                    Positioned(
+                      top: 34,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isDark ? colorScheme.primaryContainer : colorScheme.primary.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: isDark ? colorScheme.primary : colorScheme.primary.withOpacity(0.55),
+                          ),
+                        ),
+                        child: Text(
+                          'Match',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? colorScheme.onPrimaryContainer : colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -160,6 +192,9 @@ class ForYouScreen extends StatelessWidget {
           return item.title.toLowerCase().contains(searchLower) ||
             item.tags.any((tag) => tag.toLowerCase().contains(searchLower));
         }).toList();
+        final matchingItems = vm.countRecommendationMatches(filteredItems);
+        final totalItems = filteredItems.length;
+        final matchPercentage = vm.recommendationMatchPercentage(filteredItems);
         return Scaffold(
           body: SafeArea(
             top: false,
@@ -238,6 +273,16 @@ class ForYouScreen extends StatelessWidget {
                               color: mutedText,
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$matchingItems of $totalItems recommendations match your style and size '
+                            '(${matchPercentage.toStringAsFixed(0)}%)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.primary,
+                            ),
+                          ),
                           const SizedBox(height: 12),
                           if (filteredItems.isEmpty)
                             Center(
@@ -260,6 +305,7 @@ class ForYouScreen extends StatelessWidget {
                               itemBuilder: (context, index) => _ListingCard(
                                 listing: filteredItems[index],
                                 vm: vm,
+                                isMatch: vm.isRecommendationMatch(filteredItems[index]),
                                 onTap: () => context.push('/item/${filteredItems[index].id}'),
                               ),
                             ),
