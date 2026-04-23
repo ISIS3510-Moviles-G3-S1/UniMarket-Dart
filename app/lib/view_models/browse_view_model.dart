@@ -60,7 +60,7 @@ class BrowseViewModel extends ChangeNotifier {
     _listingService = ListingService();
     _listenListings();
     _listenConfirmedSales();
-    _loadSavedFromLocal();
+    reloadFavoritesForCurrentUser();
   }
 
   Future<void> reloadFavoritesForCurrentUser() async {
