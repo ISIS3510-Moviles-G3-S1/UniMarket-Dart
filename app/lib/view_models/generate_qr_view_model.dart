@@ -25,7 +25,8 @@ class GenerateQrViewModel extends ChangeNotifier {
   Future<void> generateQrForListing({
     required String listingId,
     required String sellerId,
-    required String buyerId,
+    required String sellerEmail,
+    required String buyerEmail,
     required String currentUserId,
   }) async {
     _setLoading(true);
@@ -35,6 +36,9 @@ class GenerateQrViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final normalizedSellerEmail = sellerEmail.trim().toLowerCase();
+      final normalizedBuyerEmail = buyerEmail.trim().toLowerCase();
+
       if (currentUserId != sellerId) {
         throw const MeetupTransactionException(
           code: 'permission-denied',
@@ -42,10 +46,25 @@ class GenerateQrViewModel extends ChangeNotifier {
         );
       }
 
+      if (normalizedSellerEmail.isEmpty) {
+        throw const MeetupTransactionException(
+          code: 'missing-email',
+          message: 'Your account email is required to generate a meetup QR code.',
+        );
+      }
+
+      if (normalizedBuyerEmail.isEmpty) {
+        throw const MeetupTransactionException(
+          code: 'invalid-input',
+          message: 'Buyer email is required.',
+        );
+      }
+
       final tx = await _service.createPendingTransaction(
         listingId: listingId,
         sellerId: sellerId,
-        buyerId: buyerId,
+        sellerEmail: normalizedSellerEmail,
+        buyerEmail: normalizedBuyerEmail,
       );
 
       _transaction = tx;
@@ -53,8 +72,8 @@ class GenerateQrViewModel extends ChangeNotifier {
           MeetupQrPayload(
             transactionId: tx.transactionId,
             listingId: tx.listingId,
-            sellerId: tx.sellerId,
-            buyerId: tx.buyerId,
+            sellerEmail: tx.sellerEmail,
+            buyerEmail: tx.buyerEmail,
           ).encode();
     } on MeetupTransactionException catch (e) {
       _errorMessage = e.message;

@@ -3,22 +3,22 @@ import 'dart:convert';
 class MeetupQrPayload {
   final String transactionId;
   final String listingId;
-  final String sellerId;
-  final String buyerId;
+  final String sellerEmail;
+  final String buyerEmail;
 
   const MeetupQrPayload({
     required this.transactionId,
     required this.listingId,
-    required this.sellerId,
-    required this.buyerId,
+    required this.sellerEmail,
+    required this.buyerEmail,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'transactionId': transactionId,
       'listingId': listingId,
-      'sellerId': sellerId,
-      'buyerId': buyerId,
+      'sellerEmail': sellerEmail,
+      'buyerEmail': buyerEmail,
     };
   }
 
@@ -41,8 +41,8 @@ class MeetupQrPayload {
     return MeetupQrPayload(
       transactionId: readRequiredKey('transactionId'),
       listingId: readRequiredKey('listingId'),
-      sellerId: readRequiredKey('sellerId'),
-      buyerId: readRequiredKey('buyerId'),
+      sellerEmail: readRequiredKey('sellerEmail'),
+      buyerEmail: readRequiredKey('buyerEmail'),
     );
   }
 }

@@ -308,6 +308,18 @@
       "languageVersion": "3.7"
     },
     {
+      "name": "hive",
+      "rootUri": "file:///C:/Users/Sofia%20Toro/AppData/Local/Pub/Cache/hosted/pub.dev/hive-2.2.3",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "hive_flutter",
+      "rootUri": "file:///C:/Users/Sofia%20Toro/AppData/Local/Pub/Cache/hosted/pub.dev/hive_flutter-1.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "http",
       "rootUri": "file:///C:/Users/Sofia%20Toro/AppData/Local/Pub/Cache/hosted/pub.dev/http-1.6.0",
       "packageUri": "lib/",
@@ -758,7 +770,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2026-04-22T22:02:14.297290Z",
+  "generated": "2026-04-23T15:00:52.550952Z",
   "generator": "pub",
   "generatorVersion": "3.7.2",
   "flutterRoot": "file:///C:/flutter",

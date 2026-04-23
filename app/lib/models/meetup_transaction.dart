@@ -29,7 +29,9 @@ class MeetupTransaction {
   final String transactionId;
   final String listingId;
   final String sellerId;
+  final String sellerEmail;
   final String buyerId;
+  final String buyerEmail;
   final MeetupTransactionStatus status;
   final DateTime? createdAt;
   final DateTime? confirmedAt;
@@ -38,7 +40,9 @@ class MeetupTransaction {
     required this.transactionId,
     required this.listingId,
     required this.sellerId,
+    required this.sellerEmail,
     required this.buyerId,
+    required this.buyerEmail,
     required this.status,
     this.createdAt,
     this.confirmedAt,
@@ -52,7 +56,9 @@ class MeetupTransaction {
     String? transactionId,
     String? listingId,
     String? sellerId,
+    String? sellerEmail,
     String? buyerId,
+    String? buyerEmail,
     MeetupTransactionStatus? status,
     DateTime? createdAt,
     DateTime? confirmedAt,
@@ -61,7 +67,9 @@ class MeetupTransaction {
       transactionId: transactionId ?? this.transactionId,
       listingId: listingId ?? this.listingId,
       sellerId: sellerId ?? this.sellerId,
+      sellerEmail: sellerEmail ?? this.sellerEmail,
       buyerId: buyerId ?? this.buyerId,
+      buyerEmail: buyerEmail ?? this.buyerEmail,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       confirmedAt: confirmedAt ?? this.confirmedAt,
@@ -73,7 +81,9 @@ class MeetupTransaction {
       'transactionId': transactionId,
       'listingId': listingId,
       'sellerId': sellerId,
+      'sellerEmail': sellerEmail,
       'buyerId': buyerId,
+      'buyerEmail': buyerEmail,
       'status': meetupStatusToString(status),
       'createdAt': createdAt,
       'confirmedAt': confirmedAt,
@@ -85,7 +95,9 @@ class MeetupTransaction {
       transactionId: (data['transactionId'] as String?) ?? '',
       listingId: (data['listingId'] as String?) ?? '',
       sellerId: (data['sellerId'] as String?) ?? '',
+      sellerEmail: (data['sellerEmail'] as String?) ?? '',
       buyerId: (data['buyerId'] as String?) ?? '',
+      buyerEmail: (data['buyerEmail'] as String?) ?? '',
       status: meetupStatusFromString((data['status'] as String?) ?? 'pending'),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       confirmedAt: (data['confirmedAt'] as Timestamp?)?.toDate(),

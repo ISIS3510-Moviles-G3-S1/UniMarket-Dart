@@ -17,30 +17,31 @@ class ScanQrViewModel extends ChangeNotifier {
   bool _hasHandledScan = false;
   String? _errorMessage;
   String? _successMessage;
-  String? _lastExpectedBuyerId;
-  String? _lastScannerUserId;
+  String? _lastExpectedBuyerEmail;
+  String? _lastScannerUserEmail;
   MeetupTransaction? _confirmedTransaction;
 
   bool get isProcessing => _isProcessing;
   bool get hasHandledScan => _hasHandledScan;
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
-  String? get lastExpectedBuyerId => _lastExpectedBuyerId;
-  String? get lastScannerUserId => _lastScannerUserId;
+  String? get lastExpectedBuyerEmail => _lastExpectedBuyerEmail;
+  String? get lastScannerUserEmail => _lastScannerUserEmail;
   MeetupTransaction? get confirmedTransaction => _confirmedTransaction;
   bool get isConfirmed => _confirmedTransaction != null;
 
   Future<void> processScannedCode({
     required String? rawValue,
     required String currentUserId,
+    required String currentUserEmail,
   }) async {
     if (_isProcessing || _hasHandledScan) return;
 
     _setProcessing(true);
     _errorMessage = null;
     _successMessage = null;
-    _lastExpectedBuyerId = null;
-    _lastScannerUserId = currentUserId;
+    _lastExpectedBuyerEmail = null;
+    _lastScannerUserEmail = currentUserEmail;
     notifyListeners();
 
     try {
@@ -49,18 +50,18 @@ class ScanQrViewModel extends ChangeNotifier {
       }
 
       final payload = MeetupQrPayload.decode(rawValue);
-      _lastExpectedBuyerId = payload.buyerId;
-      _lastScannerUserId = currentUserId;
+      _lastExpectedBuyerEmail = payload.buyerEmail;
+      _lastScannerUserEmail = currentUserEmail;
 
-      if (currentUserId != payload.buyerId) {
+      if (currentUserEmail.trim().toLowerCase() != payload.buyerEmail) {
         _errorMessage =
-            'Wrong account. Scanner UID: $currentUserId. QR expects buyer UID: ${payload.buyerId}.';
+            'Wrong account. Scanner email: $currentUserEmail. QR expects buyer email: ${payload.buyerEmail}.';
         return;
       }
 
       final transaction = await _service.confirmFromQrPayload(
         payload: payload,
-        confirmerUserId: currentUserId,
+        confirmerUserEmail: currentUserEmail,
       );
 
       _confirmedTransaction = transaction;
@@ -112,8 +113,8 @@ class ScanQrViewModel extends ChangeNotifier {
     _hasHandledScan = false;
     _errorMessage = null;
     _successMessage = null;
-    _lastExpectedBuyerId = null;
-    _lastScannerUserId = null;
+    _lastExpectedBuyerEmail = null;
+    _lastScannerUserEmail = null;
     _confirmedTransaction = null;
     notifyListeners();
   }

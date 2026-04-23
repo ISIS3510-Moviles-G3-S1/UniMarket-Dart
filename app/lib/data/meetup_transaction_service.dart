@@ -23,21 +23,26 @@ class MeetupTransactionService {
   Future<MeetupTransaction> createPendingTransaction({
     required String listingId,
     required String sellerId,
-    required String buyerId,
+    required String sellerEmail,
+    required String buyerEmail,
   }) async {
     if (listingId.trim().isEmpty ||
         sellerId.trim().isEmpty ||
-        buyerId.trim().isEmpty) {
+        sellerEmail.trim().isEmpty ||
+        buyerEmail.trim().isEmpty) {
       throw const MeetupTransactionException(
         code: 'invalid-input',
-        message: 'Listing ID, seller ID, and buyer ID are required.',
+        message: 'Listing ID, seller ID, seller email, and buyer email are required.',
       );
     }
 
-    if (sellerId == buyerId) {
+    final normalizedSellerEmail = sellerEmail.trim().toLowerCase();
+    final normalizedBuyerEmail = buyerEmail.trim().toLowerCase();
+
+    if (normalizedSellerEmail == normalizedBuyerEmail) {
       throw const MeetupTransactionException(
         code: 'invalid-buyer',
-        message: 'Seller and buyer must be different users.',
+        message: 'Seller and buyer must use different email accounts.',
       );
     }
 
@@ -85,7 +90,8 @@ class MeetupTransactionService {
       'transactionId': docRef.id,
       'listingId': listingId,
       'sellerId': sellerId,
-      'buyerId': buyerId,
+      'sellerEmail': normalizedSellerEmail,
+      'buyerEmail': normalizedBuyerEmail,
       'status': meetupStatusToString(MeetupTransactionStatus.pending),
       'createdAt': FieldValue.serverTimestamp(),
       'confirmedAt': null,
@@ -97,9 +103,9 @@ class MeetupTransactionService {
 
   Future<MeetupTransaction> confirmFromQrPayload({
     required MeetupQrPayload payload,
-    required String confirmerUserId,
+    required String confirmerUserEmail,
   }) async {
-    if (confirmerUserId != payload.buyerId) {
+    if (confirmerUserEmail.trim().toLowerCase() != payload.buyerEmail) {
       throw const MeetupTransactionException(
         code: 'wrong-buyer',
         message: 'This QR can only be confirmed by the assigned buyer.',
@@ -128,8 +134,8 @@ class MeetupTransactionService {
 
       final payloadMatchesTransaction =
           meetupTx.listingId == payload.listingId &&
-          meetupTx.sellerId == payload.sellerId &&
-          meetupTx.buyerId == payload.buyerId;
+          meetupTx.sellerEmail.trim().toLowerCase() == payload.sellerEmail &&
+          meetupTx.buyerEmail.trim().toLowerCase() == payload.buyerEmail;
 
       if (!payloadMatchesTransaction) {
         throw const MeetupTransactionException(
