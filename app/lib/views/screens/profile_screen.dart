@@ -8,6 +8,7 @@ import '../../core/price_formatter.dart';
 import '../../view_models/profile_view_model.dart';
 import '../widgets/seller_performance_feedback_card.dart';
 import '../widgets/eco_message_card.dart';
+import '../widgets/sustainability_impact_card.dart';
 import '../widgets/sustainability_progress_card.dart';
 import '../../view_models/browse_view_model.dart';
 import '../../view_models/session_view_model.dart';
@@ -189,42 +190,6 @@ class ProfileScreen extends StatelessWidget {
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: Consumer<SessionViewModel>(
-                  builder: (context, sessionVm, _) {
-                    final email = sessionVm.currentUser?.email ?? 'Not available';
-                    return Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'My email',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: isDark ? colorScheme.onSurface : AppTheme.deepGreen,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SelectableText(
-                              email,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: mutedText,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Consumer<ThemeContext>(
                   builder: (context, themeCtx, _) {
@@ -280,6 +245,18 @@ class ProfileScreen extends StatelessWidget {
                   builder: (context, vm, _) => EcoMessageCard(
                     message: vm.ecoMessage,
                     isLoading: vm.isGeneratingEcoMessage,
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Consumer<ProfileViewModel>(
+                  builder: (context, vm, _) => SustainabilityImpactCard(
+                    impact: vm.impactSummary,
+                    message: vm.impactMessage,
+                    isLoading: vm.isGeneratingImpact,
                   ),
                 ),
               ),

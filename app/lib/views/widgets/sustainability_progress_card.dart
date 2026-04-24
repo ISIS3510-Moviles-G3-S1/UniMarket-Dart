@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/app_theme.dart';
 
 class SustainabilityLevelInfo {
   const SustainabilityLevelInfo({
@@ -46,14 +47,14 @@ class SustainabilityProgressCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Current level',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.deepGreen),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         levelInfo.title,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.deepGreen),
                       ),
                     ],
                   ),
@@ -62,15 +63,15 @@ class SustainabilityProgressCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text(
+                      Text(
                         'Next level',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.sage),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         levelInfo.nextTitle,
                         textAlign: TextAlign.end,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.sage),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -89,15 +90,16 @@ class SustainabilityProgressCard extends StatelessWidget {
             LinearProgressIndicator(
               value: progress,
               minHeight: 10,
+              color: AppTheme.sage,
               backgroundColor: colorScheme.surfaceContainerHighest,
             ),
             const SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${levelInfo.minXP} XP', style: const TextStyle(fontSize: 11)),
-                Text('$xp XP', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-                Text('${levelInfo.maxXP} XP', style: const TextStyle(fontSize: 11)),
+                Text('${levelInfo.minXP} XP', style: const TextStyle(fontSize: 11, color: AppTheme.deepGreen)),
+                Text('$xp XP', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppTheme.sage)),
+                Text('${levelInfo.maxXP} XP', style: const TextStyle(fontSize: 11, color: AppTheme.deepGreen)),
               ],
             ),
           ],

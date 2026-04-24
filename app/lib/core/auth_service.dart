@@ -7,6 +7,7 @@ import 'analytics_event.dart';
 import 'analytics_service.dart';
 import '../models/app_user.dart';
 import 'auth_failure.dart';
+import 'lru_cache.dart';
 
 class AuthService {
   AuthService({
@@ -17,6 +18,20 @@ class AuthService {
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+
+  // ── LRU profile cache ────────────────────────────────────────────────────
+  // Capacity = 50: covers the logged-in user + seller profiles viewed in a
+  // typical session without unbounded memory growth. Entries are promoted to
+  // the MRU position on every read; the LRU entry is evicted on overflow.
+  static final LruCache<String, AppUser> _profileCache =
+      LruCache<String, AppUser>(capacity: 50);
+
+  // ── SharedPreferences keys for session persistence ───────────────────────
+  static const String _prefUid = 'auth_cached_uid';
+  static const String _prefEmail = 'auth_cached_email';
+  static const String _prefDisplayName = 'auth_cached_displayName';
+  static const String _prefProfilePic = 'auth_cached_profilePic';
+  static const String _prefXp = 'auth_cached_xpPoints';
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
@@ -96,6 +111,12 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
+      final uid = _auth.currentUser?.uid;
+      if (uid != null) {
+        _profileCache.invalidate(uid);
+        debugPrint('[AuthService] LRU cache invalidated for uid=$uid');
+      }
+      await clearPersistedUser();
       await _auth.signOut();
     } on FirebaseAuthException catch (e) {
       throw AuthFailure.fromFirebaseException(e);
@@ -104,26 +125,90 @@ class AuthService {
     }
   }
 
+  /// Returns the last successfully hydrated [AppUser] persisted to
+  /// SharedPreferences, or `null` if none is cached. Useful for populating
+  /// the UI immediately on cold start before Firebase resolves.
+  Future<AppUser?> getCachedSessionUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uid = prefs.getString(_prefUid);
+      if (uid == null || uid.isEmpty) return null;
+      final user = AppUser(
+        uid: uid,
+        email: prefs.getString(_prefEmail) ?? '',
+        displayName: prefs.getString(_prefDisplayName) ?? '',
+        profilePic: prefs.getString(_prefProfilePic) ?? '',
+        xpPoints: prefs.getInt(_prefXp) ?? 0,
+      );
+      // Warm-up LRU so the first in-session hydrateUser() call is a cache hit.
+      _profileCache.put(uid, user);
+      debugPrint('[AuthService] getCachedSessionUser restored uid=$uid from prefs');
+      return user;
+    } catch (e) {
+      debugPrint('[AuthService] getCachedSessionUser failed: $e');
+      return null;
+    }
+  }
+
+  /// Removes the persisted session from SharedPreferences.
+  Future<void> clearPersistedUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_prefUid);
+      await prefs.remove(_prefEmail);
+      await prefs.remove(_prefDisplayName);
+      await prefs.remove(_prefProfilePic);
+      await prefs.remove(_prefXp);
+      debugPrint('[AuthService] clearPersistedUser done');
+    } catch (e) {
+      debugPrint('[AuthService] clearPersistedUser failed: $e');
+    }
+  }
+
   Future<AppUser> hydrateUser(User firebaseUser) {
     return _hydrateUser(firebaseUser);
+  }
+
+  Future<void> _persistUserToPrefs(AppUser user) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_prefUid, user.uid);
+      await prefs.setString(_prefEmail, user.email);
+      await prefs.setString(_prefDisplayName, user.displayName);
+      await prefs.setString(_prefProfilePic, user.profilePic);
+      await prefs.setInt(_prefXp, user.xpPoints);
+    } catch (e) {
+      debugPrint('[AuthService] _persistUserToPrefs failed: $e');
+    }
   }
 
   Future<AppUser> _hydrateUser(
     User firebaseUser, {
     String? overrideDisplayName,
   }) async {
+    // ── LRU cache check ──────────────────────────────────────────────────────
+    // A cache hit avoids a Firestore round-trip entirely. The entry is promoted
+    // to the MRU position inside LruCache.get().
+    final cached = _profileCache.get(firebaseUser.uid);
+    if (cached != null) {
+      debugPrint('[AuthService] _hydrateUser LRU HIT uid=${firebaseUser.uid}');
+      return cached;
+    }
+    debugPrint('[AuthService] _hydrateUser LRU MISS uid=${firebaseUser.uid} — fetching Firestore');
+
     final docRef = _firestore.collection('users').doc(firebaseUser.uid);
     final doc = await docRef.get();
 
     if (doc.exists) {
-      final user = AppUser.fromFirestore(doc);
-      if (user.profilePic.trim().isNotEmpty) {
-        return user;
+      AppUser user = AppUser.fromFirestore(doc);
+      if (user.profilePic.trim().isEmpty) {
+        final authPhoto = firebaseUser.photoURL ?? '';
+        if (authPhoto.trim().isNotEmpty) {
+          user = user.copyWith(profilePic: authPhoto);
+        }
       }
-      final authPhoto = firebaseUser.photoURL ?? '';
-      if (authPhoto.trim().isNotEmpty) {
-        return user.copyWith(profilePic: authPhoto);
-      }
+      _profileCache.put(user.uid, user);
+      await _persistUserToPrefs(user);
       return user;
     }
 
