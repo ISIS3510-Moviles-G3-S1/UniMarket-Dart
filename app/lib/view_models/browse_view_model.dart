@@ -33,6 +33,8 @@ class BrowseViewModel extends ChangeNotifier {
   String _sort = 'newest';
   bool _aiSearch = false;
   bool _showFilters = false;
+  List<String> _registeredStylePreferences = const ['Casual', 'Streetwear'];
+  String _registeredSize = 'M';
 
   // Sample upload dates for demonstration
   final Map<String, DateTime> _itemUploadDates = {
@@ -255,6 +257,87 @@ class BrowseViewModel extends ChangeNotifier {
 
   // New item counts per frequent category
   Map<String, int> get forYouNewItemCounts => _recommendationService.getNewItemCounts();
+
+  List<String> get registeredStylePreferences => List.unmodifiable(_registeredStylePreferences);
+  String get registeredSize => _registeredSize;
+
+  void setRegisteredPreferences({
+    required List<String> stylePreferences,
+    required String size,
+  }) {
+    _registeredStylePreferences =
+        stylePreferences.map((e) => e.trim()).where((e) => e.isNotEmpty).toList(growable: false);
+    _registeredSize = _normalizeSize(size);
+    notifyListeners();
+  }
+
+  String _normalizeSize(String input) {
+    final normalized = input.trim().toLowerCase();
+    if (normalized.isEmpty || normalized == 'all') return '';
+    if (normalized == 'one size' || normalized == 'onesize') return 'one size';
+    return normalized;
+  }
+
+  String _extractListingSize(Listing listing) {
+    final explicit = _normalizeSize(listing.size);
+    if (explicit.isNotEmpty) return explicit;
+
+    for (final rawTag in listing.tags) {
+      final tag = _normalizeSize(rawTag);
+      if (tag.isEmpty) continue;
+      if (const {'xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl', 'xxxl', 'one size'}.contains(tag)) {
+        return tag;
+      }
+      if (tag.startsWith('size ')) {
+        final candidate = _normalizeSize(tag.replaceFirst('size ', ''));
+        if (candidate.isNotEmpty) return candidate;
+      }
+      if (tag.startsWith('talla ')) {
+        final candidate = _normalizeSize(tag.replaceFirst('talla ', ''));
+        if (candidate.isNotEmpty) return candidate;
+      }
+    }
+
+    return '';
+  }
+
+  bool _hasStyleMatch(Listing listing) {
+    if (_registeredStylePreferences.isEmpty) return false;
+
+    final preferred = _registeredStylePreferences
+        .map((e) => e.trim().toLowerCase())
+        .where((e) => e.isNotEmpty)
+        .toSet();
+    if (preferred.isEmpty) return false;
+
+    final listingTags = listing.tags
+        .map((e) => e.trim().toLowerCase())
+        .where((e) => e.isNotEmpty)
+        .toSet();
+    return listingTags.any(preferred.contains);
+  }
+
+  bool _hasSizeMatch(Listing listing) {
+    final registered = _normalizeSize(_registeredSize);
+    if (registered.isEmpty) return false;
+    final listingSize = _extractListingSize(listing);
+    return listingSize.isNotEmpty && listingSize == registered;
+  }
+
+  bool isRecommendationMatch(Listing listing) {
+    return _hasStyleMatch(listing) && _hasSizeMatch(listing);
+  }
+
+  int countRecommendationMatches(Iterable<Listing> recommendations) {
+    return recommendations.where(isRecommendationMatch).length;
+  }
+
+  double recommendationMatchPercentage(Iterable<Listing> recommendations) {
+    final total = recommendations.length;
+    if (total == 0) return 0;
+    final matches = countRecommendationMatches(recommendations);
+    return (matches / total) * 100;
+  }
 
   String get search => _search;
   set search(String v) {

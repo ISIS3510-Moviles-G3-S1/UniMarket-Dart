@@ -648,6 +648,7 @@ class ListingService {
       soldAt: listing.soldAt,
       imagePath: listing.imagePath,
       imageURLs: listing.imageURLs,
+      size: listing.size,
       status: listing.status,
       saved: listing.saved,
     );
