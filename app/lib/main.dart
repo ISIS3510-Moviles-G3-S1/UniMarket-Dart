@@ -8,7 +8,6 @@ import 'firebase_options.dart';
 
 import 'core/analytics_service.dart';
 import 'core/app_router.dart';
-import 'core/auth_service.dart';
 import 'core/notification_service.dart';
 import 'core/theme/theme_context.dart';
 import 'view_models/browse_view_model.dart';
@@ -58,13 +57,10 @@ class UniMarketApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeContext()),
 
-        Provider(create: (_) => AuthService()),
-
         Provider<NotificationService>(create: (_) => notificationService),
 
         ChangeNotifierProvider(
           create: (context) => SessionViewModel(
-            authService: context.read<AuthService>(),
             notificationService: context.read<NotificationService>(),
           ),
         ),
