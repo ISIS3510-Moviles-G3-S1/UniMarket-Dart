@@ -186,6 +186,9 @@ class BrowseViewModel extends ChangeNotifier {
 
   // User favorites an item
   Future<void> toggleSave(String itemId) async {
+    debugPrint('Toggling favorite for item: $itemId');
+    debugPrint('Current favorite state: ${_savedItems[itemId]}');
+
     _savedItems[itemId] = !_savedItems[itemId]!;
     final isNowSaved = _savedItems[itemId]!;
     final item = _listings.firstWhere((l) => l.id == itemId);
