@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../models/app_user.dart';
 import '../models/profile_models.dart';
 import '../models/listing.dart';
+import '../models/sustainability_impact.dart';
 import '../core/eco_service.dart';
 import '../data/listing_service.dart';
 import '../data/meetup_transaction_service.dart';
@@ -47,6 +48,14 @@ class ProfileViewModel extends ChangeNotifier {
   String? _lastEcoRequestHash;
   DateTime? _lastEcoRequestAt;
   int _ecoRequestToken = 0;
+
+  // ── Sustainability impact ─────────────────────────────────────────────────
+  SustainabilityImpact _impactSummary = SustainabilityImpact.empty;
+  String _impactMessage = '';
+  bool _isGeneratingImpact = false;
+  String? _lastImpactRequestHash;
+  DateTime? _lastImpactRequestAt;
+  int _impactRequestToken = 0;
 
   AppUser? get _user => _session.currentUser;
 
@@ -93,6 +102,10 @@ class ProfileViewModel extends ChangeNotifier {
   String get ecoMessage => _ecoMessage.isEmpty ? _buildFallbackEcoMessage() : _ecoMessage;
 
   bool get isGeneratingEcoMessage => _isGeneratingEcoMessage;
+
+  SustainabilityImpact get impactSummary => _impactSummary;
+  String get impactMessage => _impactMessage;
+  bool get isGeneratingImpact => _isGeneratingImpact;
 
   int get soldCount => _listings.where((item) => item.isSold).length;
 
@@ -174,9 +187,11 @@ class ProfileViewModel extends ChangeNotifier {
         }
         return listing;
       }).toList();
+      _recomputeImpact();
       notifyListeners();
     } catch (_) {
       _listings = _rawListings;
+      _recomputeImpact();
       notifyListeners();
     }
   }
@@ -188,6 +203,8 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   Future<void> refreshEcoMessage() => _maybeGenerateEcoMessage(forceRefresh: true);
+
+  Future<void> refreshImpactMessage() => _maybeGenerateImpactInsight(forceRefresh: true);
 
   Future<void> _maybeGenerateEcoMessage({bool forceRefresh = false}) async {
     final user = _user;
@@ -300,8 +317,74 @@ class ProfileViewModel extends ChangeNotifier {
     }
   }
 
-  String _buildFallbackEcoMessage() {
-    final info = ecoLevelInfo;
+  // ── Sustainability impact ─────────────────────────────────────────────────
+
+  void _recomputeImpact() {
+    final soldListings = _listings.where((l) => l.isSold).toList();
+    final items = soldListings
+        .map((l) => (tags: l.tags, title: l.title))
+        .toList();
+    _impactSummary = SustainabilityImpact.fromListings(items);
+    Future.microtask(_maybeGenerateImpactInsight);
+  }
+
+  Future<void> _maybeGenerateImpactInsight({bool forceRefresh = false}) async {
+    final user = _user;
+    if (user == null) {
+      _impactMessage = '';
+      _isGeneratingImpact = false;
+      notifyListeners();
+      return;
+    }
+
+    // No items reused yet — show a static nudge, no API call needed.
+    if (_impactSummary.itemsReused == 0) {
+      _impactMessage = '';
+      _isGeneratingImpact = false;
+      notifyListeners();
+      return;
+    }
+
+    final requestHash = [
+      _impactSummary.itemsReused.toString(),
+      _impactSummary.waterLiters.toString(),
+      _impactSummary.co2Kg.toStringAsFixed(1),
+      _impactSummary.wasteKg.toStringAsFixed(1),
+    ].join('|');
+
+    final now = DateTime.now();
+    final recentlyRequested =
+        _lastImpactRequestHash == requestHash &&
+        _lastImpactRequestAt != null &&
+        now.difference(_lastImpactRequestAt!) < const Duration(minutes: 5);
+
+    if (!forceRefresh && recentlyRequested) return;
+
+    _lastImpactRequestHash = requestHash;
+    _lastImpactRequestAt = now;
+
+    final requestToken = ++_impactRequestToken;
+    _isGeneratingImpact = true;
+    notifyListeners();
+
+    try {
+      final insight = await _ecoService.generateImpactInsight(
+        impact: _impactSummary,
+        displayName: profileName,
+      );
+      if (requestToken != _impactRequestToken) return;
+      _impactMessage = insight;
+    } catch (_) {
+      // Keep previous message on error.
+    } finally {
+      if (requestToken == _impactRequestToken) {
+        _isGeneratingImpact = false;
+        notifyListeners();
+      }
+    }
+  }
+
+  String _buildFallbackEcoMessage() {    final info = ecoLevelInfo;
     if (info.xpToNext <= 0) {
       return 'Amazing work, $profileName! You reached Max Level and are leading by example on UniMarket.';
     }
