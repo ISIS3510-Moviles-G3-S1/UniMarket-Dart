@@ -60,16 +60,32 @@ class BrowseViewModel extends ChangeNotifier {
   final LruCacheService<String, dynamic> _memoryCache;
   final Box<dynamic> _localStorage;
 
-  BrowseViewModel(this._memoryCache, this._localStorage);
+  BrowseViewModel(this._memoryCache, this._localStorage) {
+    _listingService = ListingService();
+    _listenListings();
+  }
 
   Future<void> cacheCatalogSnapshot(Map<String, dynamic> catalog) async {
     _memoryCache.save('catalog', catalog);
     await _localStorage.put('catalog_snapshot', catalog);
+    print('Caching catalog snapshot: \\n');
+    print(catalog.toString());
   }
 
   Map<String, dynamic>? getCachedCatalog() {
     return _memoryCache.retrieve('catalog') ??
         _localStorage.get('catalog_snapshot') as Map<String, dynamic>?;
+  }
+
+  void logCachedCatalog() {
+    debugLogMessage('Retrieving cached catalog:');
+    final catalog = getCachedCatalog();
+    debugLogMessage(catalog?.toString() ?? 'No catalog found in cache.');
+  }
+
+  // Función global para logs de depuración
+  void debugLogMessage(String message) {
+    debugPrint(message);
   }
 
   Future<void> cacheRecommendationsSnapshot(Map<String, dynamic> recommendations) async {
@@ -105,9 +121,22 @@ class BrowseViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _listenListings() {
-    _listingsSub = _listingService.getListings().listen((listings) {
+  void _listenListings() async {
+    debugPrint('Listening to listings...');
+    _listingsSub = _listingService.getListings().listen((listings) async {
+      debugPrint('Listings received:');
+      for (var listing in listings) {
+        debugPrint(listing.toString());
+      }
       _allListings = listings;
+      debugPrint('Total listings received: ${_allListings.length}');
+
+      await cacheCatalogSnapshot({
+        'listings': listings.map((listing) => listing.toJson()).toList(),
+      });
+      debugPrint('Catalog snapshot cached.');
+
+      debugPrint('Recomputing visible listings...');
       _recomputeVisibleListings();
     });
   }
@@ -120,11 +149,16 @@ class BrowseViewModel extends ChangeNotifier {
   }
 
   void _recomputeVisibleListings() {
-    _listings =
-        _allListings
-            .where((listing) => !listing.isSold)
-            .where((listing) => !_confirmedListingIds.contains(listing.id))
-            .toList();
+    debugPrint('Recomputing visible listings...');
+    _listings = _allListings
+        .where((listing) => !listing.isSold)
+        .where((listing) => !_confirmedListingIds.contains(listing.id))
+        .toList();
+
+    debugPrint('Filtered listings:');
+    for (var listing in _listings) {
+      debugPrint(listing.toString());
+    }
 
     for (final l in _listings) {
       _savedItems[l.id] = l.saved;
@@ -251,7 +285,7 @@ class BrowseViewModel extends ChangeNotifier {
     }
 
     // LOG: Show interacted tags
-    debugPrint('[ForYou] Interacted tags: ${interactedTags.join(", ")}');
+    print('[ForYou] Interacted tags: ${interactedTags.join(", ")}');
 
     // 3. Include all items with at least one tag similar to the interacted tags (using string similarity)
     const double similarityThreshold = 0.6; // You can adjust this value
@@ -262,7 +296,7 @@ class BrowseViewModel extends ChangeNotifier {
           final similarity = StringSimilarity.compareTwoStrings(
             tag.toLowerCase(), interactedTag.toLowerCase());
           if (similarity >= similarityThreshold) {
-            debugPrint('[ForYou] Similar: ${l.title} (tag: $tag) ~ $interactedTag (sim: $similarity)');
+            print('[ForYou] Similar: ${l.title} (tag: $tag) ~ $interactedTag (sim: $similarity)');
             return true;
           }
         }
@@ -274,7 +308,7 @@ class BrowseViewModel extends ChangeNotifier {
     final allForYou = [...interactedListings, ...similarListings];
 
     // LOG: Show how many items are recommended
-    debugPrint('[ForYou] Total recommendations: ${allForYou.length}');
+    print('[ForYou] Total recommendations: ${allForYou.length}');
 
     return allForYou;
   }

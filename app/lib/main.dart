@@ -23,7 +23,7 @@ Future<void> main() async {
 
   await Hive.initFlutter();
   await Hive.openBox<dynamic>('listing_drafts_v1');
-  await Hive.openBox<List>('fyp_fav_relations');
+  await Hive.openBox<dynamic>('browse_view_model');
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
