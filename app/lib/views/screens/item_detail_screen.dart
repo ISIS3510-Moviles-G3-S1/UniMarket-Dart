@@ -739,25 +739,23 @@ class _InfoSectionState extends State<_InfoSection> {
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
-            onPressed: () {
-              () async {
-                print('Add to Cart pressed for item: \\${item.id}');
-                final cart = Provider.of<CartProvider>(context, listen: false);
-                try {
-                  await cart.addItem(CartItem(
-                    id: item.id,
-                    name: item.name,
-                    seller: item.seller.name,
-                    imageUrl: item.images.isNotEmpty ? item.images.first : '',
-                    price: item.price,
-                  ));
-                  context.go('/cart');
-                } catch (e, stack) {
-                  print('Error in Add to Cart button: \\${e}\n\\${stack}');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to add item to cart.')),
-                  );
-                }
+            onPressed: () async {
+              print('Add to Cart pressed for item: \\${item.id}');
+              final cart = Provider.of<CartProvider>(context, listen: false);
+              try {
+                await cart.addItem(CartItem(
+                  id: item.id,
+                  name: item.name,
+                  seller: item.seller.name,
+                  imageUrl: item.images.isNotEmpty ? item.images.first : '',
+                  price: item.price,
+                ));
+                context.go('/cart');
+              } catch (e, stack) {
+                print('Error in Add to Cart button: \\${e}\n\\${stack}');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to add item to cart.')),
+                );
               }
             },
             icon: const Icon(Icons.shopping_cart_checkout),

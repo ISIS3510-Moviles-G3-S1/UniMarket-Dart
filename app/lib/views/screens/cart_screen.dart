@@ -13,7 +13,11 @@ class CartScreen extends StatelessWidget {
         title: const Text('Cart'),
         actions: [
           TextButton(
-            onPressed: cart.items.isEmpty ? null : cart.clearCart,
+            onPressed: cart.items.isEmpty ? null : () async {
+              try {
+                await cart.clearCart();
+              } catch (e) {}
+            },
             child: const Text('Clear', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
           ),
         ],
@@ -39,13 +43,25 @@ class CartScreen extends StatelessWidget {
                             : const Icon(Icons.image, size: 56),
                         title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text(item.seller),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text('COP ${item.price.toStringAsFixed(3)}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
                             IconButton(
+                              icon: const Icon(Icons.info_outline, color: Colors.blue),
+                              tooltip: 'View Details',
+                              onPressed: () {
+                                Navigator.of(context).pushNamed('/item/${item.id}');
+                              },
+                            ),
+                            IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => cart.removeItem(item.id),
+                              tooltip: 'Remove',
+                              onPressed: () async {
+                                try {
+                                  await cart.removeItem(item.id);
+                                } catch (e) {}
+                              },
                             ),
                           ],
                         ),
@@ -78,7 +94,24 @@ class CartScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: cart.items.isEmpty ? null : () {},
+                        onPressed: cart.items.isEmpty ? null : () async {
+                          try {
+                            await cart.clearCart();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Purchase successful!')),
+                              );
+                              // Optionally, navigate to browse or home
+                              // Navigator.of(context).pushReplacementNamed('/browse');
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Checkout failed.')),
+                              );
+                            }
+                          }
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green[400],
                           foregroundColor: Colors.white,
@@ -86,6 +119,14 @@ class CartScreen extends StatelessWidget {
                           textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                         ),
                         child: const Text('Checkout'),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.shopping_bag),
+                        label: const Text('Continue Shopping'),
+                        onPressed: () {
+                          Navigator.of(context).pushNamed('/browse');
+                        },
                       ),
                     ],
                   ),
