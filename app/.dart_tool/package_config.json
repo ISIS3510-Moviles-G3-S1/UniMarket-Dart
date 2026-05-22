@@ -614,6 +614,18 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "package_info_plus",
+      "rootUri": "file:///C:/Users/Sofia%20Toro/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus-8.3.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "package_info_plus_platform_interface",
+      "rootUri": "file:///C:/Users/Sofia%20Toro/AppData/Local/Pub/Cache/hosted/pub.dev/package_info_plus_platform_interface-3.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
+    },
+    {
       "name": "palette_generator",
       "rootUri": "file:///C:/Users/Sofia%20Toro/AppData/Local/Pub/Cache/hosted/pub.dev/palette_generator-0.3.3+7",
       "packageUri": "lib/",
@@ -980,6 +992,12 @@
       "languageVersion": "3.3"
     },
     {
+      "name": "win32",
+      "rootUri": "file:///C:/Users/Sofia%20Toro/AppData/Local/Pub/Cache/hosted/pub.dev/win32-5.13.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.7"
+    },
+    {
       "name": "xdg_directories",
       "rootUri": "file:///C:/Users/Sofia%20Toro/AppData/Local/Pub/Cache/hosted/pub.dev/xdg_directories-1.1.0",
       "packageUri": "lib/",
@@ -1004,7 +1022,7 @@
       "languageVersion": "3.7"
     }
   ],
-  "generated": "2026-05-22T01:39:38.336725Z",
+  "generated": "2026-05-22T03:31:28.463890Z",
   "generator": "pub",
   "generatorVersion": "3.7.2",
   "flutterRoot": "file:///C:/flutter",

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,8 +20,10 @@ class SessionViewModel extends ChangeNotifier {
   final NotificationService _notificationService;
   StreamSubscription<User?>? _authSubscription;
   StreamSubscription<SyncSummary>? _syncSummarySub;
-  final StreamController<String> _syncSummaryMessageController = StreamController<String>.broadcast();
-  Stream<String> get syncSummaryMessages => _syncSummaryMessageController.stream;
+  final StreamController<String> _syncSummaryMessageController =
+      StreamController<String>.broadcast();
+  Stream<String> get syncSummaryMessages =>
+      _syncSummaryMessageController.stream;
 
   // â”€â”€ LRU profile cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Capacity 50: covers the logged-in user + seller profiles viewed in a
@@ -40,6 +42,7 @@ class SessionViewModel extends ChangeNotifier {
   AppUser? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
+  bool _hasLoggedUserAppOpened = false;
 
   AppUser? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
@@ -58,9 +61,9 @@ class SessionViewModel extends ChangeNotifier {
     required NotificationService notificationService,
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance,
-        _notificationService = notificationService {
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _firestore = firestore ?? FirebaseFirestore.instance,
+       _notificationService = notificationService {
     _forceLogoutOnStart();
     // Intentar sincronizar pending signup cuando SessionVM inicia (app abre)
     Future.microtask(_trySyncOfflinePendingSignUp);
@@ -73,23 +76,28 @@ class SessionViewModel extends ChangeNotifier {
     );
 
     // Listen to listing sync summaries to notify user when offline actions complete
-    _syncSummarySub = ListingService().syncSummaryStream.listen((summary) {
-      try {
-        final parts = <String>[];
-        if (summary.created > 0) parts.add('${summary.created} created');
-        if (summary.updated > 0) parts.add('${summary.updated} updated');
-        if (summary.deleted > 0) parts.add('${summary.deleted} deleted');
-        if (summary.aiTagged > 0) parts.add('${summary.aiTagged} AI-tagged');
+    _syncSummarySub = ListingService().syncSummaryStream.listen(
+      (summary) {
+        try {
+          final parts = <String>[];
+          if (summary.created > 0) parts.add('${summary.created} created');
+          if (summary.updated > 0) parts.add('${summary.updated} updated');
+          if (summary.deleted > 0) parts.add('${summary.deleted} deleted');
+          if (summary.aiTagged > 0) parts.add('${summary.aiTagged} AI-tagged');
 
-        if (parts.isEmpty) return;
-        final body = 'Offline actions completed: ${parts.join(', ')}.';
-        _syncSummaryMessageController.add(body);
-      } catch (e) {
-        debugPrint('[SessionViewModel] Failed to emit sync summary message: $e');
-      }
-    }, onError: (e) {
-      debugPrint('[SessionViewModel] syncSummaryStream error: $e');
-    });
+          if (parts.isEmpty) return;
+          final body = 'Offline actions completed: ${parts.join(', ')}.';
+          _syncSummaryMessageController.add(body);
+        } catch (e) {
+          debugPrint(
+            '[SessionViewModel] Failed to emit sync summary message: $e',
+          );
+        }
+      },
+      onError: (e) {
+        debugPrint('[SessionViewModel] syncSummaryStream error: $e');
+      },
+    );
   }
 
   Future<void> _forceLogoutOnStart() async {
@@ -105,10 +113,7 @@ class SessionViewModel extends ChangeNotifier {
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // SIGN IN
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn({required String email, required String password}) async {
     debugPrint('[SessionViewModel] signIn email=$email');
     _setLoading(true);
     _setError(null);
@@ -173,7 +178,8 @@ class SessionViewModel extends ChangeNotifier {
       await docRef.set({
         'uid': firebaseUser.uid,
         'email': firebaseUser.email ?? '',
-        'displayName': displayName ??
+        'displayName':
+            displayName ??
             firebaseUser.displayName ??
             firebaseUser.email?.split('@').first ??
             '',
@@ -246,8 +252,8 @@ class SessionViewModel extends ChangeNotifier {
   /// Se llama automáticamente:
   /// - En el constructor (cuando SessionVM inicia al abrir app)
   /// - Opcionalmente desde un connectivity listener (cuando se detecta reconexión)
-  /// 
-  /// Flow: 
+  ///
+  /// Flow:
   /// 1. Obtiene pending signup de SharedPreferences
   /// 2. Si existe, intenta hacer signUp() con esos datos
   /// 3. Si success: limpia SharedPrefs, notifica usuario
@@ -267,14 +273,18 @@ class SessionViewModel extends ChangeNotifier {
         return; // Datos incompletos
       }
 
-      debugPrint('[SessionViewModel] Intentando sincronizar pending signup: $email');
+      debugPrint(
+        '[SessionViewModel] Intentando sincronizar pending signup: $email',
+      );
 
       // Intentar hacer el signup con los datos guardados
       await signUp(email: email, password: password, displayName: displayName);
 
       // Si llegamos aquí, el signup fue exitoso
       await OfflineSignupService.clearPendingSignUp();
-      debugPrint('[SessionViewModel] Pending signup sincronizado exitosamente: $email');
+      debugPrint(
+        '[SessionViewModel] Pending signup sincronizado exitosamente: $email',
+      );
 
       // Notificar al usuario (opcional)
       _notificationService.showNotification(
@@ -282,10 +292,14 @@ class SessionViewModel extends ChangeNotifier {
         body: 'Your registration was completed successfully!',
       );
     } on FirebaseAuthException catch (e) {
-      debugPrint('[SessionViewModel] Error sincronizando pending signup: ${e.message}');
+      debugPrint(
+        '[SessionViewModel] Error sincronizando pending signup: ${e.message}',
+      );
       // No buscamos en SharedPrefs aquí; se volverá a intentar en próximo reinicio
     } catch (e) {
-      debugPrint('[SessionViewModel] Unexpected error syncing pending signup: $e');
+      debugPrint(
+        '[SessionViewModel] Unexpected error syncing pending signup: $e',
+      );
     }
   }
 
@@ -371,10 +385,14 @@ class SessionViewModel extends ChangeNotifier {
   Future<AppUser> _hydrateUser(User firebaseUser) async {
     final cached = _profileCache.get(firebaseUser.uid);
     if (cached != null) {
-      debugPrint('[SessionViewModel] _hydrateUser LRU HIT uid=${firebaseUser.uid}');
+      debugPrint(
+        '[SessionViewModel] _hydrateUser LRU HIT uid=${firebaseUser.uid}',
+      );
       return cached;
     }
-    debugPrint('[SessionViewModel] _hydrateUser LRU MISS â€” fetching Firestore');
+    debugPrint(
+      '[SessionViewModel] _hydrateUser LRU MISS â€” fetching Firestore',
+    );
 
     final docRef = _firestore.collection('users').doc(firebaseUser.uid);
     final doc = await docRef.get();
@@ -383,7 +401,8 @@ class SessionViewModel extends ChangeNotifier {
       AppUser user = AppUser.fromFirestore(doc);
       if (user.profilePic.trim().isEmpty) {
         final authPhoto = firebaseUser.photoURL ?? '';
-        if (authPhoto.trim().isNotEmpty) user = user.copyWith(profilePic: authPhoto);
+        if (authPhoto.trim().isNotEmpty)
+          user = user.copyWith(profilePic: authPhoto);
       }
       _profileCache.put(user.uid, user);
       await _persistUserToPrefs(user);
@@ -394,7 +413,9 @@ class SessionViewModel extends ChangeNotifier {
       'uid': firebaseUser.uid,
       'email': firebaseUser.email ?? '',
       'displayName':
-          firebaseUser.displayName ?? firebaseUser.email?.split('@').first ?? '',
+          firebaseUser.displayName ??
+          firebaseUser.email?.split('@').first ??
+          '',
       'profilePic': firebaseUser.photoURL ?? '',
       'xpPoints': 0,
       'isVerified': false,
@@ -405,9 +426,10 @@ class SessionViewModel extends ChangeNotifier {
     });
 
     final createdDoc = await docRef.get();
-    final user = createdDoc.exists
-        ? AppUser.fromFirestore(createdDoc)
-        : AppUser.fromFirebaseUser(firebaseUser);
+    final user =
+        createdDoc.exists
+            ? AppUser.fromFirestore(createdDoc)
+            : AppUser.fromFirebaseUser(firebaseUser);
     _profileCache.put(user.uid, user);
     await _persistUserToPrefs(user);
     return user;
@@ -451,13 +473,19 @@ class SessionViewModel extends ChangeNotifier {
         if (ts is Timestamp) existingLastLogin = ts.toDate();
       }
 
-      final updateData = <String, Object>{'lastLogin': FieldValue.serverTimestamp()};
-      if (existingLastLogin != null) updateData['previousLogin'] = existingLastLogin;
+      final updateData = <String, Object>{
+        'lastLogin': FieldValue.serverTimestamp(),
+      };
+      if (existingLastLogin != null)
+        updateData['previousLogin'] = existingLastLogin;
       await docRef.update(updateData);
 
       final prefs = await SharedPreferences.getInstance();
       if (existingLastLogin != null) {
-        await prefs.setString('previousLogin_$uid', existingLastLogin.toIso8601String());
+        await prefs.setString(
+          'previousLogin_$uid',
+          existingLastLogin.toIso8601String(),
+        );
       }
       await prefs.setString('lastLogin_$uid', now.toIso8601String());
     } catch (e) {
@@ -468,8 +496,9 @@ class SessionViewModel extends ChangeNotifier {
   Future<bool> _isInactiveForDays(String uid, {int days = 3}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      DateTime? previousLogin =
-          DateTime.tryParse(prefs.getString('previousLogin_$uid') ?? '');
+      DateTime? previousLogin = DateTime.tryParse(
+        prefs.getString('previousLogin_$uid') ?? '',
+      );
 
       if (previousLogin == null) {
         final doc = await _firestore.collection('users').doc(uid).get();
@@ -565,7 +594,13 @@ class SessionViewModel extends ChangeNotifier {
     _currentUser = user;
     if (user != null) {
       AnalyticsService.instance.setUserId(user.uid);
+      // user_app_opened must be sent once identity is available to measure 30-day retention.
+      if (!_hasLoggedUserAppOpened) {
+        _hasLoggedUserAppOpened = true;
+        unawaited(AnalyticsService.instance.logUserAppOpened(userId: user.uid));
+      }
     } else {
+      _hasLoggedUserAppOpened = false;
       AnalyticsService.instance.reset();
     }
     notifyListeners();
