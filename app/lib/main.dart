@@ -84,6 +84,7 @@ class UniMarketApp extends StatelessWidget {
         ),
 
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProxyProvider<SessionViewModel, BrowseViewModel>(
           create: (_) => BrowseViewModel(),
           update: (context, session, browse) {
