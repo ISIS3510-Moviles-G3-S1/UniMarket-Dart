@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/cart_provider.dart';
+import '../../models/order_history_provider.dart';
+import 'package:provider/provider.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({Key? key}) : super(key: key);
@@ -100,13 +102,20 @@ class CartScreen extends StatelessWidget {
                     ElevatedButton(
                       onPressed: cart.items.isEmpty ? null : () async {
                         try {
+                          // Save order to SQLite using OrderHistoryProvider
+                          final orderHistory = Provider.of<OrderHistoryProvider>(context, listen: false);
+                          await orderHistory.addOrder(
+                            items: cart.items,
+                            subtotal: cart.subtotal,
+                            buyer: 'buyer_id', // Replace with actual user info
+                            pickupLocation: 'pickup_location', // Replace as needed
+                            paymentDetails: '**** **** **** 1234', // Masked payment info
+                          );
                           await cart.clearCart();
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Purchase successful!')),
                             );
-                            // Optionally, navigate to browse or home
-                            // Navigator.of(context).pushReplacementNamed('/browse');
                           }
                         } catch (e) {
                           if (context.mounted) {
