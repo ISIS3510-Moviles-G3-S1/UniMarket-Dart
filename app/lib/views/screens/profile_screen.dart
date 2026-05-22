@@ -240,6 +240,50 @@ class ProfileScreen extends StatelessWidget {
             ),
             SliverToBoxAdapter(
               child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Card(
+                  child: InkWell(
+                    onTap: () => context.go('/ai-stylist'),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.sage.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(Icons.auto_awesome_rounded, color: AppTheme.sageDark),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'AI Outfit Stylist',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Analyze 1 to 3 clothing photos and save styling ideas for later.',
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                 child: Consumer<ProfileViewModel>(
                   builder: (context, vm, _) {

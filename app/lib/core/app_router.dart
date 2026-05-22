@@ -16,6 +16,7 @@ import '../views/screens/meetup_generate_qr_screen.dart';
 import '../views/screens/meetup_scan_qr_screen.dart';
 import '../views/screens/chat_screen.dart';
 import '../views/screens/inbox_screen.dart';
+import '../views/screens/ai_stylist_view.dart';
 
 // Widgets
 import 'package:uni_market/views/widgets/main_shell.dart';
@@ -127,6 +128,12 @@ GoRouter createAppRouter(SessionViewModel session) {
             child: const ItemDetailScreen(),
           );
         },
+      ),
+
+      /// AI OUTFIT STYLIST
+      GoRoute(
+        path: '/ai-stylist',
+        pageBuilder: (_, __) => const NoTransitionPage(child: AIStylistView()),
       ),
 
       /// MAIN APP
