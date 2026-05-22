@@ -87,7 +87,11 @@ class AIStylistService {
 
     final isOnline = await _isOnline();
     if (!isOnline && allowOfflinePending) {
-      final pending = _buildFallbackAnalysis(preparedImages, cacheKey: cacheKey).copyWith(
+      // Ensure thumbnails and prepared files are persisted so the pending analysis
+      // can be reprocessed later even if original gallery files are removed.
+      final thumbnailPaths = await _writeThumbnails(preparedImages);
+
+      final pending = _buildFallbackAnalysis(preparedImages, cacheKey: cacheKey, thumbnailPaths: thumbnailPaths).copyWith(
         syncStatus: AIOutfitSyncStatus.pending,
         errorMessage: 'Pending analysis - will sync when internet returns',
       );
@@ -225,15 +229,32 @@ class AIStylistService {
       'bytes': bytes,
     });
 
+    // Persist the compressed image so it remains available for future reanalysis
+    // even if the original gallery file is removed.
+    final cacheHash = prepared['cacheHash']?.toString() ?? sha256.convert(bytes).toString();
+    final compressed = List<int>.from(prepared['compressedBytes'] as List? ?? const []);
+
+    final supportDir = await getApplicationSupportDirectory();
+    final imagesDir = Directory(p.join(supportDir.path, 'ai_outfit_images'));
+    if (!await imagesDir.exists()) {
+      await imagesDir.create(recursive: true);
+    }
+
+    final storedPath = p.join(imagesDir.path, '${cacheHash}.jpg');
+    final storedFile = File(storedPath);
+    if (!await storedFile.exists()) {
+      await storedFile.writeAsBytes(compressed, flush: true);
+    }
+
     return PreparedOutfitImage(
-      sourcePath: prepared['sourcePath']?.toString() ?? image.path,
+      sourcePath: storedPath,
       fileName: prepared['fileName']?.toString() ?? image.name,
-      cacheHash: prepared['cacheHash']?.toString() ?? sha256.convert(bytes).toString(),
+      cacheHash: cacheHash,
       dominantColors: (prepared['dominantColors'] as List? ?? const [])
           .map((value) => value.toString())
           .where((value) => value.trim().isNotEmpty)
           .toList(growable: false),
-      compressedBytes: Uint8List.fromList(List<int>.from(prepared['compressedBytes'] as List? ?? const [])),
+      compressedBytes: Uint8List.fromList(compressed),
       thumbnailBytes: Uint8List.fromList(List<int>.from(prepared['thumbnailBytes'] as List? ?? const [])),
     );
   }
@@ -270,6 +291,7 @@ class AIStylistService {
   AIOutfitAnalysis _buildFallbackAnalysis(
     List<PreparedOutfitImage> preparedImages, {
     required String cacheKey,
+    List<String> thumbnailPaths = const [],
   }) {
     final categories = preparedImages
         .map((image) => _guessCategory(image.fileName, image.dominantColors))
@@ -292,7 +314,7 @@ class AIStylistService {
       id: 'ai_outfit_${DateTime.now().microsecondsSinceEpoch}',
       createdAt: DateTime.now(),
       imagePaths: preparedImages.map((image) => image.sourcePath).toList(growable: false),
-      thumbnailPaths: const [],
+      thumbnailPaths: thumbnailPaths,
       categories: categories.isEmpty ? const ['Outfit'] : categories,
       dominantColors: dominantColors.isEmpty ? const ['Neutral'] : dominantColors,
       style: style,
