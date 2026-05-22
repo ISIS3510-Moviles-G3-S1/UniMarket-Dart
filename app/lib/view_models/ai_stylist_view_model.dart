@@ -138,7 +138,10 @@ class AIStylistViewModel extends ChangeNotifier {
     _currentAnalysis = analysis;
     _selectedImages
       ..clear()
-      ..addAll(analysis.imagePaths.map((path) => XFile(path)));
+      ..addAll(
+        (analysis.thumbnailPaths.isNotEmpty ? analysis.thumbnailPaths : analysis.imagePaths)
+            .map((path) => XFile(path)),
+      );
     await _refreshRecommendations();
     _statusMessage = analysis.syncStatus == AIOutfitSyncStatus.pending
         ? 'Pending analysis - will sync when internet returns'

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -316,15 +317,18 @@ class _PreviewCard extends StatelessWidget {
 }
 
 Widget _buildPreviewImage(XFile image) {
-  if (!kIsWeb && image.path.isNotEmpty) {
-    return Image.file(File(image.path), width: 110, height: 110, fit: BoxFit.cover);
-  }
-  return FutureBuilder(
+  return FutureBuilder<Uint8List>(
     future: image.readAsBytes(),
     builder: (context, snapshot) {
       if (snapshot.connectionState != ConnectionState.done || !snapshot.hasData) {
-        return Container(width: 110, height: 110, color: Colors.grey.shade300, child: const Center(child: CircularProgressIndicator()));
+        return Container(
+          width: 110,
+          height: 110,
+          color: Colors.grey.shade300,
+          child: const Center(child: CircularProgressIndicator()),
+        );
       }
+
       return Image.memory(snapshot.data!, width: 110, height: 110, fit: BoxFit.cover);
     },
   );
@@ -475,6 +479,8 @@ class _ListingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = item.primaryImageUrl.trim();
+
     return SizedBox(
       width: 150,
       child: Card(
@@ -483,12 +489,25 @@ class _ListingCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: item.hasPrimaryImage
-                  ? Image.network(item.primaryImageUrl, fit: BoxFit.cover)
-                  : Container(
+              child: imageUrl.isEmpty
+                  ? Container(
                       color: Colors.grey.shade200,
                       child: const Icon(Icons.image_rounded),
-                    ),
+                    )
+                  : imageUrl.startsWith('file://') || imageUrl.startsWith('/')
+                      ? Image.file(File(imageUrl.replaceFirst('file://', '')), fit: BoxFit.cover)
+                      : CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => Container(
+                            color: Colors.grey.shade200,
+                            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                          ),
+                          errorWidget: (_, __, ___) => Container(
+                            color: Colors.grey.shade200,
+                            child: const Icon(Icons.image_rounded),
+                          ),
+                        ),
             ),
             Padding(
               padding: const EdgeInsets.all(10),
