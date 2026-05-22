@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/cart_provider.dart';
 import '../../models/order_history_provider.dart';
+import '../../core/connectivity_service.dart';
 import 'package:provider/provider.dart';
 
 class CartScreen extends StatelessWidget {
@@ -102,26 +103,32 @@ class CartScreen extends StatelessWidget {
                     ElevatedButton(
                       onPressed: cart.items.isEmpty ? null : () async {
                         try {
-                          // Save order to SQLite using OrderHistoryProvider
                           final orderHistory = Provider.of<OrderHistoryProvider>(context, listen: false);
+                          final connectivity = Provider.of<ConnectivityService>(context, listen: false);
+                          final isOffline = !connectivity.isOnline;
                           await orderHistory.addOrder(
                             items: cart.items,
                             subtotal: cart.subtotal,
-                            buyer: 'buyer_id', // Replace with actual user info
-                            pickupLocation: 'pickup_location', // Replace as needed
-                            paymentDetails: '**** **** **** 1234', // Masked payment info
+                            buyer: 'buyer_id',
+                            pickupLocation: 'pickup_location',
+                            paymentDetails: '**** **** **** 1234',
+                            isOffline: isOffline,
                           );
                           await cart.clearCart();
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Purchase successful!')),
+                              SnackBar(content: Text(isOffline
+                                ? 'Purchase saved locally and will sync when online.'
+                                : 'Purchase successful!')),
                             );
                           }
-                        } catch (e) {
+                        } catch (e, stack) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Checkout failed.')),
+                              SnackBar(content: Text('Checkout failed: ' + e.toString())),
                             );
+                            debugPrint('Checkout error: ' + e.toString());
+                            debugPrint(stack.toString());
                           }
                         }
                       },

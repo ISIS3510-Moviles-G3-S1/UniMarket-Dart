@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'firebase_options.dart';
 
@@ -13,6 +15,7 @@ import 'core/analytics_service.dart';
 import 'core/app_router.dart';
 import 'core/notification_service.dart';
 import 'core/lru_cache_service.dart';
+import 'core/connectivity_service.dart';
 import 'core/theme/theme_context.dart';
 import 'services/outfit_sync_service.dart';
 import 'view_models/browse_view_model.dart';
@@ -22,10 +25,17 @@ import 'view_models/seller_performance_view_model.dart';
 import 'view_models/sell_view_model.dart';
 
 import 'models/cart_provider.dart';
+import 'models/order_history_provider.dart';
 import 'view_models/session_view_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize sqflite FFI for desktop (not web)
+  if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
 
   await Hive.initFlutter();
   await Hive.openBox<dynamic>('listing_drafts_v1');
@@ -65,6 +75,7 @@ class UniMarketApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeContext()),
+        ChangeNotifierProvider(create: (_) => ConnectivityService()),
 
         ChangeNotifierProvider(
           create: (_) => OutfitSyncService()..start(),
@@ -87,6 +98,7 @@ class UniMarketApp extends StatelessWidget {
 
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => OrderHistoryProvider()),
         ChangeNotifierProxyProvider<SessionViewModel, BrowseViewModel>(
           create: (_) => BrowseViewModel(),
           update: (context, session, browse) {
