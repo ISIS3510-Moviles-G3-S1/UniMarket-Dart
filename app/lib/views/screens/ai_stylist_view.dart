@@ -143,16 +143,21 @@ class _AIStylistScaffoldState extends State<_AIStylistScaffold> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                    child: _MarketplaceSection(
-                      vm: vm,
-                      listings: vm.recommendedListings,
+                    child: Selector<AIStylistViewModel, List<Listing>>(
+                      selector: (_, vm) => vm.recommendedListings,
+                      builder: (context, listings, _) => _MarketplaceSection(
+                        vm: vm,
+                        listings: listings,
+                      ),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                    child: _HistorySection(vm: vm),
+                    child: Consumer<AIStylistViewModel>(
+                      builder: (context, vm, _) => _HistorySection(vm: vm),
+                    ),
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 32)),
