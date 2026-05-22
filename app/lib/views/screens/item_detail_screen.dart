@@ -9,6 +9,7 @@ import '../../view_models/item_detail_view_model.dart';
 import '../../view_models/session_view_model.dart';
 import '../../models/item_detail.dart';
 import '../../models/seller.dart';
+import '../../models/cart_provider.dart';
 
 class ItemDetailScreen extends StatelessWidget {
   const ItemDetailScreen({super.key});
@@ -17,11 +18,33 @@ class ItemDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final backTextColor =
-        isDark
-            ? colorScheme.onSurface.withValues(alpha: 0.78)
-            : AppTheme.mutedForeground;
+    final backTextColor = isDark
+        ? colorScheme.onSurface.withValues(alpha: 0.78)
+        : AppTheme.mutedForeground;
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.chevron_left_rounded, color: isDark ? colorScheme.onSurface.withAlpha(200) : AppTheme.mutedForeground),
+          onPressed: () => context.go('/browse'),
+        ),
+        title: Image.asset(
+          'assets/images/uni_market_logo.png',
+          height: 28,
+          fit: BoxFit.contain,
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_outlined),
+            color: Colors.black,
+            onPressed: () => context.go('/cart'),
+            tooltip: 'Cart',
+          ),
+        ],
+      ),
+      extendBodyBehindAppBar: true,
       body: SafeArea(
         child: Consumer<ItemDetailViewModel>(
           builder: (context, vm, _) {
@@ -31,54 +54,6 @@ class ItemDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () => context.go('/browse'),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 8,
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.chevron_left_rounded,
-                                  size: 20,
-                                  color:
-                                      isDark
-                                          ? colorScheme.onSurface.withAlpha(200)
-                                          : AppTheme.mutedForeground,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Back to Browse',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color:
-                                        isDark
-                                            ? colorScheme.onSurface.withAlpha(
-                                              200,
-                                            )
-                                            : AppTheme.mutedForeground,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Image.asset(
-                        'assets/images/uni_market_logo.png',
-                        height: 28,
-                        fit: BoxFit.contain,
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 16),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -761,6 +736,32 @@ class _InfoSectionState extends State<_InfoSection> {
               label: const Text('Scan QR to Confirm Pickup'),
             ),
           ),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () async {
+              print('Add to Cart pressed for item: \\${item.id}');
+              final cart = Provider.of<CartProvider>(context, listen: false);
+              try {
+                await cart.addItem(CartItem(
+                  id: item.id,
+                  name: item.name,
+                  seller: item.seller.name,
+                  imageUrl: item.images.isNotEmpty ? item.images.first : '',
+                  price: item.price,
+                ));
+                context.go('/cart');
+              } catch (e, stack) {
+                print('Error in Add to Cart button: \\${e}\n\\${stack}');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to add item to cart.')),
+                );
+              }
+            },
+            icon: const Icon(Icons.shopping_cart_checkout),
+            label: const Text('Add to Cart'),
+          ),
+        ),
       ],
     );
   }

@@ -20,6 +20,8 @@ import 'view_models/home_view_model.dart';
 import 'view_models/profile_view_model.dart';
 import 'view_models/seller_performance_view_model.dart';
 import 'view_models/sell_view_model.dart';
+
+import 'models/cart_provider.dart';
 import 'view_models/session_view_model.dart';
 
 Future<void> main() async {
@@ -84,6 +86,7 @@ class UniMarketApp extends StatelessWidget {
         ),
 
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProxyProvider<SessionViewModel, BrowseViewModel>(
           create: (_) => BrowseViewModel(),
           update: (context, session, browse) {
