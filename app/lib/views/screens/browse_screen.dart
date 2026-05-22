@@ -6,6 +6,7 @@ import '../../core/app_theme.dart';
 import '../../core/price_formatter.dart';
 import '../../view_models/browse_view_model.dart';
 import '../../models/listing.dart';
+import '../../models/cart_provider.dart';
 import '../widgets/filter_sheet.dart';
 import 'for_you_screen.dart';
 
@@ -290,20 +291,48 @@ class _ListingCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        PriceFormatter.formatCop(listing.price),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.sage,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            PriceFormatter.formatCop(listing.price),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.sage,
+                            ),
+                          ),
+                          Text(
+                            listing.sellerName,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: mutedText,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        listing.sellerName,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: mutedText,
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.add_shopping_cart),
+                        tooltip: 'Add to Cart',
+                        onPressed: () async {
+                          final cart = Provider.of<CartProvider>(context, listen: false);
+                          try {
+                            await cart.addItem(CartItem(
+                              id: listing.id,
+                              name: listing.title,
+                              seller: listing.sellerName,
+                              imageUrl: listing.hasPrimaryImage ? listing.primaryImageUrl : '',
+                              price: listing.price.toDouble(),
+                            ));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Added to cart!')),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Failed to add to cart.')),
+                            );
+                          }
+                        },
                       ),
                     ],
                   ),
