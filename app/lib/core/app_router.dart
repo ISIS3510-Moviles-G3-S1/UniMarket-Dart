@@ -17,6 +17,7 @@ import '../views/screens/meetup_scan_qr_screen.dart';
 import '../views/screens/chat_screen.dart';
 import '../views/screens/inbox_screen.dart';
 import '../views/screens/ai_stylist_view.dart';
+import '../views/screens/cart_screen.dart';
 
 // Widgets
 import 'package:uni_market/views/widgets/main_shell.dart';
@@ -134,6 +135,12 @@ GoRouter createAppRouter(SessionViewModel session) {
       GoRoute(
         path: '/ai-stylist',
         pageBuilder: (_, __) => const NoTransitionPage(child: AIStylistView()),
+      ),
+
+      /// CART
+      GoRoute(
+        path: '/cart',
+        builder: (_, __) => const CartScreen(),
       ),
 
       /// MAIN APP

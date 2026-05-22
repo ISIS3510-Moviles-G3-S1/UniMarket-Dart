@@ -17,11 +17,33 @@ class ItemDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final backTextColor =
-        isDark
-            ? colorScheme.onSurface.withValues(alpha: 0.78)
-            : AppTheme.mutedForeground;
+    final backTextColor = isDark
+        ? colorScheme.onSurface.withValues(alpha: 0.78)
+        : AppTheme.mutedForeground;
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.chevron_left_rounded, color: isDark ? colorScheme.onSurface.withAlpha(200) : AppTheme.mutedForeground),
+          onPressed: () => context.go('/browse'),
+        ),
+        title: Image.asset(
+          'assets/images/uni_market_logo.png',
+          height: 28,
+          fit: BoxFit.contain,
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_outlined),
+            color: Colors.black,
+            onPressed: () => context.go('/cart'),
+            tooltip: 'Cart',
+          ),
+        ],
+      ),
+      extendBodyBehindAppBar: true,
       body: SafeArea(
         child: Consumer<ItemDetailViewModel>(
           builder: (context, vm, _) {
@@ -31,54 +53,6 @@ class ItemDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () => context.go('/browse'),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 8,
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.chevron_left_rounded,
-                                  size: 20,
-                                  color:
-                                      isDark
-                                          ? colorScheme.onSurface.withAlpha(200)
-                                          : AppTheme.mutedForeground,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Back to Browse',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color:
-                                        isDark
-                                            ? colorScheme.onSurface.withAlpha(
-                                              200,
-                                            )
-                                            : AppTheme.mutedForeground,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Image.asset(
-                        'assets/images/uni_market_logo.png',
-                        height: 28,
-                        fit: BoxFit.contain,
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 16),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
