@@ -7,10 +7,14 @@ class AnalyticsValue {
 
   const AnalyticsValue._(this.value, this.type);
 
-  factory AnalyticsValue.string(String v) => AnalyticsValue._(v, AnalyticsValueType.string);
-  factory AnalyticsValue.int(int v) => AnalyticsValue._(v, AnalyticsValueType.int);
-  factory AnalyticsValue.doubleType(double v) => AnalyticsValue._(v, AnalyticsValueType.doubleType);
-  factory AnalyticsValue.boolType(bool v) => AnalyticsValue._(v, AnalyticsValueType.boolType);
+  factory AnalyticsValue.string(String v) =>
+      AnalyticsValue._(v, AnalyticsValueType.string);
+  factory AnalyticsValue.int(int v) =>
+      AnalyticsValue._(v, AnalyticsValueType.int);
+  factory AnalyticsValue.doubleType(double v) =>
+      AnalyticsValue._(v, AnalyticsValueType.doubleType);
+  factory AnalyticsValue.boolType(bool v) =>
+      AnalyticsValue._(v, AnalyticsValueType.boolType);
 
   dynamic get firebaseValue {
     switch (type) {
@@ -48,14 +52,14 @@ class AnalyticsEvent {
   static AnalyticsEvent appOpened() => AnalyticsEvent(name: 'app_opened');
 
   static AnalyticsEvent screenViewed(String screenName) => AnalyticsEvent(
-        name: 'screen_viewed',
-        parameters: {'screen_name': AnalyticsValue.string(screenName)},
-      );
+    name: 'screen_viewed',
+    parameters: {'screen_name': AnalyticsValue.string(screenName)},
+  );
 
   static AnalyticsEvent loginAttempt(String method) => AnalyticsEvent(
-        name: 'login_attempt',
-        parameters: {'method': AnalyticsValue.string(method)},
-      );
+    name: 'login_attempt',
+    parameters: {'method': AnalyticsValue.string(method)},
+  );
 
   // ---------------------------------------------------------------------------
   // Type-2 Business Question: User inactivity & engagement timing
@@ -65,33 +69,31 @@ class AnalyticsEvent {
   static AnalyticsEvent userMeaningfulInteraction({
     required String userId,
     required String interactionType, // "buy" | "like" | "sell" | "view"
-    required String timestamp,       // ISO-8601
-    required String category,        // Category/tag of the item
-  }) =>
-      AnalyticsEvent(
-        name: 'user_meaningful_interaction',
-        parameters: {
-          'user_id': AnalyticsValue.string(userId),
-          'interaction_type': AnalyticsValue.string(interactionType),
-          'timestamp': AnalyticsValue.string(timestamp),
-          'category': AnalyticsValue.string(category),
-        },
-      );
+    required String timestamp, // ISO-8601
+    required String category, // Category/tag of the item
+  }) => AnalyticsEvent(
+    name: 'user_meaningful_interaction',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'interaction_type': AnalyticsValue.string(interactionType),
+      'timestamp': AnalyticsValue.string(timestamp),
+      'category': AnalyticsValue.string(category),
+    },
+  );
 
   /// Fired when a new item is uploaded (for category new item count).
   static AnalyticsEvent newItemUploaded({
-    required String userId,         // Seller's user id
-    required String category,       // Category/tag of the item
-    required String timestamp,      // ISO-8601
-  }) =>
-      AnalyticsEvent(
-        name: 'new_item_uploaded',
-        parameters: {
-          'user_id': AnalyticsValue.string(userId),
-          'category': AnalyticsValue.string(category),
-          'timestamp': AnalyticsValue.string(timestamp),
-        },
-      );
+    required String userId, // Seller's user id
+    required String category, // Category/tag of the item
+    required String timestamp, // ISO-8601
+  }) => AnalyticsEvent(
+    name: 'new_item_uploaded',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'category': AnalyticsValue.string(category),
+      'timestamp': AnalyticsValue.string(timestamp),
+    },
+  );
 
   /// Fired every time the app evaluates whether the user is inactive.
   static AnalyticsEvent userInactivityChecked({
@@ -99,16 +101,17 @@ class AnalyticsEvent {
     required int daysSinceLastInteraction,
     required bool isInactive,
     required int thresholdDays,
-  }) =>
-      AnalyticsEvent(
-        name: 'user_inactivity_checked',
-        parameters: {
-          'user_id': AnalyticsValue.string(userId),
-          'days_since_last_interaction': AnalyticsValue.int(daysSinceLastInteraction),
-          'is_inactive': AnalyticsValue.boolType(isInactive),
-          'threshold_days': AnalyticsValue.int(thresholdDays),
-        },
-      );
+  }) => AnalyticsEvent(
+    name: 'user_inactivity_checked',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'days_since_last_interaction': AnalyticsValue.int(
+        daysSinceLastInteraction,
+      ),
+      'is_inactive': AnalyticsValue.boolType(isInactive),
+      'threshold_days': AnalyticsValue.int(thresholdDays),
+    },
+  );
 
   /// Fired ONLY when a re-engagement notification is actually triggered.
   static AnalyticsEvent reengagementNotificationTriggered({
@@ -116,36 +119,36 @@ class AnalyticsEvent {
     required int daysInactive,
     required int thresholdDays,
     String notificationType = 'inactivity_nudge',
-  }) =>
-      AnalyticsEvent(
-        name: 'reengagement_notification_triggered',
-        parameters: {
-          'user_id': AnalyticsValue.string(userId),
-          'days_inactive': AnalyticsValue.int(daysInactive),
-          'threshold_days': AnalyticsValue.int(thresholdDays),
-          'notification_type': AnalyticsValue.string(notificationType),
-        },
-      );
+  }) => AnalyticsEvent(
+    name: 'reengagement_notification_triggered',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'days_inactive': AnalyticsValue.int(daysInactive),
+      'threshold_days': AnalyticsValue.int(thresholdDays),
+      'notification_type': AnalyticsValue.string(notificationType),
+    },
+  );
 
   /// Fired when the inactivity check passes (user is active — no notification sent).
   static AnalyticsEvent userActiveNoNotification({
     required String userId,
     required int daysSinceLastInteraction,
-  }) =>
-      AnalyticsEvent(
-        name: 'user_active_no_notification',
-        parameters: {
-          'user_id': AnalyticsValue.string(userId),
-          'days_since_last_interaction': AnalyticsValue.int(daysSinceLastInteraction),
-        },
-      );
+  }) => AnalyticsEvent(
+    name: 'user_active_no_notification',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'days_since_last_interaction': AnalyticsValue.int(
+        daysSinceLastInteraction,
+      ),
+    },
+  );
 
   // ---------------------------------------------------------------------------
   // Type-3 Business Question: Theme preference (automatic vs manual)
   // ---------------------------------------------------------------------------
 
   /// Fired when the app AUTOMATICALLY switches theme based on time-of-day context.
-  /// 
+  ///
   /// This captures automatic theme transitions (e.g., light → dark at 7 PM,
   /// or dark → light at 6 AM) driven by the DayThemeStrategy / NightThemeStrategy
   /// polling mechanism.
@@ -153,52 +156,53 @@ class AnalyticsEvent {
   /// Use this event to answer: "What percentage of UniMarket sessions
   /// automatically switch between light and dark mode based on time-of-day context?"
   static AnalyticsEvent themeAutoSwitched({
-    required String sessionId,           // Session ID for grouping
-    String? userId,                      // User ID if authenticated (may be null for guests)
-    required String fromTheme,           // "light" | "dark"
-    required String toTheme,             // "light" | "dark"
-    required int hourOfDay,              // 0-23: hour when switch occurred
-    required String timestamp,           // ISO-8601: exact moment of switch
-    String switchReason = 'time_based',  // "time_based" for automatic, "manual" for overrides
-  }) =>
-      AnalyticsEvent(
-        name: 'theme_auto_switched',
-        parameters: {
-          'session_id': AnalyticsValue.string(sessionId),
-          if (userId != null) 'user_id': AnalyticsValue.string(userId),
-          'from_theme': AnalyticsValue.string(fromTheme),
-          'to_theme': AnalyticsValue.string(toTheme),
-          'hour_of_day': AnalyticsValue.int(hourOfDay),
-          'timestamp': AnalyticsValue.string(timestamp),
-          'switch_reason': AnalyticsValue.string(switchReason),
-          'is_automatic': AnalyticsValue.boolType(true),
-        },
-      );
+    required String sessionId, // Session ID for grouping
+    String? userId, // User ID if authenticated (may be null for guests)
+    required String fromTheme, // "light" | "dark"
+    required String toTheme, // "light" | "dark"
+    required int hourOfDay, // 0-23: hour when switch occurred
+    required String timestamp, // ISO-8601: exact moment of switch
+    String switchReason =
+        'time_based', // "time_based" for automatic, "manual" for overrides
+  }) => AnalyticsEvent(
+    name: 'theme_auto_switched',
+    parameters: {
+      'session_id': AnalyticsValue.string(sessionId),
+      if (userId != null) 'user_id': AnalyticsValue.string(userId),
+      'from_theme': AnalyticsValue.string(fromTheme),
+      'to_theme': AnalyticsValue.string(toTheme),
+      'hour_of_day': AnalyticsValue.int(hourOfDay),
+      'timestamp': AnalyticsValue.string(timestamp),
+      'switch_reason': AnalyticsValue.string(switchReason),
+      'is_automatic': AnalyticsValue.boolType(true),
+    },
+  );
 
   /// Fired when a user manually overrides the automatic theme selection.
   ///
   /// Captures manual theme changes triggered by user preference, accessibility
   /// settings, or ambient-light detection (if implemented in future).
   static AnalyticsEvent themeManualOverride({
-    required String sessionId,              // Session ID for grouping
-    String? userId,                         // User ID if authenticated (may be null for guests)
-    required String fromTheme,              // "light" | "dark" (the auto-selected theme before override)
-    required String toTheme,                // "light" | "dark" (user's manual selection)
-    required String overrideReason,         // "user_preference" | "accessibility" | "battery_saver" | etc.
-    required String timestamp,              // ISO-8601: exact moment of override
-  }) =>
-      AnalyticsEvent(
-        name: 'theme_manual_override',
-        parameters: {
-          'session_id': AnalyticsValue.string(sessionId),
-          if (userId != null) 'user_id': AnalyticsValue.string(userId),
-          'from_theme': AnalyticsValue.string(fromTheme),
-          'to_theme': AnalyticsValue.string(toTheme),
-          'override_reason': AnalyticsValue.string(overrideReason),
-          'timestamp': AnalyticsValue.string(timestamp),
-          'is_automatic': AnalyticsValue.boolType(false),
-        },
-      );
+    required String sessionId, // Session ID for grouping
+    String? userId, // User ID if authenticated (may be null for guests)
+    required String
+    fromTheme, // "light" | "dark" (the auto-selected theme before override)
+    required String toTheme, // "light" | "dark" (user's manual selection)
+    required String
+    overrideReason, // "user_preference" | "accessibility" | "battery_saver" | etc.
+    required String timestamp, // ISO-8601: exact moment of override
+  }) => AnalyticsEvent(
+    name: 'theme_manual_override',
+    parameters: {
+      'session_id': AnalyticsValue.string(sessionId),
+      if (userId != null) 'user_id': AnalyticsValue.string(userId),
+      'from_theme': AnalyticsValue.string(fromTheme),
+      'to_theme': AnalyticsValue.string(toTheme),
+      'override_reason': AnalyticsValue.string(overrideReason),
+      'timestamp': AnalyticsValue.string(timestamp),
+      'is_automatic': AnalyticsValue.boolType(false),
+    },
+  );
 
   /// Fired once per session to record the initial (baseline) theme choice
   /// when the app starts.
@@ -207,22 +211,21 @@ class AnalyticsEvent {
   ///   - Which theme users see on app launch (based on time of day)
   ///   - Device-to-device distribution of light vs. dark theme starts
   static AnalyticsEvent sessionThemeInitialized({
-    required String sessionId,     // Session ID for grouping
-    String? userId,                // User ID if authenticated
-    required String initialTheme,  // "light" | "dark"
-    required int hourOfDay,        // 0-23: hour when session started
-    required String timestamp,     // ISO-8601: app launch time
-  }) =>
-      AnalyticsEvent(
-        name: 'session_theme_initialized',
-        parameters: {
-          'session_id': AnalyticsValue.string(sessionId),
-          if (userId != null) 'user_id': AnalyticsValue.string(userId),
-          'initial_theme': AnalyticsValue.string(initialTheme),
-          'hour_of_day': AnalyticsValue.int(hourOfDay),
-          'timestamp': AnalyticsValue.string(timestamp),
-        },
-      );
+    required String sessionId, // Session ID for grouping
+    String? userId, // User ID if authenticated
+    required String initialTheme, // "light" | "dark"
+    required int hourOfDay, // 0-23: hour when session started
+    required String timestamp, // ISO-8601: app launch time
+  }) => AnalyticsEvent(
+    name: 'session_theme_initialized',
+    parameters: {
+      'session_id': AnalyticsValue.string(sessionId),
+      if (userId != null) 'user_id': AnalyticsValue.string(userId),
+      'initial_theme': AnalyticsValue.string(initialTheme),
+      'hour_of_day': AnalyticsValue.int(hourOfDay),
+      'timestamp': AnalyticsValue.string(timestamp),
+    },
+  );
 
   /// Fired when a user explicitly chooses their theme mode.
   ///
@@ -233,32 +236,33 @@ class AnalyticsEvent {
     required String sessionId,
     String? userId,
     required String preferenceMode, // "automatic" | "manual"
-    required String selectedTheme,  // "light" | "dark"
-    required String timestamp,      // ISO-8601
-  }) =>
-      AnalyticsEvent(
-        name: 'theme_preference_selected',
-        parameters: {
-          'session_id': AnalyticsValue.string(sessionId),
-          if (userId != null) 'user_id': AnalyticsValue.string(userId),
-          'preference_mode': AnalyticsValue.string(preferenceMode),
-          'selected_theme': AnalyticsValue.string(selectedTheme),
-          'timestamp': AnalyticsValue.string(timestamp),
-          'is_automatic': AnalyticsValue.boolType(preferenceMode == 'automatic'),
-        },
-      );
+    required String selectedTheme, // "light" | "dark"
+    required String timestamp, // ISO-8601
+  }) => AnalyticsEvent(
+    name: 'theme_preference_selected',
+    parameters: {
+      'session_id': AnalyticsValue.string(sessionId),
+      if (userId != null) 'user_id': AnalyticsValue.string(userId),
+      'preference_mode': AnalyticsValue.string(preferenceMode),
+      'selected_theme': AnalyticsValue.string(selectedTheme),
+      'timestamp': AnalyticsValue.string(timestamp),
+      'is_automatic': AnalyticsValue.boolType(preferenceMode == 'automatic'),
+    },
+  );
 
   static AnalyticsEvent listingCreatedWithIATagging({
     required String listingId,
     required String userId,
   }) => AnalyticsEvent(
-        name: 'listing_created_with_ia_tagging',
-        parameters: {
-          'listing_id': AnalyticsValue.string(listingId),
-          'user_id': AnalyticsValue.string(userId),
-          'timestamp': AnalyticsValue.string(DateTime.now().toUtc().toIso8601String()),
-        },
-      );
+    name: 'listing_created_with_ia_tagging',
+    parameters: {
+      'listing_id': AnalyticsValue.string(listingId),
+      'user_id': AnalyticsValue.string(userId),
+      'timestamp': AnalyticsValue.string(
+        DateTime.now().toUtc().toIso8601String(),
+      ),
+    },
+  );
 
   // ---------------------------------------------------------------------------
   // Type-4 Business Question: Monetizable sustainability data
@@ -275,22 +279,21 @@ class AnalyticsEvent {
     required double co2SavedKg,
     required double wasteSavedKg,
     required String timestamp,
-  }) =>
-      AnalyticsEvent(
-        name: 'sustainability_impact_per_transaction',
-        parameters: {
-          'transaction_id': AnalyticsValue.string(transactionId),
-          'listing_id': AnalyticsValue.string(listingId),
-          'seller_id': AnalyticsValue.string(sellerId),
-          'category': AnalyticsValue.string(category),
-          'water_saved_liters': AnalyticsValue.int(waterSavedLiters),
-          'co2_saved_kg': AnalyticsValue.doubleType(co2SavedKg),
-          'waste_saved_kg': AnalyticsValue.doubleType(wasteSavedKg),
-          'timestamp': AnalyticsValue.string(timestamp),
-          // Monetization hint for downstream segmentation.
-          'data_product': AnalyticsValue.string('esg_partnership_signal'),
-        },
-      );
+  }) => AnalyticsEvent(
+    name: 'sustainability_impact_per_transaction',
+    parameters: {
+      'transaction_id': AnalyticsValue.string(transactionId),
+      'listing_id': AnalyticsValue.string(listingId),
+      'seller_id': AnalyticsValue.string(sellerId),
+      'category': AnalyticsValue.string(category),
+      'water_saved_liters': AnalyticsValue.int(waterSavedLiters),
+      'co2_saved_kg': AnalyticsValue.doubleType(co2SavedKg),
+      'waste_saved_kg': AnalyticsValue.doubleType(wasteSavedKg),
+      'timestamp': AnalyticsValue.string(timestamp),
+      // Monetization hint for downstream segmentation.
+      'data_product': AnalyticsValue.string('esg_partnership_signal'),
+    },
+  );
 
   /// Fired when the ECO recommendation message is produced for the user.
   /// This enables correlation between message exposure and later engagement.
@@ -301,16 +304,140 @@ class AnalyticsEvent {
     required int transactions,
     required int messageLength,
     required String timestamp,
-  }) =>
-      AnalyticsEvent(
-        name: 'eco_recommendation_shown',
-        parameters: {
-          'user_id': AnalyticsValue.string(userId),
-          'level_title': AnalyticsValue.string(levelTitle),
-          'sold_count': AnalyticsValue.int(soldCount),
-          'transactions': AnalyticsValue.int(transactions),
-          'message_length': AnalyticsValue.int(messageLength),
-          'timestamp': AnalyticsValue.string(timestamp),
-        },
-      );
+  }) => AnalyticsEvent(
+    name: 'eco_recommendation_shown',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'level_title': AnalyticsValue.string(levelTitle),
+      'sold_count': AnalyticsValue.int(soldCount),
+      'transactions': AnalyticsValue.int(transactions),
+      'message_length': AnalyticsValue.int(messageLength),
+      'timestamp': AnalyticsValue.string(timestamp),
+    },
+  );
+
+  // ---------------------------------------------------------------------------
+  // Type-5 Business Question: AI Stylist effectiveness + business impact
+  // ---------------------------------------------------------------------------
+  // This BQ is Type 5 because it combines:
+  // 1) feature effectiveness (AI Stylist usage), and
+  // 2) business impact (30-day retention + marketplace engagement).
+
+  /// Fired when the AI Stylist screen is opened.
+  static AnalyticsEvent aiStylistOpened({
+    required String userId,
+    required String timestamp,
+    required String platform,
+    required String sourceScreen,
+  }) => AnalyticsEvent(
+    name: 'ai_stylist_opened',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'timestamp': AnalyticsValue.string(timestamp),
+      'platform': AnalyticsValue.string(platform),
+      'source_screen': AnalyticsValue.string(sourceScreen),
+    },
+  );
+
+  /// Fired when outfit analysis completes successfully.
+  ///
+  /// `ai_stylist_analysis_completed` identifies users who used the feature,
+  /// which defines Group A for the 30-day impact comparison.
+  static AnalyticsEvent aiStylistAnalysisCompleted({
+    required String userId,
+    required String timestamp,
+    required String analysisId,
+    required int imageCount,
+    required bool fromCache,
+    required String syncStatus,
+    required int processingTimeMs,
+  }) => AnalyticsEvent(
+    name: 'ai_stylist_analysis_completed',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'timestamp': AnalyticsValue.string(timestamp),
+      'analysis_id': AnalyticsValue.string(analysisId),
+      'image_count': AnalyticsValue.int(imageCount),
+      'from_cache': AnalyticsValue.boolType(fromCache),
+      'sync_status': AnalyticsValue.string(syncStatus),
+      'processing_time_ms': AnalyticsValue.int(processingTimeMs),
+    },
+  );
+
+  /// Fired when marketplace recommendations are displayed in AI Stylist.
+  static AnalyticsEvent aiStylistRecommendationsViewed({
+    required String userId,
+    required String timestamp,
+    required String analysisId,
+    required int recommendationCount,
+  }) => AnalyticsEvent(
+    name: 'ai_stylist_recommendations_viewed',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'timestamp': AnalyticsValue.string(timestamp),
+      'analysis_id': AnalyticsValue.string(analysisId),
+      'recommendation_count': AnalyticsValue.int(recommendationCount),
+    },
+  );
+
+  /// Fired when a recommendation is clicked from AI Stylist.
+  ///
+  /// `source = ai_stylist` separates interactions generated by this feature
+  /// from normal browsing behavior.
+  static AnalyticsEvent aiStylistRecommendationClicked({
+    required String userId,
+    required String timestamp,
+    required String analysisId,
+    required String listingId,
+    required String category,
+    required String source,
+  }) => AnalyticsEvent(
+    name: 'ai_stylist_recommendation_clicked',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'timestamp': AnalyticsValue.string(timestamp),
+      'analysis_id': AnalyticsValue.string(analysisId),
+      'listing_id': AnalyticsValue.string(listingId),
+      'category': AnalyticsValue.string(category),
+      'source': AnalyticsValue.string(source),
+    },
+  );
+
+  /// Fired when a recommendation is saved/favorited from AI Stylist.
+  ///
+  /// `source = ai_stylist` makes AI-driven marketplace engagement queryable.
+  static AnalyticsEvent aiStylistListingSaved({
+    required String userId,
+    required String timestamp,
+    required String analysisId,
+    required String listingId,
+    required String source,
+  }) => AnalyticsEvent(
+    name: 'ai_stylist_listing_saved',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'timestamp': AnalyticsValue.string(timestamp),
+      'analysis_id': AnalyticsValue.string(analysisId),
+      'listing_id': AnalyticsValue.string(listingId),
+      'source': AnalyticsValue.string(source),
+    },
+  );
+
+  /// Fired at app startup once user identity is available.
+  ///
+  /// `user_app_opened` is required to calculate 30-day return behavior.
+  static AnalyticsEvent userAppOpened({
+    required String userId,
+    required String timestamp,
+    required String platform,
+    required String appVersion,
+  }) => AnalyticsEvent(
+    name: 'user_app_opened',
+    parameters: {
+      'user_id': AnalyticsValue.string(userId),
+      'timestamp': AnalyticsValue.string(timestamp),
+      'platform': AnalyticsValue.string(platform),
+      'app_version': AnalyticsValue.string(appVersion),
+    },
+  );
 }

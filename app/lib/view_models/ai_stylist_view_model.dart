@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../core/analytics_service.dart';
 import '../data/ai_outfit_local_storage_service.dart';
 import '../models/ai_outfit_analysis.dart';
 import '../models/listing.dart';
@@ -11,7 +12,7 @@ import '../services/outfit_sync_service.dart';
 
 class AIStylistViewModel extends ChangeNotifier {
   AIStylistViewModel({required OutfitSyncService syncService})
-      : _syncService = syncService {
+    : _syncService = syncService {
     _syncService.addListener(_handleSyncUpdate);
     unawaited(loadHistory());
   }
@@ -20,8 +21,10 @@ class AIStylistViewModel extends ChangeNotifier {
   final AIStylistService _stylistService = AIStylistService();
   final AIOutfitLocalStorageService _storage = AIOutfitLocalStorageService();
   final ImagePicker _picker = ImagePicker();
+  final AnalyticsService _analytics = AnalyticsService.instance;
 
   final List<XFile> _selectedImages = [];
+  final Set<String> _recommendationsViewedTrackedAnalysisIds = <String>{};
   List<AIOutfitAnalysis> _history = [];
   List<Listing> _recommendedListings = [];
   AIOutfitAnalysis? _currentAnalysis;
@@ -32,19 +35,28 @@ class AIStylistViewModel extends ChangeNotifier {
 
   List<XFile> get selectedImages => List.unmodifiable(_selectedImages);
   List<AIOutfitAnalysis> get history => List.unmodifiable(_history);
-  List<Listing> get recommendedListings => List.unmodifiable(_recommendedListings);
+  List<Listing> get recommendedListings =>
+      List.unmodifiable(_recommendedListings);
   AIOutfitAnalysis? get currentAnalysis => _currentAnalysis;
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   bool get isSyncing => _syncService.isSyncing;
   String? get errorMessage => _errorMessage;
   String? get statusMessage => _statusMessage;
-  bool get canAnalyze => _selectedImages.isNotEmpty && _selectedImages.length <= 3;
+  bool get canAnalyze =>
+      _selectedImages.isNotEmpty && _selectedImages.length <= 3;
+
+  void onViewOpened({String sourceScreen = 'profile_screen'}) {
+    _analytics.logAIStylistOpened(sourceScreen: sourceScreen);
+  }
 
   Future<void> loadHistory() async {
     _history = await _storage.getHistory(limit: 30);
     if (_currentAnalysis != null) {
-      final refreshed = _history.where((analysis) => analysis.id == _currentAnalysis!.id).toList();
+      final refreshed =
+          _history
+              .where((analysis) => analysis.id == _currentAnalysis!.id)
+              .toList();
       if (refreshed.isNotEmpty) {
         _currentAnalysis = refreshed.first;
       }
@@ -96,23 +108,39 @@ class AIStylistViewModel extends ChangeNotifier {
     _statusMessage = null;
     notifyListeners();
 
+    final stopwatch = Stopwatch()..start();
+
     try {
       final analysis = await _stylistService.analyzeOutfit(_selectedImages);
       _currentAnalysis = analysis;
       await _refreshRecommendations();
       await loadHistory();
+
+      // Type-5 BQ: successful analysis completion marks feature adoption group.
+      if (analysis.syncStatus != AIOutfitSyncStatus.failed) {
+        _analytics.logAIStylistAnalysisCompleted(
+          analysisId: analysis.id,
+          imageCount: _selectedImages.length,
+          fromCache: analysis.fromCache,
+          syncStatus: aiOutfitSyncStatusToString(analysis.syncStatus),
+          processingTimeMs: stopwatch.elapsedMilliseconds,
+        );
+      }
+
       if (analysis.syncStatus == AIOutfitSyncStatus.pending) {
         _statusMessage = 'Pending analysis - will sync when internet returns';
       } else if (analysis.fromCache) {
         _statusMessage = 'Loaded from cache';
       } else if (analysis.syncStatus == AIOutfitSyncStatus.failed) {
-        _statusMessage = 'AI analysis failed. Showing a local fallback preview.';
+        _statusMessage =
+            'AI analysis failed. Showing a local fallback preview.';
       } else {
         _statusMessage = 'Analysis complete.';
       }
     } catch (error) {
       _errorMessage = error.toString();
     } finally {
+      stopwatch.stop();
       _isLoading = false;
       notifyListeners();
     }
@@ -139,13 +167,16 @@ class AIStylistViewModel extends ChangeNotifier {
     _selectedImages
       ..clear()
       ..addAll(
-        (analysis.thumbnailPaths.isNotEmpty ? analysis.thumbnailPaths : analysis.imagePaths)
+        (analysis.thumbnailPaths.isNotEmpty
+                ? analysis.thumbnailPaths
+                : analysis.imagePaths)
             .map((path) => XFile(path)),
       );
     await _refreshRecommendations();
-    _statusMessage = analysis.syncStatus == AIOutfitSyncStatus.pending
-        ? 'Pending analysis - will sync when internet returns'
-        : 'Showing saved analysis.';
+    _statusMessage =
+        analysis.syncStatus == AIOutfitSyncStatus.pending
+            ? 'Pending analysis - will sync when internet returns'
+            : 'Showing saved analysis.';
     notifyListeners();
   }
 
@@ -166,10 +197,44 @@ class AIStylistViewModel extends ChangeNotifier {
     }
 
     try {
-      _recommendedListings = await _stylistService.getRecommendedListings(analysis);
+      _recommendedListings = await _stylistService.getRecommendedListings(
+        analysis,
+      );
+
+      // Type-5 BQ: recommendation visibility is part of marketplace engagement funnel.
+      if (_recommendedListings.isNotEmpty &&
+          !_recommendationsViewedTrackedAnalysisIds.contains(analysis.id)) {
+        _recommendationsViewedTrackedAnalysisIds.add(analysis.id);
+        _analytics.logAIStylistRecommendationsViewed(
+          analysisId: analysis.id,
+          recommendationCount: _recommendedListings.length,
+        );
+      }
     } catch (_) {
       _recommendedListings = [];
     }
+  }
+
+  void logRecommendationClicked(Listing listing) {
+    final analysis = _currentAnalysis;
+    if (analysis == null) return;
+
+    // `source = ai_stylist` isolates interactions driven by this feature.
+    _analytics.logAIStylistRecommendationClicked(
+      analysisId: analysis.id,
+      listingId: listing.id,
+      category: listing.tags.isNotEmpty ? listing.tags.first : 'unknown',
+    );
+  }
+
+  void logRecommendationSaved(Listing listing) {
+    final analysis = _currentAnalysis;
+    if (analysis == null) return;
+
+    _analytics.logAIStylistListingSaved(
+      analysisId: analysis.id,
+      listingId: listing.id,
+    );
   }
 
   void _handleSyncUpdate() {
@@ -181,7 +246,8 @@ class AIStylistViewModel extends ChangeNotifier {
     final current = _currentAnalysis;
     if (current == null) return;
 
-    final refreshed = _history.where((analysis) => analysis.id == current.id).toList();
+    final refreshed =
+        _history.where((analysis) => analysis.id == current.id).toList();
     if (refreshed.isNotEmpty) {
       _currentAnalysis = refreshed.first;
       await _refreshRecommendations();

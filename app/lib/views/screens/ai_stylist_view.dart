@@ -11,6 +11,7 @@ import '../../core/app_theme.dart';
 import '../../models/ai_outfit_analysis.dart';
 import '../../models/listing.dart';
 import '../../services/outfit_sync_service.dart';
+import '../../view_models/browse_view_model.dart';
 import '../../view_models/ai_stylist_view_model.dart';
 
 class AIStylistView extends StatelessWidget {
@@ -19,14 +20,33 @@ class AIStylistView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AIStylistViewModel(syncService: context.read<OutfitSyncService>()),
+      create:
+          (_) => AIStylistViewModel(
+            syncService: context.read<OutfitSyncService>(),
+          ),
       child: const _AIStylistScaffold(),
     );
   }
 }
 
-class _AIStylistScaffold extends StatelessWidget {
+class _AIStylistScaffold extends StatefulWidget {
   const _AIStylistScaffold();
+
+  @override
+  State<_AIStylistScaffold> createState() => _AIStylistScaffoldState();
+}
+
+class _AIStylistScaffoldState extends State<_AIStylistScaffold> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<AIStylistViewModel>().onViewOpened(
+        sourceScreen: 'profile_screen',
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +58,8 @@ class _AIStylistScaffold extends StatelessWidget {
         title: const Text('AI Outfit Stylist'),
         actions: [
           IconButton(
-            onPressed: () => context.read<AIStylistViewModel>().clearSelection(),
+            onPressed:
+                () => context.read<AIStylistViewModel>().clearSelection(),
             icon: const Icon(Icons.restart_alt_rounded),
             tooltip: 'Clear selection',
           ),
@@ -77,8 +98,12 @@ class _AIStylistScaffold extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                       child: _MessageBanner(
-                        icon: vm.isSyncing ? Icons.sync_rounded : Icons.info_outline_rounded,
-                        color: vm.isSyncing ? AppTheme.accent : AppTheme.sageDark,
+                        icon:
+                            vm.isSyncing
+                                ? Icons.sync_rounded
+                                : Icons.info_outline_rounded,
+                        color:
+                            vm.isSyncing ? AppTheme.accent : AppTheme.sageDark,
                         message: vm.statusMessage!,
                       ),
                     ),
@@ -118,7 +143,10 @@ class _AIStylistScaffold extends StatelessWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                    child: _MarketplaceSection(listings: vm.recommendedListings),
+                    child: _MarketplaceSection(
+                      vm: vm,
+                      listings: vm.recommendedListings,
+                    ),
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -138,7 +166,11 @@ class _AIStylistScaffold extends StatelessWidget {
 }
 
 class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.isDark, required this.colorScheme, required this.vm});
+  const _HeroCard({
+    required this.isDark,
+    required this.colorScheme,
+    required this.vm,
+  });
 
   final bool isDark;
   final ColorScheme colorScheme;
@@ -151,9 +183,10 @@ class _HeroCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isDark
-              ? [colorScheme.surfaceContainerHighest, colorScheme.surface]
-              : [const Color(0xFFF6F8F6), const Color(0xFFE8F0E9)],
+          colors:
+              isDark
+                  ? [colorScheme.surfaceContainerHighest, colorScheme.surface]
+                  : [const Color(0xFFF6F8F6), const Color(0xFFE8F0E9)],
         ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppTheme.sage.withValues(alpha: 0.18)),
@@ -169,18 +202,28 @@ class _HeroCard extends StatelessWidget {
                   color: AppTheme.sage.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(Icons.auto_awesome_rounded, color: AppTheme.sageDark),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: AppTheme.sageDark,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('AI Outfit Stylist', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                    Text(
+                      'AI Outfit Stylist',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Upload 1 to 3 clothing images for outfit-only analysis, styling tips, and matching suggestions.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -190,10 +233,19 @@ class _HeroCard extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              _StatusPill(label: vm.isSyncing ? 'Syncing' : 'Ready', icon: vm.isSyncing ? Icons.sync_rounded : Icons.check_circle_rounded),
+              _StatusPill(
+                label: vm.isSyncing ? 'Syncing' : 'Ready',
+                icon:
+                    vm.isSyncing
+                        ? Icons.sync_rounded
+                        : Icons.check_circle_rounded,
+              ),
               const SizedBox(width: 8),
               if (vm.selectedImages.isNotEmpty)
-                _StatusPill(label: '${vm.selectedImages.length}/3 selected', icon: Icons.photo_library_rounded),
+                _StatusPill(
+                  label: '${vm.selectedImages.length}/3 selected',
+                  icon: Icons.photo_library_rounded,
+                ),
               const Spacer(),
               FilledButton(
                 onPressed: () => context.go('/profile'),
@@ -220,9 +272,19 @@ class _ImagePickerSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Image picker', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              'Image picker',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
-            Text('Choose up to three clothing photos from your gallery. These are used for styling analysis only.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            Text(
+              'Choose up to three clothing photos from your gallery. These are used for styling analysis only.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: vm.isLoading ? null : vm.pickImages,
@@ -231,7 +293,13 @@ class _ImagePickerSection extends StatelessWidget {
             ),
             if (vm.selectedImages.length == 3) ...[
               const SizedBox(height: 8),
-              Text('Maximum of 3 images reached.', style: TextStyle(color: AppTheme.sageDark, fontWeight: FontWeight.w600)),
+              Text(
+                'Maximum of 3 images reached.',
+                style: TextStyle(
+                  color: AppTheme.sageDark,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ],
         ),
@@ -253,10 +321,20 @@ class _SelectedImagesSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Selected images', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              'Selected images',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 12),
             if (vm.selectedImages.isEmpty)
-              Text('No clothing photos selected yet.', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))
+              Text(
+                'No clothing photos selected yet.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              )
             else
               Wrap(
                 spacing: 12,
@@ -299,9 +377,16 @@ class _PreviewCard extends StatelessWidget {
                   child: GestureDetector(
                     onTap: onRemove,
                     child: Container(
-                      decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black54),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black54,
+                      ),
                       padding: const EdgeInsets.all(4),
-                      child: const Icon(Icons.close_rounded, color: Colors.white, size: 16),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     ),
                   ),
                 ),
@@ -309,7 +394,12 @@ class _PreviewCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(image.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
+          Text(
+            image.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12),
+          ),
         ],
       ),
     );
@@ -320,7 +410,8 @@ Widget _buildPreviewImage(XFile image) {
   return FutureBuilder<Uint8List>(
     future: image.readAsBytes(),
     builder: (context, snapshot) {
-      if (snapshot.connectionState != ConnectionState.done || !snapshot.hasData) {
+      if (snapshot.connectionState != ConnectionState.done ||
+          !snapshot.hasData) {
         return Container(
           width: 110,
           height: 110,
@@ -329,7 +420,12 @@ Widget _buildPreviewImage(XFile image) {
         );
       }
 
-      return Image.memory(snapshot.data!, width: 110, height: 110, fit: BoxFit.cover);
+      return Image.memory(
+        snapshot.data!,
+        width: 110,
+        height: 110,
+        fit: BoxFit.cover,
+      );
     },
   );
 }
@@ -344,10 +440,19 @@ class _AnalyzeButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
-        onPressed: vm.isLoading || !vm.canAnalyze ? null : vm.analyzeSelectedImages,
-        icon: vm.isLoading
-            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            : const Icon(Icons.auto_fix_high_rounded),
+        onPressed:
+            vm.isLoading || !vm.canAnalyze ? null : vm.analyzeSelectedImages,
+        icon:
+            vm.isLoading
+                ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+                : const Icon(Icons.auto_fix_high_rounded),
         label: const Text('Analyze Outfit'),
       ),
     );
@@ -365,7 +470,12 @@ class _AnalysisSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('AI result', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        Text(
+          'AI result',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: 12),
         _ResultCard(
           title: 'Detected categories',
@@ -373,7 +483,8 @@ class _AnalysisSection extends StatelessWidget {
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: analysis.categories.map((value) => _Chip(text: value)).toList(),
+            children:
+                analysis.categories.map((value) => _Chip(text: value)).toList(),
           ),
         ),
         _ResultCard(
@@ -382,22 +493,43 @@ class _AnalysisSection extends StatelessWidget {
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: analysis.dominantColors.map((value) => _Chip(text: value)).toList(),
+            children:
+                analysis.dominantColors
+                    .map((value) => _Chip(text: value))
+                    .toList(),
           ),
         ),
-        _ResultCard(title: 'Style', icon: Icons.style_rounded, child: Text(analysis.style.isEmpty ? 'Not detected' : analysis.style)),
-        _ResultCard(title: 'Aesthetic', icon: Icons.auto_awesome_rounded, child: Text(analysis.aesthetic.isEmpty ? 'Not detected' : analysis.aesthetic)),
-        _ResultCard(title: 'Outfit advice', icon: Icons.tips_and_updates_rounded, child: Text(analysis.outfitAdvice)),
+        _ResultCard(
+          title: 'Style',
+          icon: Icons.style_rounded,
+          child: Text(analysis.style.isEmpty ? 'Not detected' : analysis.style),
+        ),
+        _ResultCard(
+          title: 'Aesthetic',
+          icon: Icons.auto_awesome_rounded,
+          child: Text(
+            analysis.aesthetic.isEmpty ? 'Not detected' : analysis.aesthetic,
+          ),
+        ),
+        _ResultCard(
+          title: 'Outfit advice',
+          icon: Icons.tips_and_updates_rounded,
+          child: Text(analysis.outfitAdvice),
+        ),
         _ResultCard(
           title: 'Missing item suggestions',
           icon: Icons.add_circle_outline_rounded,
-          child: analysis.missingItems.isEmpty
-              ? const Text('No obvious gaps detected.')
-              : Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: analysis.missingItems.map((value) => _Chip(text: value)).toList(),
-                ),
+          child:
+              analysis.missingItems.isEmpty
+                  ? const Text('No obvious gaps detected.')
+                  : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children:
+                        analysis.missingItems
+                            .map((value) => _Chip(text: value))
+                            .toList(),
+                  ),
         ),
         _ResultCard(
           title: 'Marketplace tags',
@@ -405,7 +537,10 @@ class _AnalysisSection extends StatelessWidget {
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: analysis.marketplaceTags.map((value) => _Chip(text: value)).toList(),
+            children:
+                analysis.marketplaceTags
+                    .map((value) => _Chip(text: value))
+                    .toList(),
           ),
         ),
         const SizedBox(height: 8),
@@ -414,9 +549,14 @@ class _AnalysisSection extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: vm.isSaving ? null : vm.saveCurrentAnalysis,
-                icon: vm.isSaving
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.bookmark_add_rounded),
+                icon:
+                    vm.isSaving
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.bookmark_add_rounded),
                 label: const Text('Save Outfit'),
               ),
             ),
@@ -436,8 +576,9 @@ class _AnalysisSection extends StatelessWidget {
 }
 
 class _MarketplaceSection extends StatelessWidget {
-  const _MarketplaceSection({required this.listings});
+  const _MarketplaceSection({required this.vm, required this.listings});
 
+  final AIStylistViewModel vm;
   final List<Listing> listings;
 
   @override
@@ -448,22 +589,51 @@ class _MarketplaceSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Recommended from UniMarket', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              'Recommended from UniMarket',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 12),
             if (listings.isEmpty)
-              Text('No matching listings yet. Try another outfit or save the analysis for later.', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))
-            else
-              SizedBox(
-                height: 220,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, index) {
-                    final item = listings[index];
-                    return _ListingCard(item: item);
-                  },
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
-                  itemCount: listings.length,
+              Text(
+                'No matching listings yet. Try another outfit or save the analysis for later.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
+              )
+            else
+              Consumer<BrowseViewModel>(
+                builder:
+                    (context, browseVm, _) => SizedBox(
+                      height: 220,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemBuilder: (context, index) {
+                          final item = listings[index];
+                          final isSaved = browseVm.isSaved(item.id);
+                          return _ListingCard(
+                            item: item,
+                            isSaved: isSaved,
+                            onTap: () {
+                              vm.logRecommendationClicked(item);
+                              context.go('/item/${item.id}');
+                            },
+                            onToggleSave: () async {
+                              final wasSaved = browseVm.isSaved(item.id);
+                              await browseVm.toggleSave(item.id);
+                              final isNowSaved = browseVm.isSaved(item.id);
+                              if (!wasSaved && isNowSaved) {
+                                vm.logRecommendationSaved(item);
+                              }
+                            },
+                          );
+                        },
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemCount: listings.length,
+                      ),
+                    ),
               ),
           ],
         ),
@@ -473,9 +643,17 @@ class _MarketplaceSection extends StatelessWidget {
 }
 
 class _ListingCard extends StatelessWidget {
-  const _ListingCard({required this.item});
+  const _ListingCard({
+    required this.item,
+    required this.isSaved,
+    required this.onTap,
+    required this.onToggleSave,
+  });
 
   final Listing item;
+  final bool isSaved;
+  final VoidCallback onTap;
+  final VoidCallback onToggleSave;
 
   @override
   Widget build(BuildContext context) {
@@ -485,42 +663,88 @@ class _ListingCard extends StatelessWidget {
       width: 150,
       child: Card(
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: imageUrl.isEmpty
-                  ? Container(
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.image_rounded),
-                    )
-                  : imageUrl.startsWith('file://') || imageUrl.startsWith('/')
-                      ? Image.file(File(imageUrl.replaceFirst('file://', '')), fit: BoxFit.cover)
-                      : CachedNetworkImage(
+        child: InkWell(
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child:
+                    imageUrl.isEmpty
+                        ? Container(
+                          color: Colors.grey.shade200,
+                          child: const Icon(Icons.image_rounded),
+                        )
+                        : imageUrl.startsWith('file://') ||
+                            imageUrl.startsWith('/')
+                        ? Image.file(
+                          File(imageUrl.replaceFirst('file://', '')),
+                          fit: BoxFit.cover,
+                        )
+                        : CachedNetworkImage(
                           imageUrl: imageUrl,
                           fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(
-                            color: Colors.grey.shade200,
-                            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                          ),
-                          errorWidget: (_, __, ___) => Container(
-                            color: Colors.grey.shade200,
-                            child: const Icon(Icons.image_rounded),
-                          ),
+                          placeholder:
+                              (_, __) => Container(
+                                color: Colors.grey.shade200,
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              ),
+                          errorWidget:
+                              (_, __, ___) => Container(
+                                color: Colors.grey.shade200,
+                                child: const Icon(Icons.image_rounded),
+                              ),
                         ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text(item.tags.take(2).join(' · '), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                ],
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.tags.take(2).join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        tooltip: isSaved ? 'Saved' : 'Save from AI stylist',
+                        icon: Icon(
+                          isSaved
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                        ),
+                        color:
+                            isSaved
+                                ? Colors.redAccent
+                                : Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                        onPressed: onToggleSave,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -540,10 +764,20 @@ class _HistorySection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Saved outfit history', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              'Saved outfit history',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 12),
             if (vm.history.isEmpty)
-              Text('Previous outfit analyses will appear here after you save or analyze one.', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant))
+              Text(
+                'Previous outfit analyses will appear here after you save or analyze one.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              )
             else
               Column(
                 children: [
@@ -557,7 +791,10 @@ class _HistorySection extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            color:
+                                Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Column(
@@ -567,18 +804,25 @@ class _HistorySection extends StatelessWidget {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      analysis.categories.isNotEmpty ? analysis.categories.join(', ') : 'Outfit analysis',
+                                      analysis.categories.isNotEmpty
+                                          ? analysis.categories.join(', ')
+                                          : 'Outfit analysis',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontWeight: FontWeight.w700),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   _StatusPill(
                                     label: analysis.syncStatus.name,
-                                    icon: analysis.syncStatus == AIOutfitSyncStatus.synced
-                                        ? Icons.check_circle_rounded
-                                        : analysis.syncStatus == AIOutfitSyncStatus.pending
+                                    icon:
+                                        analysis.syncStatus ==
+                                                AIOutfitSyncStatus.synced
+                                            ? Icons.check_circle_rounded
+                                            : analysis.syncStatus ==
+                                                AIOutfitSyncStatus.pending
                                             ? Icons.schedule_rounded
                                             : Icons.error_outline_rounded,
                                   ),
@@ -589,7 +833,12 @@ class _HistorySection extends StatelessWidget {
                                 analysis.outfitAdvice,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                style: TextStyle(
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
@@ -606,7 +855,11 @@ class _HistorySection extends StatelessWidget {
 }
 
 class _ResultCard extends StatelessWidget {
-  const _ResultCard({required this.title, required this.icon, required this.child});
+  const _ResultCard({
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
 
   final String title;
   final IconData icon;
@@ -654,7 +907,10 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: AppTheme.sage.withValues(alpha: 0.22)),
       ),
-      child: Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }
@@ -678,7 +934,10 @@ class _StatusPill extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: AppTheme.sageDark),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
@@ -686,7 +945,11 @@ class _StatusPill extends StatelessWidget {
 }
 
 class _MessageBanner extends StatelessWidget {
-  const _MessageBanner({required this.icon, required this.color, required this.message});
+  const _MessageBanner({
+    required this.icon,
+    required this.color,
+    required this.message,
+  });
 
   final IconData icon;
   final Color color;

@@ -13,6 +13,7 @@ import '../widgets/sustainability_progress_card.dart';
 import '../../view_models/browse_view_model.dart';
 import '../../view_models/session_view_model.dart';
 import '../../models/profile_models.dart';
+import '../../services/ai_stylist_impact_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -20,20 +21,21 @@ class ProfileScreen extends StatelessWidget {
   Future<bool> _confirmDelete(BuildContext context) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete clothing listing?'),
-        content: const Text('This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('Delete clothing listing?'),
+            content: const Text('This action cannot be undone.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
     return result ?? false;
   }
@@ -43,7 +45,9 @@ class ProfileScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     final mutedText =
-        isDark ? colorScheme.onSurface.withValues(alpha: 0.72) : AppTheme.mutedForeground;
+        isDark
+            ? colorScheme.onSurface.withValues(alpha: 0.72)
+            : AppTheme.mutedForeground;
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
@@ -72,114 +76,123 @@ class ProfileScreen extends StatelessWidget {
             ),
             SliverToBoxAdapter(
               child: Consumer<ProfileViewModel>(
-                builder: (context, vm, _) => Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: colorScheme.outline.withValues(alpha: 0.60),
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 72,
-                        height: 72,
-                        padding: const EdgeInsets.all(2.5),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppTheme.sage, width: 2),
-                        ),
-                        child: ClipOval(
-                          child: vm.profileAvatar.trim().isNotEmpty
-                              ? CachedNetworkImage(
-                                  imageUrl: vm.profileAvatar.trim(),
-                                  fit: BoxFit.cover,
-                                  errorWidget: (_, __, ___) => Container(
-                                    color: const Color(0xFFF2F2F2),
-                                    alignment: Alignment.center,
-                                    child: const Icon(
-                                      Icons.person_rounded,
-                                      size: 34,
-                                      color: AppTheme.deepGreen,
-                                    ),
-                                  ),
-                                )
-                              : Container(
-                                  color: const Color(0xFFF2F2F2),
-                                  alignment: Alignment.center,
-                                  child: const Icon(
-                                    Icons.person_rounded,
-                                    size: 34,
-                                    color: AppTheme.deepGreen,
-                                  ),
-                                ),
+                builder:
+                    (context, vm, _) => Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: colorScheme.outline.withValues(alpha: 0.60),
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              vm.profileName,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: isDark ? colorScheme.onSurface : AppTheme.deepGreen,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            padding: const EdgeInsets.all(2.5),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppTheme.sage,
+                                width: 2,
                               ),
                             ),
-                            Text(
-                              '${vm.profileUniversity} · Member since ${vm.profileSince}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: mutedText,
-                              ),
+                            child: ClipOval(
+                              child:
+                                  vm.profileAvatar.trim().isNotEmpty
+                                      ? CachedNetworkImage(
+                                        imageUrl: vm.profileAvatar.trim(),
+                                        fit: BoxFit.cover,
+                                        errorWidget:
+                                            (_, __, ___) => Container(
+                                              color: const Color(0xFFF2F2F2),
+                                              alignment: Alignment.center,
+                                              child: const Icon(
+                                                Icons.person_rounded,
+                                                size: 34,
+                                                color: AppTheme.deepGreen,
+                                              ),
+                                            ),
+                                      )
+                                      : Container(
+                                        color: const Color(0xFFF2F2F2),
+                                        alignment: Alignment.center,
+                                        child: const Icon(
+                                          Icons.person_rounded,
+                                          size: 34,
+                                          color: AppTheme.deepGreen,
+                                        ),
+                                      ),
                             ),
-                            const SizedBox(height: 8),
-                            Row(
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(
-                                  Icons.star_rounded,
-                                  size: 21,
-                                  color: Color(0xFF2F2F2F),
-                                ),
-                                const SizedBox(width: 8),
                                 Text(
-                                  '${vm.profileRating}',
+                                  vm.profileName,
                                   style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.onSurface,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800,
+                                    color:
+                                        isDark
+                                            ? colorScheme.onSurface
+                                            : AppTheme.deepGreen,
                                   ),
                                 ),
                                 Text(
-                                  ' · ${vm.profileTransactions} transactions',
+                                  '${vm.profileUniversity} · Member since ${vm.profileSince}',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: mutedText,
                                   ),
                                 ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.star_rounded,
+                                      size: 21,
+                                      color: Color(0xFF2F2F2F),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${vm.profileRating}',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: colorScheme.onSurface,
+                                      ),
+                                    ),
+                                    Text(
+                                      ' · ${vm.profileTransactions} transactions',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: mutedText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${vm.xp} XP Points',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.sage,
+                                  ),
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${vm.xp} XP Points',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: AppTheme.sage,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
               ),
             ),
             SliverToBoxAdapter(
@@ -204,7 +217,10 @@ class ProfileScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: isDark ? colorScheme.onSurface : AppTheme.deepGreen,
+                                color:
+                                    isDark
+                                        ? colorScheme.onSurface
+                                        : AppTheme.deepGreen,
                               ),
                             ),
                             const SizedBox(height: 10),
@@ -215,17 +231,23 @@ class ProfileScreen extends StatelessWidget {
                                 ChoiceChip(
                                   label: const Text('Automatic'),
                                   selected:
-                                      themeCtx.selectionMode == ThemeSelectionMode.automatic,
-                                  onSelected: (_) => themeCtx.setAutomaticMode(),
+                                      themeCtx.selectionMode ==
+                                      ThemeSelectionMode.automatic,
+                                  onSelected:
+                                      (_) => themeCtx.setAutomaticMode(),
                                 ),
                                 ChoiceChip(
                                   label: const Text('Light'),
-                                  selected: themeCtx.selectionMode == ThemeSelectionMode.light,
+                                  selected:
+                                      themeCtx.selectionMode ==
+                                      ThemeSelectionMode.light,
                                   onSelected: (_) => themeCtx.setLightMode(),
                                 ),
                                 ChoiceChip(
                                   label: const Text('Dark'),
-                                  selected: themeCtx.selectionMode == ThemeSelectionMode.dark,
+                                  selected:
+                                      themeCtx.selectionMode ==
+                                      ThemeSelectionMode.dark,
                                   onSelected: (_) => themeCtx.setDarkMode(),
                                 ),
                               ],
@@ -255,7 +277,10 @@ class ProfileScreen extends StatelessWidget {
                               color: AppTheme.sage.withValues(alpha: 0.16),
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const Icon(Icons.auto_awesome_rounded, color: AppTheme.sageDark),
+                            child: const Icon(
+                              Icons.auto_awesome_rounded,
+                              color: AppTheme.sageDark,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           const Expanded(
@@ -264,7 +289,10 @@ class ProfileScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   'AI Outfit Stylist',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                                 SizedBox(height: 4),
                                 Text(
@@ -282,6 +310,12 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: _AIStylistImpactCard(),
+              ),
+            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -296,8 +330,10 @@ class ProfileScreen extends StatelessWidget {
                           builder: (context, snapshot) {
                             final event = snapshot.data;
                             final isRunning =
-                                event?.phase == ProfileCardAsyncPhase.ecoRunning ||
-                                event?.phase == ProfileCardAsyncPhase.impactRunning;
+                                event?.phase ==
+                                    ProfileCardAsyncPhase.ecoRunning ||
+                                event?.phase ==
+                                    ProfileCardAsyncPhase.impactRunning;
                             if (!isRunning) {
                               return const SizedBox.shrink();
                             }
@@ -321,11 +357,12 @@ class ProfileScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Consumer<ProfileViewModel>(
-                  builder: (context, vm, _) => SustainabilityImpactCard(
-                    impact: vm.impactSummary,
-                    message: vm.impactMessage,
-                    isLoading: vm.isGeneratingImpact,
-                  ),
+                  builder:
+                      (context, vm, _) => SustainabilityImpactCard(
+                        impact: vm.impactSummary,
+                        message: vm.impactMessage,
+                        isLoading: vm.isGeneratingImpact,
+                      ),
                 ),
               ),
             ),
@@ -333,16 +370,17 @@ class ProfileScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Consumer<ProfileViewModel>(
-                  builder: (context, vm, _) => SustainabilityProgressCard(
-                    xp: vm.xp,
-                    xpToNext: vm.xpToNext,
-                    levelInfo: SustainabilityLevelInfo(
-                      title: vm.ecoLevelInfo.title,
-                      nextTitle: vm.ecoLevelInfo.nextTitle,
-                      minXP: vm.ecoLevelInfo.minXP,
-                      maxXP: vm.ecoLevelInfo.maxXP,
-                    ),
-                  ),
+                  builder:
+                      (context, vm, _) => SustainabilityProgressCard(
+                        xp: vm.xp,
+                        xpToNext: vm.xpToNext,
+                        levelInfo: SustainabilityLevelInfo(
+                          title: vm.ecoLevelInfo.title,
+                          nextTitle: vm.ecoLevelInfo.nextTitle,
+                          minXP: vm.ecoLevelInfo.minXP,
+                          maxXP: vm.ecoLevelInfo.maxXP,
+                        ),
+                      ),
                 ),
               ),
             ),
@@ -351,7 +389,8 @@ class ProfileScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                 child: Text(
                   'Favorites',
-                  style: Theme.of(context).textTheme.titleLarge ??
+                  style:
+                      Theme.of(context).textTheme.titleLarge ??
                       const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -362,11 +401,17 @@ class ProfileScreen extends StatelessWidget {
             SliverToBoxAdapter(
               child: Consumer<BrowseViewModel>(
                 builder: (context, browseVm, _) {
-                  final savedListings = browseVm.filteredAndSorted.where((l) => browseVm.isSaved(l.id)).toList();
+                  final savedListings =
+                      browseVm.filteredAndSorted
+                          .where((l) => browseVm.isSaved(l.id))
+                          .toList();
                   if (savedListings.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('No favorites yet.', style: TextStyle(color: AppTheme.mutedForeground)),
+                      child: Text(
+                        'No favorites yet.',
+                        style: TextStyle(color: AppTheme.mutedForeground),
+                      ),
                     );
                   }
                   return SizedBox(
@@ -388,25 +433,40 @@ class ProfileScreen extends StatelessWidget {
                                 children: [
                                   Expanded(
                                     child: CachedNetworkImage(
-                                      imageUrl: item.imageURLs.isNotEmpty ? item.imageURLs[0] : item.imagePath,
+                                      imageUrl:
+                                          item.imageURLs.isNotEmpty
+                                              ? item.imageURLs[0]
+                                              : item.imagePath,
                                       fit: BoxFit.cover,
-                                      errorWidget: (_, __, ___) => const Icon(Icons.image_rounded),
+                                      errorWidget:
+                                          (_, __, ___) =>
+                                              const Icon(Icons.image_rounded),
                                     ),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(8),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           item.title,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
                                         Text(
-                                          PriceFormatter.formatCopFromNum(item.price),
-                                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.sage),
+                                          PriceFormatter.formatCopFromNum(
+                                            item.price,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.sage,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -463,9 +523,11 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       TabBar(
-                        labelColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
+                        labelColor:
+                            isDark ? colorScheme.primary : AppTheme.deepGreen,
                         unselectedLabelColor: mutedText,
-                        indicatorColor: isDark ? colorScheme.primary : AppTheme.deepGreen,
+                        indicatorColor:
+                            isDark ? colorScheme.primary : AppTheme.deepGreen,
                         tabs: const [
                           Tab(text: 'Activity Feed'),
                           Tab(text: 'My Listings'),
@@ -594,12 +656,25 @@ class ProfileScreen extends StatelessWidget {
                                                 children: [
                                                   if (listing.hasPrimaryImage)
                                                     CachedNetworkImage(
-                                                      imageUrl: listing.primaryImageUrl,
+                                                      imageUrl:
+                                                          listing
+                                                              .primaryImageUrl,
                                                       fit: BoxFit.cover,
-                                                      errorWidget: (_, __, ___) => const Icon(Icons.image_rounded),
+                                                      errorWidget:
+                                                          (
+                                                            _,
+                                                            __,
+                                                            ___,
+                                                          ) => const Icon(
+                                                            Icons.image_rounded,
+                                                          ),
                                                     )
                                                   else
-                                                    const Center(child: Icon(Icons.image_rounded)),
+                                                    const Center(
+                                                      child: Icon(
+                                                        Icons.image_rounded,
+                                                      ),
+                                                    ),
                                                   Positioned(
                                                     top: 8,
                                                     left: 8,
@@ -658,7 +733,9 @@ class ProfileScreen extends StatelessWidget {
                                                     ),
                                                   ),
                                                   Text(
-                                                    PriceFormatter.formatCop(listing.price),
+                                                    PriceFormatter.formatCop(
+                                                      listing.price,
+                                                    ),
                                                     style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
@@ -691,17 +768,34 @@ class ProfileScreen extends StatelessWidget {
                                                       const SizedBox(width: 8),
                                                       IconButton(
                                                         onPressed: () async {
-                                                          final confirmed = await _confirmDelete(context);
-                                                          if (!confirmed || !context.mounted) return;
+                                                          final confirmed =
+                                                              await _confirmDelete(
+                                                                context,
+                                                              );
+                                                          if (!confirmed ||
+                                                              !context.mounted)
+                                                            return;
 
-                                                          final queuedOffline = await vm.deleteListing(listing.id);
-                                                          if (!context.mounted) return;
+                                                          final queuedOffline =
+                                                              await vm
+                                                                  .deleteListing(
+                                                                    listing.id,
+                                                                  );
+                                                          if (!context.mounted)
+                                                            return;
 
-                                                          final message = queuedOffline
-                                                              ? 'Your clothing will be deleted when internet connection is restored.'
-                                                              : 'Clothing deleted successfully.';
-                                                          ScaffoldMessenger.of(context).showSnackBar(
-                                                            SnackBar(content: Text(message)),
+                                                          final message =
+                                                              queuedOffline
+                                                                  ? 'Your clothing will be deleted when internet connection is restored.'
+                                                                  : 'Clothing deleted successfully.';
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                message,
+                                                              ),
+                                                            ),
                                                           );
                                                         },
                                                         icon: const Icon(
@@ -735,27 +829,100 @@ class ProfileScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
                 child: Consumer<SessionViewModel>(
-                  builder: (context, session, _) => SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: session.isLoading
-                          ? null
-                          : () async {
-                              await session.signOut();
-                            },
-                      child: session.isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Log out'),
-                    ),
-                  ),
+                  builder:
+                      (context, session, _) => SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed:
+                              session.isLoading
+                                  ? null
+                                  : () async {
+                                    await session.signOut();
+                                  },
+                          child:
+                              session.isLoading
+                                  ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Text('Log out'),
+                        ),
+                      ),
                 ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AIStylistImpactCard extends StatelessWidget {
+  const _AIStylistImpactCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: FutureBuilder<AIStylistImpactStats>(
+          future: AIStylistImpactService().get30DayImpact(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 72,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final stats = snapshot.data;
+            if (stats == null) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'AI Stylist 30-Day Impact',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No analytics data yet. Events will populate after users open AI Stylist and return to the app.',
+                    style: textTheme.bodyMedium,
+                  ),
+                ],
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'AI Stylist 30-Day Impact',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text('AI Stylist users: ${stats.aiStylistUsers}'),
+                Text(
+                  'Returning AI Stylist users: ${stats.returningAiStylistUsers}',
+                ),
+                Text('Recommendation clicks: ${stats.recommendationClicks}'),
+                Text('Saved recommendations: ${stats.savedRecommendations}'),
+                Text(
+                  '30-day return rate: ${(stats.aiStylistReturnRate * 100).toStringAsFixed(1)}%',
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -775,9 +942,10 @@ class _BadgeCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: isLocked
-          ? const Color.fromRGBO(214, 221, 219, 0.46)
-          : const Color.fromRGBO(214, 221, 219, 0.30),
+      color:
+          isLocked
+              ? const Color.fromRGBO(214, 221, 219, 0.46)
+              : const Color.fromRGBO(214, 221, 219, 0.30),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
@@ -792,15 +960,16 @@ class _BadgeCard extends StatelessWidget {
             Stack(
               children: [
                 ColorFiltered(
-                  colorFilter: isLocked
-                      ? const ColorFilter.mode(
-                          Color(0xFFBDBDBD),
-                          BlendMode.modulate,
-                        )
-                      : const ColorFilter.mode(
-                          Colors.transparent,
-                          BlendMode.dst,
-                        ),
+                  colorFilter:
+                      isLocked
+                          ? const ColorFilter.mode(
+                            Color(0xFFBDBDBD),
+                            BlendMode.modulate,
+                          )
+                          : const ColorFilter.mode(
+                            Colors.transparent,
+                            BlendMode.dst,
+                          ),
                   child: Text(
                     badge.emoji,
                     style: const TextStyle(fontSize: 34),
@@ -836,31 +1005,36 @@ class _BadgeCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 12,
-                color: isLocked
-                    ? (isDark
-                        ? colorScheme.onSurface.withValues(alpha: 0.46)
-                        : const Color(0xFF9EB0B3))
-                    : (isDark
-                        ? colorScheme.onSurface.withValues(alpha: 0.72)
-                        : AppTheme.mutedForeground),
+                color:
+                    isLocked
+                        ? (isDark
+                            ? colorScheme.onSurface.withValues(alpha: 0.46)
+                            : const Color(0xFF9EB0B3))
+                        : (isDark
+                            ? colorScheme.onSurface.withValues(alpha: 0.72)
+                            : AppTheme.mutedForeground),
               ),
             ),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: isLocked
-                    ? (isDark
-                        ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.9)
-                        : const Color(0xFFD6DDDB))
-                    : AppTheme.accent.withValues(alpha: 0.2),
+                color:
+                    isLocked
+                        ? (isDark
+                            ? colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.9,
+                            )
+                            : const Color(0xFFD6DDDB))
+                        : AppTheme.accent.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: isLocked
-                      ? (isDark
-                          ? colorScheme.outline.withValues(alpha: 0.7)
-                          : const Color(0xFFD6DDDB))
-                      : AppTheme.accent.withValues(alpha: 0.3),
+                  color:
+                      isLocked
+                          ? (isDark
+                              ? colorScheme.outline.withValues(alpha: 0.7)
+                              : const Color(0xFFD6DDDB))
+                          : AppTheme.accent.withValues(alpha: 0.3),
                 ),
               ),
               child: Text(
@@ -868,13 +1042,14 @@ class _BadgeCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: isLocked
-                      ? (isDark
-                          ? colorScheme.onSurface.withValues(alpha: 0.92)
-                          : const Color(0xFF9CB1B5))
-                      : (isDark
-                          ? Colors.white.withValues(alpha: 0.90)
-                          : AppTheme.accent),
+                  color:
+                      isLocked
+                          ? (isDark
+                              ? colorScheme.onSurface.withValues(alpha: 0.92)
+                              : const Color(0xFF9CB1B5))
+                          : (isDark
+                              ? Colors.white.withValues(alpha: 0.90)
+                              : AppTheme.accent),
                 ),
               ),
             ),
