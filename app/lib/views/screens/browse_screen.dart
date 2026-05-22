@@ -19,6 +19,18 @@ class BrowseScreen extends StatelessWidget {
     final mutedText =
         isDark ? colorScheme.onSurface.withOpacity(0.72) : AppTheme.mutedForeground;
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        title: const Text('Browse', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_outlined),
+            onPressed: () => context.go('/cart'),
+            tooltip: 'Cart',
+          ),
+        ],
+      ),
       body: SafeArea(
         top: false,
         child: Consumer<BrowseViewModel>(

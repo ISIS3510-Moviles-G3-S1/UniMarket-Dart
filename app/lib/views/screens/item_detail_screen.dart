@@ -9,6 +9,7 @@ import '../../view_models/item_detail_view_model.dart';
 import '../../view_models/session_view_model.dart';
 import '../../models/item_detail.dart';
 import '../../models/seller.dart';
+import '../../models/cart_provider.dart';
 
 class ItemDetailScreen extends StatelessWidget {
   const ItemDetailScreen({super.key});
@@ -735,6 +736,24 @@ class _InfoSectionState extends State<_InfoSection> {
               label: const Text('Scan QR to Confirm Pickup'),
             ),
           ),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () {
+              final cart = Provider.of<CartProvider>(context, listen: false);
+              cart.addItem(CartItem(
+                id: item.id,
+                name: item.name,
+                seller: item.seller.name,
+                imageUrl: item.images.isNotEmpty ? item.images.first : '',
+                price: item.price,
+              ));
+              context.go('/cart');
+            },
+            icon: const Icon(Icons.shopping_cart_checkout),
+            label: const Text('Add to Cart'),
+          ),
+        ),
       ],
     );
   }
