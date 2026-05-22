@@ -23,19 +23,47 @@ class CartProvider extends ChangeNotifier {
 
   double get subtotal => _items.fold(0, (sum, item) => sum + item.price);
 
-  void addItem(CartItem item) {
-    print('Adding item to cart: \\${item.id}');
-    _items.add(item);
-    notifyListeners();
+  Future<void> addItem(CartItem item) async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 300)); // Simulate async operation
+      print('Adding item to cart: \\${item.id}');
+      _items.add(item);
+      notifyListeners();
+    } catch (e, stack) {
+      print('Error adding item to cart: \\${e}\n\\${stack}');
+      rethrow;
+    }
   }
 
-  void removeItem(String id) {
-    _items.removeWhere((item) => item.id == id);
-    notifyListeners();
+  Future<void> removeItem(String id) async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 200));
+      _items.removeWhere((item) => item.id == id);
+      notifyListeners();
+    } catch (e, stack) {
+      print('Error removing item from cart: \\${e}\n\\${stack}');
+      rethrow;
+    }
   }
 
-  void clearCart() {
-    _items.clear();
-    notifyListeners();
+  Future<void> clearCart() async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 200));
+      _items.clear();
+      notifyListeners();
+    } catch (e, stack) {
+      print('Error clearing cart: \\${e}\n\\${stack}');
+      rethrow;
+    }
+  }
+  Future<void> loadCart() async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 500));
+      // TODO: Load cart from storage
+      notifyListeners();
+    } catch (e, stack) {
+      print('Error loading cart: \\${e}\n\\${stack}');
+      rethrow;
+    }
   }
 }
