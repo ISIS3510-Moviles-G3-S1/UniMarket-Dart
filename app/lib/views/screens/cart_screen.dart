@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/cart_provider.dart';
 
 class CartScreen extends StatelessWidget {
@@ -10,6 +11,10 @@ class CartScreen extends StatelessWidget {
     final cart = Provider.of<CartProvider>(context);
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/browse'),
+        ),
         title: const Text('Cart'),
         actions: [
           TextButton(
@@ -51,7 +56,7 @@ class CartScreen extends StatelessWidget {
                               icon: const Icon(Icons.info_outline, color: Colors.blue),
                               tooltip: 'View Details',
                               onPressed: () {
-                                Navigator.of(context).pushNamed('/item/${item.id}');
+                                context.go('/item/${item.id}');
                               },
                             ),
                             IconButton(
@@ -125,7 +130,7 @@ class CartScreen extends StatelessWidget {
                         icon: const Icon(Icons.shopping_bag),
                         label: const Text('Continue Shopping'),
                         onPressed: () {
-                          Navigator.of(context).pushNamed('/browse');
+                          context.go('/browse');
                         },
                       ),
                     ],

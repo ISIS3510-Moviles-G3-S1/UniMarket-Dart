@@ -137,11 +137,7 @@ GoRouter createAppRouter(SessionViewModel session) {
         pageBuilder: (_, __) => const NoTransitionPage(child: AIStylistView()),
       ),
 
-      /// CART
-      GoRoute(
-        path: '/cart',
-        builder: (_, __) => const CartScreen(),
-      ),
+
 
       /// MAIN APP
       StatefulShellRoute.indexedStack(
@@ -166,6 +162,11 @@ GoRouter createAppRouter(SessionViewModel session) {
                 pageBuilder:
                     (context, state) =>
                         const NoTransitionPage(child: BrowseScreen()),
+              ),
+              GoRoute(
+                path: '/cart',
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: CartScreen()),
               ),
             ],
           ),
