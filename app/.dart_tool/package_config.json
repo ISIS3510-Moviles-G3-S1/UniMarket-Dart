@@ -146,6 +146,12 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "code_assets",
+      "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/code_assets-1.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
       "name": "code_builder",
       "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/code_builder-4.11.1",
       "packageUri": "lib/",
@@ -428,6 +434,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "hooks",
+      "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/hooks-1.0.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.10"
+    },
+    {
       "name": "http",
       "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/http-1.6.0",
       "packageUri": "lib/",
@@ -588,6 +600,12 @@
       "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/mockito-5.4.4",
       "packageUri": "lib/",
       "languageVersion": "3.1"
+    },
+    {
+      "name": "native_toolchain_c",
+      "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/native_toolchain_c-0.17.6",
+      "packageUri": "lib/",
+      "languageVersion": "3.10"
     },
     {
       "name": "nested",
@@ -770,6 +788,12 @@
       "languageVersion": "2.17"
     },
     {
+      "name": "record_use",
+      "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/record_use-0.6.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.10"
+    },
+    {
       "name": "rxdart",
       "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/rxdart-0.28.0",
       "packageUri": "lib/",
@@ -872,6 +896,12 @@
       "languageVersion": "3.7"
     },
     {
+      "name": "sqflite_common_ffi",
+      "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_common_ffi-2.4.0+3",
+      "packageUri": "lib/",
+      "languageVersion": "3.10"
+    },
+    {
       "name": "sqflite_darwin",
       "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_darwin-2.4.2",
       "packageUri": "lib/",
@@ -882,6 +912,12 @@
       "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/sqflite_platform_interface-2.4.0",
       "packageUri": "lib/",
       "languageVersion": "3.5"
+    },
+    {
+      "name": "sqlite3",
+      "rootUri": "file:///C:/Users/Isabella%20Caputi/AppData/Local/Pub/Cache/hosted/pub.dev/sqlite3-3.3.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
     },
     {
       "name": "stack_trace",
