@@ -14,6 +14,7 @@ import 'core/app_router.dart';
 import 'core/notification_service.dart';
 import 'core/lru_cache_service.dart';
 import 'core/theme/theme_context.dart';
+import 'services/outfit_sync_service.dart';
 import 'view_models/browse_view_model.dart';
 import 'view_models/home_view_model.dart';
 import 'view_models/profile_view_model.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox<dynamic>('listing_drafts_v1');
   await Hive.openBox<dynamic>('browse_view_model');
+  await Hive.openBox('ai_outfit_analyses_v1');
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -61,6 +63,10 @@ class UniMarketApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeContext()),
+
+        ChangeNotifierProvider(
+          create: (_) => OutfitSyncService()..start(),
+        ),
 
         Provider<NotificationService>(create: (_) => notificationService),
 
