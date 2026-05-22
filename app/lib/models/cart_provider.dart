@@ -24,6 +24,7 @@ class CartProvider extends ChangeNotifier {
   double get subtotal => _items.fold(0, (sum, item) => sum + item.price);
 
   void addItem(CartItem item) {
+    print('Adding item to cart: \\${item.id}');
     _items.add(item);
     notifyListeners();
   }

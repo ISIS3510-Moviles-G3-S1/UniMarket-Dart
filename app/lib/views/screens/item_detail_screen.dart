@@ -740,6 +740,7 @@ class _InfoSectionState extends State<_InfoSection> {
           width: double.infinity,
           child: FilledButton.icon(
             onPressed: () {
+              print('Add to Cart pressed for item: \\${item.id}');
               final cart = Provider.of<CartProvider>(context, listen: false);
               cart.addItem(CartItem(
                 id: item.id,
