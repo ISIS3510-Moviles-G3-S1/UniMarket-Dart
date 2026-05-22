@@ -31,6 +31,9 @@ class CustomBottomNavBar extends StatelessWidget {
         case 4:
           context.go('/profile');
           break;
+        case 5:
+          context.go('/cart');
+          break;
       }
       onTap(index);
     }
@@ -71,6 +74,12 @@ class CustomBottomNavBar extends StatelessWidget {
               index: 4,
               currentIndex: currentIndex,
               onTap: () => _handleTap(4),
+            ),
+            _NavIcon(
+              icon: Icons.shopping_cart,
+              index: 5,
+              currentIndex: currentIndex,
+              onTap: () => _handleTap(5),
             ),
           ],
         ),

@@ -16,25 +16,31 @@ import '../core/recommendation_service.dart';
 import '../core/recommendation_system.dart';
 
 class BrowseViewModel extends ChangeNotifier {
-    // --- Search Results Cache ---
-    // Guarda los resultados de búsqueda por query (en memoria y Hive)
+    // cache first
+
+    // Guarda los resultados de búsqueda por query en ambas cachés (memoria y local storage)
     Future<void> cacheSearchResults(String query, List<Listing> results) async {
+      // LRU en memoria: mantiene los resultados más recientes y usados
       _memoryCache.save('search_result_\u001f$query', results.map((e) => e.toJson()).toList());
+      // Local storage: persistencia para acceso offline
       final box = await Hive.openBox<List>('search_results_cache');
       await box.put('search_result_\u001f$query', results.map((e) => e.toJson()).toList());
     }
 
-    // Recupera resultados cacheados para una query
+    // Recupera resultados cacheados para una query siguiendo la estrategia cache first
     Future<List<Listing>?> getCachedSearchResults(String query) async {
+      // 1. Buscar en la caché en memoria (LRU)
       final mem = _memoryCache.retrieve('search_result_\u001f$query');
       if (mem != null) {
         return (mem as List).map((json) => Listing.fromJson(json)).toList();
       }
+      // 2. Si no está en memoria, buscar en local storage
       final box = await Hive.openBox<List>('search_results_cache');
       final cached = box.get('search_result_\u001f$query');
       if (cached != null) {
         return (cached as List).map((json) => Listing.fromJson(json)).toList();
       }
+      // 3. Si no hay datos en caché, retornar null para indicar que se debe consultar remoto
       return null;
     }
   final FypFavRelationStorage _favStorage = FypFavRelationStorage();
@@ -95,16 +101,27 @@ class BrowseViewModel extends ChangeNotifier {
     _listenListings();
   }
 
+
+  // --- CACHE STRATEGY GUIDE: Catálogo ---
+  // Estrategia "cache first" para el catálogo:
+  // 1. Almacena el catálogo en memoria (LRU) para acceso rápido.
+  // 2. También lo guarda en local storage para persistencia offline.
+  // 3. Al recuperar, primero busca en memoria y luego en local storage.
   Future<void> cacheCatalogSnapshot(Map<String, dynamic> catalog) async {
+    // LRU en memoria
     _memoryCache.save('catalog', catalog);
+    // Local storage
     await _localStorage.put('catalog_snapshot', catalog);
     print('Caching catalog snapshot: \\n');
     print(catalog.toString());
   }
 
+  // Recupera el catálogo siguiendo la estrategia cache first
   Map<String, dynamic>? getCachedCatalog() {
+    // 1. Buscar en memoria (LRU)
+    // 2. Si no está, buscar en local storage
     return _memoryCache.retrieve('catalog') ??
-        _localStorage.get('catalog_snapshot') as Map<String, dynamic>?;
+      _localStorage.get('catalog_snapshot') as Map<String, dynamic>?;
   }
 
   void logCachedCatalog() {
@@ -118,14 +135,24 @@ class BrowseViewModel extends ChangeNotifier {
     debugPrint(message);
   }
 
+
+  // Estrategia "cache first" para recomendaciones:
+  // 1. Guarda las recomendaciones en memoria (LRU) para acceso inmediato.
+  // 2. También las almacena en local storage para persistencia.
+  // 3. Al recuperar, primero busca en memoria y luego en local storage.
   Future<void> cacheRecommendationsSnapshot(Map<String, dynamic> recommendations) async {
+    // LRU en memoria
     _memoryCache.save('recommendations', recommendations);
+    // Local storage
     await _localStorage.put('recommendations_snapshot', recommendations);
   }
 
+  // Recupera las recomendaciones siguiendo la estrategia cache first
   Map<String, dynamic>? getCachedRecommendations() {
+    // 1. Buscar en memoria (LRU)
+    // 2. Si no está, buscar en local storage
     return _memoryCache.retrieve('recommendations') ??
-        _localStorage.get('recommendations_snapshot') as Map<String, dynamic>?;
+      _localStorage.get('recommendations_snapshot') as Map<String, dynamic>?;
   }
 
   Future<void> persistCatalogAndRecommendations(Map<String, dynamic> catalog, Map<String, dynamic> recommendations) async {
@@ -133,14 +160,14 @@ class BrowseViewModel extends ChangeNotifier {
     await cacheRecommendationsSnapshot(recommendations);
   }
 
-  // Guarda las recomendaciones de FYP en Hive
+  // Guarda las recomendaciones de FYP
   Future<void> _cacheForYouRecommendations(List<Listing> recommendations) async {
     final box = await Hive.openBox<List>('fyp_cache');
     await box.put('cached_fyp', recommendations.map((listing) => listing.toJson()).toList());
     debugPrint('Recomendaciones de FYP guardadas en Hive.');
   }
 
-  // Recupera las recomendaciones de FYP desde Hive
+  // Recupera las recomendaciones de FYP
   Future<List<Listing>> _getCachedForYouRecommendations() async {
     final box = await Hive.openBox<List>('fyp_cache');
     final cachedData = box.get('cached_fyp', defaultValue: []);
@@ -148,14 +175,14 @@ class BrowseViewModel extends ChangeNotifier {
   }
 
 
-  // Guarda los favoritos en Hive
+  // Guarda los favoritos
   Future<void> _cacheFavorites() async {
     final box = await Hive.openBox<Map>('favorites_cache');
     await box.put('cached_favorites', _savedItems);
     debugPrint('Favoritos guardados en Hive.');
   }
 
-  // Recupera los favoritos desde Hive
+  // Recupera los favoritos
   Future<void> _getCachedFavorites() async {
     final box = await Hive.openBox<Map>('favorites_cache');
     final cachedData = box.get('cached_favorites', defaultValue: {});
@@ -326,7 +353,7 @@ class BrowseViewModel extends ChangeNotifier {
       return;
     }
     if (isNowSaved) {
-      // Guardar relación en Hive
+      // Guardar relación 
       await _favStorage.addRelation(favId: userId, fypItemId: itemId);
       AnalyticsService.instance.track(
         AnalyticsEvent.userMeaningfulInteraction(
@@ -337,7 +364,7 @@ class BrowseViewModel extends ChangeNotifier {
         ),
       );
     } else {
-      // Eliminar relación de Hive
+      // Eliminar relación 
       await _favStorage.removeRelation(favId: userId, fypItemId: itemId);
     }
 
@@ -469,7 +496,7 @@ class BrowseViewModel extends ChangeNotifier {
     final results = await Future.wait([favoritesTask, recentSearchesTask, tagsTask]);
     final recommendations = results.expand((list) => list).toList();
 
-    await _cacheForYouRecommendations(recommendations); // Guardar en Hive
+    await _cacheForYouRecommendations(recommendations);
     return recommendations;
   }
 
@@ -709,13 +736,12 @@ class BrowseViewModel extends ChangeNotifier {
   Future<void> performSearchWithIsolate(String query) async {
     debugPrint('Starting search with isolate...');
 
-    // Crear un ReceivePort para recibir resultados del Isolate
+    //ReceivePort para recibir resultados del Isolate
     final receivePort = ReceivePort();
 
-    // Crear un Isolate y pasarle los datos necesarios
+    //creo isolate
     await Isolate.spawn(_searchIsolateEntry, [query, _listings, receivePort.sendPort]);
 
-    // Escuchar los resultados del Isolate
     receivePort.listen((filteredResults) {
       debugPrint('Search results received from isolate: ${filteredResults.length} items.');
       _listings = List<Listing>.from(filteredResults);
@@ -723,19 +749,19 @@ class BrowseViewModel extends ChangeNotifier {
     });
   }
 
-  // Método que se ejecuta en el Isolate
+  //ejecuta isolate
   static void _searchIsolateEntry(List<dynamic> args) {
     final query = args[0] as String;
     final listings = args[1] as List<Listing>;
     final sendPort = args[2] as SendPort;
 
-    // Filtrar los productos según el query
+    //filtra segun query
     final filteredResults = listings.where((listing) {
       return listing.title.toLowerCase().contains(query.toLowerCase()) ||
              listing.tags.any((tag) => tag.toLowerCase().contains(query.toLowerCase()));
     }).toList();
 
-    // Enviar los resultados de vuelta al hilo principal
+    //envia resultados al main isolate
     sendPort.send(filteredResults);
   }
 

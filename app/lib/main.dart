@@ -8,6 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
+import 'models/cart_provider.dart';
 
 import 'core/analytics_service.dart';
 import 'core/app_router.dart';
@@ -102,7 +103,7 @@ class UniMarketApp extends StatelessWidget {
             return previous;
           },
         ),
-
+        ChangeNotifierProvider(create: (_) => CartProvider()),
         ProxyProvider<SessionViewModel, GoRouter>(
           update: (_, session, __) => createAppRouter(session),
         ),
