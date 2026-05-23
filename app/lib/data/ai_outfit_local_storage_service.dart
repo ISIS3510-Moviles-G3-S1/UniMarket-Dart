@@ -5,8 +5,11 @@ import '../models/ai_outfit_analysis.dart';
 class AIOutfitLocalStorageService {
   static const String boxName = 'ai_outfit_analyses_v1';
 
+  Box? _boxCache;
   Future<Box> _openBox() async {
-    return Hive.openBox(boxName);
+    if (_boxCache?.isOpen == true) return _boxCache!;
+    _boxCache = await Hive.openBox(boxName);
+    return _boxCache!;
   }
 
   Future<void> saveAnalysis(AIOutfitAnalysis analysis) async {

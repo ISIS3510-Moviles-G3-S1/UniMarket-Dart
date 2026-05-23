@@ -16,6 +16,8 @@ import '../core/image_analysis_service.dart';
 import 'package:hive/hive.dart';
 
 class ListingService {
+    Box? _listingsBoxCache;
+
   ListingService() {
     _syncDriver = this;
     _initializeOnce();
@@ -67,8 +69,14 @@ class ListingService {
   }
 
   // Stores listings in Hive using a LinkedHashMap so access order is preserved.
+  Future<Box> _openListingsBox() async {
+    if (_listingsBoxCache?.isOpen == true) return _listingsBoxCache!;
+    _listingsBoxCache = await Hive.openBox(_listedCacheBoxName);
+    return _listingsBoxCache!;
+  }
+
   Future<void> _cacheListings(List<Listing> listings) async {
-    final box = await Hive.openBox(_listedCacheBoxName);
+    final box = await _openListingsBox();
     final cache = _readLinkedListingCache(box.get(_cachedListingsKey));
 
     for (final listing in listings) {
@@ -287,7 +295,7 @@ class ListingService {
   static bool _canUseFirestore(User? user) => _isVerifiedStudentUser(user);
 
   Future<void> _upsertCachedListing(Listing listing) async {
-    final box = await Hive.openBox(_listedCacheBoxName);
+    final box = await _openListingsBox();
     final cache = _readLinkedListingCache(box.get(_cachedListingsKey));
     _touchListingCache(cache, listing.id, listing.toJson());
     final trimmed = _trimLinkedListingCache(cache, _maxCachedListings);
@@ -296,7 +304,7 @@ class ListingService {
 
   Future<void> _removeCachedListing(String listingId) async {
     if (listingId.trim().isEmpty) return;
-    final box = await Hive.openBox(_listedCacheBoxName);
+    final box = await _openListingsBox();
     final cache = _readLinkedListingCache(box.get(_cachedListingsKey));
     final existing = cache[listingId];
     if (existing != null && existing is Map<String, dynamic>) {
@@ -309,7 +317,7 @@ class ListingService {
 
   Future<void> _purgeCachedListing(String listingId) async {
     if (listingId.trim().isEmpty) return;
-    final box = await Hive.openBox(_listedCacheBoxName);
+    final box = await _openListingsBox();
     final cache = _readLinkedListingCache(box.get(_cachedListingsKey));
     cache.remove(listingId);
     final trimmed = _trimLinkedListingCache(cache, _maxCachedListings);

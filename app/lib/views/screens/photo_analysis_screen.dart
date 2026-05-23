@@ -54,6 +54,8 @@ class _PhotoAnalysisScreenState extends State<PhotoAnalysisScreen> {
     setState(() {
       loading = true;
     });
+    // Debounce: short delay to avoid double-triggering
+    await Future.delayed(const Duration(milliseconds: 200));
     final connectivity = Connectivity();
     final connectivityResults = await connectivity.checkConnectivity();
     final isOnline = connectivityResults.isNotEmpty && !connectivityResults.contains(ConnectivityResult.none);
@@ -107,7 +109,7 @@ class _PhotoAnalysisScreenState extends State<PhotoAnalysisScreen> {
           timestamp: DateTime.now().millisecondsSinceEpoch,
         );
         await PendingPhotoAnalysisStorage().insert(pending);
-        await _analyzeFraming();
+        await _analyzeFraming(bytes: bytes);
       } catch (e) {
         if (!mounted) return;
         setState(() {
@@ -125,11 +127,11 @@ class _PhotoAnalysisScreenState extends State<PhotoAnalysisScreen> {
     }
   }
 
-  Future<void> _analyzeFraming() async {
+  Future<void> _analyzeFraming({List<int>? bytes}) async {
     await Future.delayed(const Duration(milliseconds: 100));
     try {
-      final bytes = await File(widget.photo.path).readAsBytes();
-      final decoded = img.decodeImage(bytes);
+      final imageBytes = bytes ?? await File(widget.photo.path).readAsBytes();
+      final decoded = img.decodeImage(imageBytes);
       if (decoded != null) {
         // Improved framing: sample center and border, estimate object area by color difference
         final w = decoded.width, h = decoded.height;

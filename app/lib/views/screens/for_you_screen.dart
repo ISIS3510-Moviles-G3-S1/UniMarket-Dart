@@ -119,12 +119,11 @@ class _ListingCard extends StatelessWidget {
                             color: isDark ? colorScheme.primary : colorScheme.primary.withOpacity(0.55),
                           ),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Match',
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? colorScheme.onPrimaryContainer : colorScheme.primary,
                           ),
                         ),
                       ),
@@ -152,7 +151,7 @@ class _ListingCard extends StatelessWidget {
                     children: [
                       Text(
                         PriceFormatter.formatCop(listing.price),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.sage,
@@ -187,21 +186,12 @@ class ForYouScreen extends StatelessWidget {
     final mutedText = isDark ? colorScheme.onSurface.withOpacity(0.72) : AppTheme.mutedForeground;
     return Consumer<BrowseViewModel>(
       builder: (context, vm, _) {
-        final searchLower = vm.search.toLowerCase();
-        final filteredItems = vm.forYouRecommendations.where((item) {
-          return item.title.toLowerCase().contains(searchLower) ||
-            item.tags.any((tag) => tag.toLowerCase().contains(searchLower));
-        }).toList();
-        final matchingItems = vm.countRecommendationMatches(filteredItems);
-        final totalItems = filteredItems.length;
-        final matchPercentage = vm.recommendationMatchPercentage(filteredItems);
         return Scaffold(
           body: SafeArea(
             top: false,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Responsive top padding for tab bar
                 SizedBox(height: MediaQuery.of(context).size.height * 0.04),
                 Container(
                   color: colorScheme.surface,
@@ -215,9 +205,9 @@ class ForYouScreen extends StatelessWidget {
                             foregroundColor: colorScheme.onSurface,
                           ),
                           onPressed: () => Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => BrowseScreen()),
+                            MaterialPageRoute(builder: (_) => const BrowseScreen()),
                           ),
-                          child: Text('Browse', style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: const Text('Browse', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ),
                       Expanded(
@@ -226,8 +216,8 @@ class ForYouScreen extends StatelessWidget {
                             backgroundColor: colorScheme.primary.withOpacity(0.12),
                             foregroundColor: colorScheme.primary,
                           ),
-                          onPressed: () {}, // Already on For You
-                          child: Text('For You', style: TextStyle(fontWeight: FontWeight.bold)),
+                          onPressed: () {},
+                          child: const Text('For You', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
@@ -262,54 +252,71 @@ class ForYouScreen extends StatelessWidget {
                 Expanded(
                   child: Stack(
                     children: [
-                      ListView(
-                        padding: const EdgeInsets.all(12),
-                        children: [
-                          Text(
-                            '${filteredItems.length} items',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: mutedText,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$matchingItems of $totalItems recommendations match your style and size '
-                            '(${matchPercentage.toStringAsFixed(0)}%)',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          if (filteredItems.isEmpty)
-                            Center(
-                              child: Text(
-                                'No recommendations found.',
-                                style: TextStyle(color: mutedText),
+                      Selector<BrowseViewModel, List<Listing>>(
+                        selector: (_, vm) {
+                          final searchLower = vm.search.toLowerCase();
+                          return vm.forYouRecommendations.where((item) {
+                            return item.title.toLowerCase().contains(searchLower) ||
+                              item.tags.any((tag) => tag.toLowerCase().contains(searchLower));
+                          }).toList();
+                        },
+                        builder: (context, filteredItems, _) {
+                          final browseVm = context.read<BrowseViewModel>();
+                          final matchingItems = browseVm.countRecommendationMatches(filteredItems);
+                          final totalItems = filteredItems.length;
+                          final matchPercentage = browseVm.recommendationMatchPercentage(filteredItems);
+                          return ListView(
+                            padding: const EdgeInsets.all(12),
+                            children: [
+                              Text(
+                                '${filteredItems.length} items',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: mutedText,
+                                ),
                               ),
-                            )
-                          else
-                            GridView.builder(
-                              shrinkWrap: true,
-                              physics: const ClampingScrollPhysics(),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                childAspectRatio: 0.72,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
+                              const SizedBox(height: 4),
+                              Text(
+                                '$matchingItems of $totalItems recommendations match your style and size '
+                                '(${matchPercentage.toStringAsFixed(0)}%)',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.primary,
+                                ),
                               ),
-                              itemCount: filteredItems.length,
-                              itemBuilder: (context, index) => _ListingCard(
-                                listing: filteredItems[index],
-                                vm: vm,
-                                isMatch: vm.isRecommendationMatch(filteredItems[index]),
-                                onTap: () => context.push('/item/${filteredItems[index].id}'),
-                              ),
-                            ),
-                        ],
+                              const SizedBox(height: 12),
+                              if (filteredItems.isEmpty)
+                                Center(
+                                  child: Text(
+                                    'No recommendations found.',
+                                    style: TextStyle(color: mutedText),
+                                  ),
+                                )
+                              else
+                                GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const ClampingScrollPhysics(),
+                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.72,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                  ),
+                                  cacheExtent: 500,
+                                  addAutomaticKeepAlives: false,
+                                  itemCount: filteredItems.length,
+                                  itemBuilder: (context, index) => _ListingCard(
+                                    listing: filteredItems[index],
+                                    vm: browseVm,
+                                    isMatch: browseVm.isRecommendationMatch(filteredItems[index]),
+                                    onTap: () => context.push('/item/${filteredItems[index].id}'),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
                       ),
                       if (vm.showFilters) FilterSheet(vm: vm),
                     ],
