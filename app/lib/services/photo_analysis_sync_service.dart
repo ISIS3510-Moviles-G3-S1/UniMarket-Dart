@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import '../core/photo_quality_vision_service.dart';
-import 'pending_photo_analysis_storage.dart';
+import '../data/pending_photo_analysis_storage.dart';
 
 class PhotoAnalysisSyncService {
   final PendingPhotoAnalysisStorage _storage = PendingPhotoAnalysisStorage();

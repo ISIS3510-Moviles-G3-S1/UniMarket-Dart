@@ -10,6 +10,10 @@ import '../../view_models/session_view_model.dart';
 import '../../models/item_detail.dart';
 import '../../models/seller.dart';
 import '../../models/cart_provider.dart';
+import '../../models/listing.dart';
+import '../../models/listing_kind.dart';
+import '../donation_request_sheet.dart';
+import '../propose_trade_sheet.dart';
 
 class ItemDetailScreen extends StatelessWidget {
   const ItemDetailScreen({super.key});
@@ -18,9 +22,6 @@ class ItemDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    final backTextColor = isDark
-        ? colorScheme.onSurface.withValues(alpha: 0.78)
-        : AppTheme.mutedForeground;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -63,9 +64,9 @@ class ItemDetailScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (item != null) ...[
-                              _Gallery(item: item!, vm: vm),
+                              _Gallery(item: item, vm: vm),
                               const SizedBox(height: 12),
-                              _InfoSection(item: item!, vm: vm),
+                              _InfoSection(item: item, vm: vm),
                             ],
                           ],
                         ),
@@ -727,41 +728,65 @@ class _InfoSectionState extends State<_InfoSection> {
               label: const Text('Generate Meetup QR'),
             ),
           ),
-        if (canScanAsBuyer)
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () => context.push('/meetup/scan'),
-              icon: const Icon(Icons.qr_code_scanner_rounded),
-              label: const Text('Scan QR to Confirm Pickup'),
+        if (canScanAsBuyer) ...[
+          if (item.exchangeType == 'donate' || (vm.rawListing != null && vm.rawListing!.kind == ListingKind.donation))
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: vm.rawListing == null
+                    ? null
+                    : () => DonationRequestSheet.show(context, vm.rawListing!),
+                icon: const Icon(Icons.volunteer_activism_outlined),
+                label: const Text('Claim Donation'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.deepGreen,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            )
+          else if (item.exchangeType == 'swap' || (vm.rawListing != null && vm.rawListing!.kind == ListingKind.barter))
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: vm.rawListing == null
+                    ? null
+                    : () => ProposeTradeSheet.show(context, vm.rawListing!),
+                icon: const Icon(Icons.sync_alt_rounded),
+                label: const Text('Propose Trade'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.sage,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () async {
+                  print('Add to Cart pressed for item: \\${item.id}');
+                  final cart = Provider.of<CartProvider>(context, listen: false);
+                  try {
+                    await cart.addItem(CartItem(
+                      id: item.id,
+                      name: item.name,
+                      seller: item.seller.name,
+                      imageUrl: item.images.isNotEmpty ? item.images.first : '',
+                      price: item.price,
+                    ));
+                    context.go('/cart');
+                  } catch (e, stack) {
+                    print('Error in Add to Cart button: \\${e}\n\\${stack}');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to add item to cart.')),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.shopping_cart_checkout),
+                label: const Text('Add to Cart'),
+              ),
             ),
-          ),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: () async {
-              print('Add to Cart pressed for item: \\${item.id}');
-              final cart = Provider.of<CartProvider>(context, listen: false);
-              try {
-                await cart.addItem(CartItem(
-                  id: item.id,
-                  name: item.name,
-                  seller: item.seller.name,
-                  imageUrl: item.images.isNotEmpty ? item.images.first : '',
-                  price: item.price,
-                ));
-                context.go('/cart');
-              } catch (e, stack) {
-                print('Error in Add to Cart button: \\${e}\n\\${stack}');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to add item to cart.')),
-                );
-              }
-            },
-            icon: const Icon(Icons.shopping_cart_checkout),
-            label: const Text('Add to Cart'),
-          ),
-        ),
+        ],
       ],
     );
   }

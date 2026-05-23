@@ -10,6 +10,7 @@ import '../view_models/browse_view_model.dart';
 
 class ItemDetailViewModel extends ChangeNotifier {
   ItemDetail? _item;
+  Listing? _rawListing;
   final ListingService _listingService = ListingService();
   List<Map<String, dynamic>> _similarItems = const [];
   int _activeImageIndex = 0;
@@ -19,6 +20,7 @@ class ItemDetailViewModel extends ChangeNotifier {
   bool _lastUpdateWasOffline = false;
 
   ItemDetail? get item => _item;
+  Listing? get rawListing => _rawListing;
   int get activeImageIndex => _activeImageIndex;
   bool get saved => _saved;
   bool get messageSent => _messageSent;
@@ -29,6 +31,7 @@ class ItemDetailViewModel extends ChangeNotifier {
   Future<void> loadItem(String id) async {
     final listing = await _listingService.getListingById(id);
     if (listing != null) {
+        _rawListing = listing;
         final allImages = [
           ...listing.imageURLs.where((url) => url.trim().isNotEmpty),
           if (listing.imagePath.trim().isNotEmpty) listing.imagePath.trim(),
@@ -59,6 +62,7 @@ class ItemDetailViewModel extends ChangeNotifier {
         final allListings = await _listingService.getListings().first;
         _similarItems = _buildSimilarItems(currentListingId: id, listings: allListings);
     } else {
+      _rawListing = null;
       _item = null;
       _similarItems = const [];
     }

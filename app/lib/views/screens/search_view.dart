@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/browse_view_model.dart';
+import '../../models/listing.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 class SearchView extends StatefulWidget {
@@ -42,7 +43,7 @@ class _SearchViewState extends State<SearchView> {
         _loading = false;
       });
       // Guarda en cache
-      await browseViewModel.saveSearchHistoryAndCache(query, filtered.map((e) => e.value).toList());
+      await browseViewModel.saveSearchHistoryAndCache(query, filtered.map((e) => Listing.fromJson(Map<String, dynamic>.from(e.value))).toList());
     } else {
       // Offline: busca en cache de resultados
       final cached = await browseViewModel.getCachedSearchResults(query);

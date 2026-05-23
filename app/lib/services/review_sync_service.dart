@@ -6,13 +6,13 @@ class ReviewSyncService {
   final PendingReviewStorage _storage = PendingReviewStorage();
   final Future<void> Function(Map<String, dynamic> review) sendReviewToBackend;
   late final Connectivity _connectivity;
-  late final Stream<ConnectivityResult> _connectivityStream;
+  late final Stream<List<ConnectivityResult>> _connectivityStream;
 
   ReviewSyncService({required this.sendReviewToBackend}) {
     _connectivity = Connectivity();
     _connectivityStream = _connectivity.onConnectivityChanged;
-    _connectivityStream.listen((result) {
-      if (result != ConnectivityResult.none) {
+    _connectivityStream.listen((results) {
+      if (results.isNotEmpty && results.any((r) => r != ConnectivityResult.none)) {
         syncPendingReviews();
       }
     });

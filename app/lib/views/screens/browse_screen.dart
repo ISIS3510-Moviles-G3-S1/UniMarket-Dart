@@ -9,6 +9,7 @@ import '../../models/listing.dart';
 import '../../models/cart_provider.dart';
 import '../widgets/filter_sheet.dart';
 import 'for_you_screen.dart';
+import '../donations_browse_screen.dart';
 
 class BrowseScreen extends StatelessWidget {
   const BrowseScreen({super.key});
@@ -25,6 +26,13 @@ class BrowseScreen extends StatelessWidget {
         elevation: 0,
         title: const Text('Browse', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.volunteer_activism_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const DonationsBrowseScreen()),
+            ),
+            tooltip: 'Donations',
+          ),
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
             onPressed: () => context.go('/cart'),
@@ -97,6 +105,14 @@ class BrowseScreen extends StatelessWidget {
                                 hintText: 'Search items...'
                               ),
                             ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const DonationsBrowseScreen()),
+                            ),
+                            icon: const Icon(Icons.volunteer_activism_outlined),
+                            color: colorScheme.primary,
+                            tooltip: 'Donations',
                           ),
                           IconButton(
                             onPressed: () => vm.showFilters = true,

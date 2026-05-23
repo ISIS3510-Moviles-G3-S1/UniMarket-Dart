@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
+import 'listing_kind.dart';
 
 /// Firestore-backed listing status values.
 ///
 /// These helpers keep the app's listing states consistent when we count sold
 /// items for seller performance feedback.
-enum ListingStatus { active, sold, reserved, archived }
+enum ListingStatus { active, sold, reserved, archived, tradeLocked }
 
 String listingStatusToString(ListingStatus status) {
   switch (status) {
@@ -17,6 +18,8 @@ String listingStatusToString(ListingStatus status) {
       return 'archived';
     case ListingStatus.active:
       return 'active';
+    case ListingStatus.tradeLocked:
+      return 'tradeLocked';
   }
 }
 
@@ -28,6 +31,8 @@ ListingStatus listingStatusFromString(String? value) {
       return ListingStatus.reserved;
     case 'archived':
       return ListingStatus.archived;
+    case 'tradelocked':
+      return ListingStatus.tradeLocked;
     case 'available':
     case 'active':
     default:
@@ -55,6 +60,8 @@ class Listing {
   final String size;
   final String status;
   final bool saved;
+  final ListingKind kind;
+  final String? tradedWith;
 
   const Listing({
     required this.id,
@@ -75,18 +82,23 @@ class Listing {
     this.size = '',
     this.status = 'active',
     this.saved = false,
+    this.kind = ListingKind.sale,
+    this.tradedWith,
   });
 
   ListingStatus get listingStatus => listingStatusFromString(status);
   bool get isSold => listingStatus == ListingStatus.sold;
   bool get isActive => listingStatus == ListingStatus.active;
-  bool get isAvailable => !isSold;
+  bool get isTradeLocked => listingStatus == ListingStatus.tradeLocked;
+  bool get isAvailable => !isSold && !isTradeLocked;
 
   Listing copyWith({
     bool? saved,
     String? status,
     DateTime? soldAt,
     String? size,
+    ListingKind? kind,
+    String? tradedWith,
   }) => Listing(
     id: id,
     sellerId: sellerId,
@@ -106,6 +118,8 @@ class Listing {
     size: size ?? this.size,
     status: status ?? this.status,
     saved: saved ?? this.saved,
+    kind: kind ?? this.kind,
+    tradedWith: tradedWith ?? this.tradedWith,
   );
 
   String get primaryImageUrl {
@@ -192,6 +206,8 @@ class Listing {
           : _extractSizeFromTags(parsedTags),
       status: listingStatusToString(listingStatusFromString(data['status']?.toString())),
       saved: false,
+      kind: listingKindFromString(data['kind']?.toString()),
+      tradedWith: data['tradedWith']?.toString(),
     );
   }
 
@@ -222,6 +238,8 @@ class Listing {
       size: json['size'] ?? '',
       status: json['status'] ?? 'active',
       saved: json['saved'] ?? false,
+      kind: listingKindFromString(json['kind']?.toString()),
+      tradedWith: json['tradedWith']?.toString(),
     );
   }
 
@@ -243,6 +261,8 @@ class Listing {
       'imageURLs': imageURLs,
       'size': size,
       'status': listingStatusToString(listingStatusFromString(status)),
+      'kind': listingKindToString(kind),
+      'tradedWith': tradedWith,
     };
   }
 
@@ -266,6 +286,8 @@ class Listing {
       'size': size,
       'status': status,
       'saved': saved,
+      'kind': listingKindToString(kind),
+      'tradedWith': tradedWith,
     };
   }
 }

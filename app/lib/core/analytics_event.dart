@@ -440,4 +440,91 @@ class AnalyticsEvent {
       'app_version': AnalyticsValue.string(appVersion),
     },
   );
+
+  static AnalyticsEvent donationListingCreated({required String listingId, required String category}) => AnalyticsEvent(
+    name: 'donation_listing_created',
+    parameters: {
+      'listing_id': AnalyticsValue.string(listingId),
+      'category': AnalyticsValue.string(category),
+    },
+  );
+
+  static AnalyticsEvent donationBrowsed({required int countShown}) => AnalyticsEvent(
+    name: 'donation_browsed',
+    parameters: {
+      'count_shown': AnalyticsValue.int(countShown),
+    },
+  );
+
+  static AnalyticsEvent donationClaimed({required String listingId, required String sellerId, required int timeSinceListingSeconds}) => AnalyticsEvent(
+    name: 'donation_claimed',
+    parameters: {
+      'listing_id': AnalyticsValue.string(listingId),
+      'seller_id': AnalyticsValue.string(sellerId),
+      'time_since_listing_seconds': AnalyticsValue.int(timeSinceListingSeconds),
+    },
+  );
+
+  static AnalyticsEvent donationApproved({required String listingId, required String requesterId, required int waitTimeSeconds}) => AnalyticsEvent(
+    name: 'donation_approved',
+    parameters: {
+      'listing_id': AnalyticsValue.string(listingId),
+      'requester_id': AnalyticsValue.string(requesterId),
+      'wait_time_seconds': AnalyticsValue.int(waitTimeSeconds),
+    },
+  );
+
+  static AnalyticsEvent donationDeclined({required String listingId, required String requesterId}) => AnalyticsEvent(
+    name: 'donation_declined',
+    parameters: {
+      'listing_id': AnalyticsValue.string(listingId),
+      'requester_id': AnalyticsValue.string(requesterId),
+    },
+  );
+
+  static AnalyticsEvent donationPickedUp({required String listingId}) => AnalyticsEvent(
+    name: 'donation_picked_up',
+    parameters: {
+      'listing_id': AnalyticsValue.string(listingId),
+    },
+  );
+
+  static AnalyticsEvent tradeProposed({required String desiredListingId, required String offeredListingId, required double priceDelta}) => AnalyticsEvent(
+    name: 'trade_proposed',
+    parameters: {
+      'desired_listing_id': AnalyticsValue.string(desiredListingId),
+      'offered_listing_id': AnalyticsValue.string(offeredListingId),
+      'price_delta': AnalyticsValue.doubleType(priceDelta),
+    },
+  );
+
+  static AnalyticsEvent tradeAccepted({required String proposalId, required int waitTimeSeconds}) => AnalyticsEvent(
+    name: 'trade_accepted',
+    parameters: {
+      'proposal_id': AnalyticsValue.string(proposalId),
+      'wait_time_seconds': AnalyticsValue.int(waitTimeSeconds),
+    },
+  );
+
+  static AnalyticsEvent tradeDeclined({required String proposalId, required int waitTimeSeconds}) => AnalyticsEvent(
+    name: 'trade_declined',
+    parameters: {
+      'proposal_id': AnalyticsValue.string(proposalId),
+      'wait_time_seconds': AnalyticsValue.int(waitTimeSeconds),
+    },
+  );
+
+  static AnalyticsEvent tradeCompleted({required String proposalId}) => AnalyticsEvent(
+    name: 'trade_completed',
+    parameters: {
+      'proposal_id': AnalyticsValue.string(proposalId),
+    },
+  );
+
+  static AnalyticsEvent tradeMatchScoreViewed({required String scoreBucket}) => AnalyticsEvent(
+    name: 'trade_match_score_viewed',
+    parameters: {
+      'score_bucket': AnalyticsValue.string(scoreBucket),
+    },
+  );
 }
