@@ -19,14 +19,21 @@ class AppDatabase {
     final path = join(dbPath, 'unimarket.db');
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onCreate: (db, version) async {
         await _createBaseTables(db);
         await _createChatTables(db);
+        await _createDonationAndTradeTables(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await _createChatTables(db);
+        }
+        if (oldVersion < 3) {
+          await _createDonationAndTradeTables(db);
         }
       },
     );
@@ -129,5 +136,61 @@ class AppDatabase {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_chat_conversations_user_updated ON chat_conversations(user_id, updated_at);',
     );
+  }
+
+  Future<void> _createDonationAndTradeTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS donation_requests (
+        id                   TEXT PRIMARY KEY,
+        donation_listing_id  TEXT NOT NULL,
+        seller_id            TEXT NOT NULL,
+        requester_id         TEXT NOT NULL,
+        requester_message    TEXT,
+        status               TEXT NOT NULL,
+        created_at           INTEGER NOT NULL,
+        resolved_at          INTEGER,
+        is_synced_claim      INTEGER NOT NULL DEFAULT 0,
+        is_synced_decision   INTEGER NOT NULL DEFAULT 0,
+        last_sync_attempt_at INTEGER,
+        retry_count          INTEGER NOT NULL DEFAULT 0
+      );
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_dreq_seller ON donation_requests(seller_id);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_dreq_requester ON donation_requests(requester_id);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_dreq_listing ON donation_requests(donation_listing_id);');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS trade_proposals (
+        id                    TEXT PRIMARY KEY,
+        from_user_id          TEXT NOT NULL,
+        to_user_id            TEXT NOT NULL,
+        desired_listing_id    TEXT NOT NULL,
+        offered_listing_id    TEXT NOT NULL,
+        message               TEXT,
+        status                TEXT NOT NULL,
+        price_delta           REAL NOT NULL,
+        created_at            INTEGER NOT NULL,
+        resolved_at           INTEGER,
+        is_synced_proposal    INTEGER NOT NULL DEFAULT 0,
+        is_synced_decision    INTEGER NOT NULL DEFAULT 0,
+        retry_count           INTEGER NOT NULL DEFAULT 0
+      );
+    ''');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_tp_to ON trade_proposals(to_user_id);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_tp_from ON trade_proposals(from_user_id);');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS trade_item_snapshots (
+        id            TEXT PRIMARY KEY,
+        proposal_id   TEXT NOT NULL,
+        listing_id    TEXT NOT NULL,
+        title         TEXT NOT NULL,
+        image_url     TEXT,
+        price         REAL NOT NULL,
+        owner_id      TEXT NOT NULL,
+        role          TEXT NOT NULL,
+        FOREIGN KEY (proposal_id) REFERENCES trade_proposals(id) ON DELETE CASCADE
+      );
+    ''');
   }
 }

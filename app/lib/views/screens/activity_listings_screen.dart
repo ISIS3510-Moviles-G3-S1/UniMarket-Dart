@@ -5,6 +5,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/app_theme.dart';
 import '../../core/price_formatter.dart';
 import '../../view_models/profile_view_model.dart';
+import '../incoming_donation_requests_screen.dart';
+import '../my_donations_screen.dart';
+import '../trade_proposals_inbox_screen.dart';
 
 class ActivityListingsScreen extends StatelessWidget {
   const ActivityListingsScreen({super.key});
@@ -77,65 +80,172 @@ class ActivityListingsScreen extends StatelessWidget {
                 child: Consumer<ProfileViewModel>(
                   builder: (context, vm, _) => TabBarView(
                     children: [
-                      ListView.builder(
+                      ListView(
                         padding: const EdgeInsets.all(16),
-                        itemCount: vm.activityFeed.length,
-                        itemBuilder: (context, i) {
-                          final a = vm.activityFeed[i];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              leading: Text(
-                                a.icon,
-                                style: const TextStyle(fontSize: 24),
-                              ),
-                              title: Text(
-                                a.text,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              subtitle: Text(
-                                a.time,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: mutedText,
-                                ),
-                              ),
-                              trailing: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      isDark
-                                          ? AppTheme.sage.withValues(alpha: 0.28)
-                                          : AppTheme.sage.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color:
-                                        isDark
-                                            ? AppTheme.sage.withValues(alpha: 0.48)
-                                            : AppTheme.sage.withValues(alpha: 0.3),
-                                  ),
-                                ),
-                                child: Text(
-                                  '+${a.xp} XP',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color:
-                                        isDark
-                                            ? Colors.white.withValues(alpha: 0.92)
-                                            : AppTheme.sageDark,
-                                  ),
-                                ),
+                        children: [
+                          // Quick actions section
+                          Text(
+                            'Barter & Donations',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppTheme.deepGreen,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Card(
+                            elevation: 1,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: isDark ? colorScheme.outline : AppTheme.muted,
                               ),
                             ),
-                          );
-                        },
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: AppTheme.deepGreen.withValues(alpha: 0.1),
+                                    child: const Icon(Icons.volunteer_activism, color: AppTheme.deepGreen),
+                                  ),
+                                  title: const Text(
+                                    'Donation Claims Inbox',
+                                    style: TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  subtitle: const Text('Manage claims for items you donated'),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const IncomingDonationRequestsScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                Divider(height: 1, color: isDark ? colorScheme.outline : AppTheme.muted),
+                                ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: AppTheme.sage.withValues(alpha: 0.1),
+                                    child: const Icon(Icons.card_giftcard, color: AppTheme.sage),
+                                  ),
+                                  title: const Text(
+                                    'My Donations',
+                                    style: TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  subtitle: const Text('Track items you have given or claimed'),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const MyDonationsScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                Divider(height: 1, color: isDark ? colorScheme.outline : AppTheme.muted),
+                                ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: AppTheme.accent.withValues(alpha: 0.1),
+                                    child: const Icon(Icons.sync_alt_rounded, color: AppTheme.accent),
+                                  ),
+                                  title: const Text(
+                                    'Trade Proposals Inbox',
+                                    style: TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  subtitle: const Text('Manage incoming and outgoing barter offers'),
+                                  trailing: const Icon(Icons.chevron_right),
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const TradeProposalsInboxScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Activity Feed',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppTheme.deepGreen,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (vm.activityFeed.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 32),
+                              child: Center(
+                                child: Text(
+                                  'No recent activity',
+                                  style: TextStyle(color: mutedText),
+                                ),
+                              ),
+                            )
+                          else
+                            ListView.builder(
+                              physics: const NeverScrollableScrollPhysics(),
+                              shrinkWrap: true,
+                              itemCount: vm.activityFeed.length,
+                              itemBuilder: (context, i) {
+                                final a = vm.activityFeed[i];
+                                return Card(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  child: ListTile(
+                                    leading: Text(
+                                      a.icon,
+                                      style: const TextStyle(fontSize: 24),
+                                    ),
+                                    title: Text(
+                                      a.text,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      a.time,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: mutedText,
+                                      ),
+                                    ),
+                                    trailing: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            isDark
+                                                ? AppTheme.sage.withValues(alpha: 0.28)
+                                                : AppTheme.sage.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color:
+                                              isDark
+                                                  ? AppTheme.sage.withValues(alpha: 0.48)
+                                                  : AppTheme.sage.withValues(alpha: 0.3),
+                                        ),
+                                      ),
+                                      child: Text(
+                                        '+${a.xp} XP',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color:
+                                              isDark
+                                                  ? Colors.white.withValues(alpha: 0.92)
+                                                  : AppTheme.sageDark,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
                       ),
                       ListView.builder(
                         padding: const EdgeInsets.all(16),
