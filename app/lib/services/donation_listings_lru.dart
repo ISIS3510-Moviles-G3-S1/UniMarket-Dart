@@ -1,29 +1,18 @@
-import 'dart:collection';
+import '../core/lru_cache.dart';
 import '../models/listing.dart';
 
 class DonationListingsLRU {
   DonationListingsLRU._();
   static final DonationListingsLRU instance = DonationListingsLRU._();
 
-  final LinkedHashMap<String, List<Listing>> _cache = LinkedHashMap<String, List<Listing>>();
-  final int capacity = 16;
+  final LruCache<String, List<Listing>> _cache = LruCache<String, List<Listing>>(capacity: 16);
 
   void put(String category, List<Listing> listings) {
-    if (_cache.containsKey(category)) {
-      _cache.remove(category);
-    } else if (_cache.length >= capacity) {
-      _cache.remove(_cache.keys.first); // evict oldest
-    }
-    _cache[category] = listings;
+    _cache.put(category, listings);
   }
 
   List<Listing>? get(String category) {
-    final listings = _cache[category];
-    if (listings == null) return null;
-    // Bump
-    _cache.remove(category);
-    _cache[category] = listings;
-    return listings;
+    return _cache.get(category);
   }
 
   void clear() {

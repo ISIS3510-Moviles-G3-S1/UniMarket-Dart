@@ -31,7 +31,9 @@ class DonationOfflineSnapshot {
       if (!await file.exists()) return null;
       final content = await file.readAsString();
       if (content.isEmpty) return null;
-      return json.decode(content) as Map<String, dynamic>?;
+      
+      // Use compute isolate to deserialize off the main thread to avoid blocking UI frame rendering on load
+      return await compute(_deserializeJson, content);
     } catch (e) {
       debugPrint('Error loading donation snapshot: $e');
       return null;
@@ -41,4 +43,8 @@ class DonationOfflineSnapshot {
 
 String _serializeJson(Map<String, dynamic> data) {
   return json.encode(data);
+}
+
+Map<String, dynamic>? _deserializeJson(String content) {
+  return json.decode(content) as Map<String, dynamic>?;
 }
