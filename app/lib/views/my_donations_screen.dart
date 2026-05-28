@@ -113,7 +113,6 @@ class _GivenTabState extends State<_GivenTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('🎁', style: TextStyle(fontSize: 64)),
             const SizedBox(height: 16),
             const Text(
               'No items donated yet',
@@ -186,7 +185,6 @@ class _ClaimedTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('🛍️', style: TextStyle(fontSize: 64)),
                 const SizedBox(height: 16),
                 const Text(
                   'No donation claims requested',

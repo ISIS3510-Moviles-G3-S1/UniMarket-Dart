@@ -126,7 +126,6 @@ class _ReceivedProposalsView extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('🤝', style: TextStyle(fontSize: 64)),
                   const SizedBox(height: 16),
                   const Text(
                     'No trade proposals received',
