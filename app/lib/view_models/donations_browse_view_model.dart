@@ -5,12 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/listing.dart';
 import '../services/donation_service.dart';
 import '../services/donation_listings_lru.dart';
+import '../services/donation_parser_isolate.dart';
 import '../data/donation_offline_snapshot.dart';
 import '../models/listing_kind.dart';
 
 class DonationsBrowseViewModel extends ChangeNotifier {
   final DonationService _service = DonationService();
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  StreamSubscription<List<Listing>>? _isolateStreamSubscription;
 
   List<Listing> _listings = [];
   bool _isLoading = false;
@@ -74,18 +76,30 @@ class DonationsBrowseViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    // Cancel any previous isolate stream subscription
+    await _isolateStreamSubscription?.cancel();
+
     try {
       if (_isOffline) {
-        // Load from local JSON offline snapshot
-        final snapshot = await DonationOfflineSnapshot.load();
-        if (snapshot != null) {
-          final list = snapshot['list'] as List? ?? [];
-          final rawListings = list.map((item) => Listing.fromJson(Map<String, dynamic>.from(item))).toList();
-          _listings = rawListings.where((l) => l.kind == ListingKind.donation && l.isActive).toList();
-          final ts = snapshot['timestamp'] as int?;
-          if (ts != null) {
-            _lastRefreshed = DateTime.fromMillisecondsSinceEpoch(ts);
-          }
+        // Load raw content from local snapshot
+        final content = await DonationOfflineSnapshot.loadRaw();
+        if (content != null) {
+          // Parse using background native Isolate stream
+          final completer = Completer<void>();
+          final stream = DonationParserIsolate().parseDonationsStream(content);
+          
+          _isolateStreamSubscription = stream.listen((rawListings) {
+            _listings = rawListings.where((l) => l.kind == ListingKind.donation && l.isActive).toList();
+            _lastRefreshed = DateTime.now(); // Loaded from offline storage
+            completer.complete();
+          }, onError: (err) {
+            _errorMessage = err.toString();
+            completer.complete();
+          }, onDone: () {
+            if (!completer.isCompleted) completer.complete();
+          });
+
+          await completer.future;
         } else {
           _listings = [];
         }

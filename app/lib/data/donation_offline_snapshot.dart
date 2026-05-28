@@ -39,6 +39,18 @@ class DonationOfflineSnapshot {
       return null;
     }
   }
+
+  static Future<String?> loadRaw() async {
+    try {
+      final file = await _getFile();
+      if (!await file.exists()) return null;
+      final content = await file.readAsString();
+      return content.isEmpty ? null : content;
+    } catch (e) {
+      debugPrint('Error reading raw snapshot: $e');
+      return null;
+    }
+  }
 }
 
 String _serializeJson(Map<String, dynamic> data) {
